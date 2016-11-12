@@ -2,7 +2,12 @@ package httpclient
 
 import "github.com/valyala/fasthttp"
 
+var default_HttpClientOption = &HttpClientOption{}
+
 func NewHttpClient(clientOption *HttpClientOption) HttpClient {
+	if clientOption == nil{
+		clientOption = default_HttpClientOption
+	}
 	client := &fasthttp.Client{
 		Name: clientOption.GetName(),
 		Dial: clientOption.GetDial(),
