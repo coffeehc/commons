@@ -8,8 +8,6 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type StreamWriter func(w *bufio.Writer)
-
 type HttpArgs interface {
 	getFastHttpAtgs() *fasthttp.Args
 
@@ -157,7 +155,7 @@ type HttpRequestHeader interface {
 	VisitAllCookie(f func(key, value []byte))
 	Del(key string)
 	DelBytes(key []byte)
-	SetCookie(cookie HttpCookie)
+	SetCookie(key string,value string)
 	SetCookieBytesK(key []byte, value string)
 	SetCookieBytesKV(key []byte,value []byte)
 	DelCookieBytes(key []byte)
@@ -229,7 +227,7 @@ type HttpResponseHeader interface {
 	DelAllCookies()
 	Peek(key string) []byte
 	PeekBytes(key []byte) []byte
-	Cookie(key string) []byte
+	Cookie(cookie HttpCookie) bool
 	Read(r *bufio.Reader) error
 	Write(w *bufio.Writer) error
 	WriteTo(w io.Writer) (int64, error)
@@ -245,15 +243,13 @@ type HttpRequest interface {
 	SetHost(host string)
 	SetHostBytes(host []byte)
 	Host() []byte
-	GetRequestURI(requestURI string)
 	SetRequestURI(requestURI string)
 	SetRequestURIBytes(requestURI []byte)
 	RequestURI() []byte
 	ConnectionClose() bool
 	SetConnectionClose()
-	SendFile(path string) error
 	SetBodyStream(bodyStream io.Reader, bodySize int)
-	SetBodyStreamWriter(sw StreamWriter)
+	SetBodyStreamWriter(sw func(w *bufio.Writer))
 	BodyWriter() io.Writer
 	BodyGunzip() ([]byte, error)
 	BodyInflate() ([]byte, error)
@@ -266,7 +262,7 @@ type HttpRequest interface {
 	SetBody(body []byte)
 	SetBodyString(body string)
 	ResetBody()
-	CopyTo(dst *HttpRequest)
+	CopyTo(dst HttpRequest)
 	URI() HttpUri
 	PostArgs() HttpArgs
 	MultipartForm() (*multipart.Form, error)
@@ -291,7 +287,7 @@ type HttpResponse interface {
 	SendFile(path string) error
 	SetBodyStream(bodyStream io.Reader, bodySize int)
 	IsBodyStream() bool
-	SetBodyStreamWriter(sw StreamWriter)
+	SetBodyStreamWriter(sw func(w *bufio.Writer))
 	BodyWriter() io.Writer
 	Body() []byte
 	BodyGunzip() ([]byte, error)

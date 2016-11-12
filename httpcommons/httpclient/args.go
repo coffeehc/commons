@@ -95,7 +95,7 @@ func (this *_HttpArgs)GetUint(key string) (int, error) {
 	return this.args.GetUint(key)
 }
 func (this *_HttpArgs)SetUint(key string, value int) {
-	this.args.GetUint(key, value)
+	this.args.SetUint(key, value)
 }
 func (this *_HttpArgs)SetUintBytes(key []byte, value int) {
 	this.args.SetUintBytes(key, value)

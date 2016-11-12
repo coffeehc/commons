@@ -42,7 +42,9 @@ func (this *_HttpResponseHeader)ConnectionUpgrade() bool{
 func (this *_HttpResponseHeader)ContentLength() int{
 	return this.headre.ContentLength()
 }
-func (this *_HttpResponseHeader)SetContentLength(contentLength int)
+func (this *_HttpResponseHeader)SetContentLength(contentLength int){
+	this.headre.SetContentLength(contentLength)
+}
 func (this *_HttpResponseHeader)ContentType() []byte{
 	return this.headre.ContentType()
 }
@@ -74,7 +76,7 @@ func (this *_HttpResponseHeader)Reset(){
 	this.headre.Reset()
 }
 func (this *_HttpResponseHeader)CopyTo(dst HttpResponseHeader){
-	this.headre.CopyTo(dst)
+	this.headre.CopyTo(dst.getFastHttpResponseHeader())
 }
 func (this *_HttpResponseHeader)VisitAll(f func(key, value []byte)){
 	this.headre.VisitAll(f)
@@ -116,7 +118,7 @@ func (this *_HttpResponseHeader)SetCanonical(key, value []byte){
 	this.headre.SetCanonical(key,value)
 }
 func (this *_HttpResponseHeader)SetCookie(cookie HttpCookie){
-	this.headre.SetCookie(cookie)
+	this.headre.SetCookie(cookie.getFastHttpCookie())
 }
 func (this *_HttpResponseHeader)DelClientCookie(key string){
 	this.headre.DelClientCookie(key)
@@ -139,8 +141,8 @@ func (this *_HttpResponseHeader)Peek(key string) []byte{
 func (this *_HttpResponseHeader)PeekBytes(key []byte) []byte{
 	return this.headre.PeekBytes(key)
 }
-func (this *_HttpResponseHeader)Cookie(key string) []byte {
-	return this.headre.Cookie(key)
+func (this *_HttpResponseHeader)Cookie(cookie HttpCookie) bool {
+	return this.headre.Cookie(cookie.getFastHttpCookie())
 }
 func (this *_HttpResponseHeader)Read(r *bufio.Reader) error {
 	return this.headre.Read(r)

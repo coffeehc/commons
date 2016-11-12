@@ -15,19 +15,19 @@ func (this *_HttpResponse)getFastHttpResponse() *fasthttp.Response {
 }
 
 func (this *_HttpResponse)StatusCode() int {
-	this.response.StatusCode()
+	return this.response.StatusCode()
 }
 func (this *_HttpResponse)SetStatusCode(statusCode int) {
 	this.response.SetStatusCode(statusCode)
 }
 func (this *_HttpResponse)ConnectionClose() bool {
-	this.response.ConnectionClose()
+	return this.response.ConnectionClose()
 }
 func (this *_HttpResponse)SetConnectionClose() {
 	this.response.SetConnectionClose()
 }
 func (this *_HttpResponse)SendFile(path string) error {
-	this.response.SendFile(path)
+	return this.response.SendFile(path)
 }
 func (this *_HttpResponse)SetBodyStream(bodyStream io.Reader, bodySize int) {
 	this.response.SetBodyStream(bodyStream, bodySize)
@@ -35,7 +35,7 @@ func (this *_HttpResponse)SetBodyStream(bodyStream io.Reader, bodySize int) {
 func (this *_HttpResponse)IsBodyStream() bool {
 	return this.response.IsBodyStream()
 }
-func (this *_HttpResponse)SetBodyStreamWriter(sw StreamWriter) {
+func (this *_HttpResponse)SetBodyStreamWriter(sw func(w *bufio.Writer)) {
 	this.response.SetBodyStreamWriter(sw)
 }
 func (this *_HttpResponse)BodyWriter() io.Writer {
@@ -75,7 +75,7 @@ func (this *_HttpResponse)SwapBody(body []byte) []byte {
 	return this.response.SwapBody(body)
 }
 func (this *_HttpResponse)CopyTo(dst HttpResponse) {
-	this.response.CopyTo(dst)
+	this.response.CopyTo(dst.getFastHttpResponse())
 }
 func (this *_HttpResponse)Reset() {
 	this.response.Reset()

@@ -5,8 +5,8 @@
 		{
 			"checksumSHA1": "+mvdMY/dtSOahVJD5YVEBtF1Ia8=",
 			"path": "github.com/coffeehc/logger",
-			"revision": "c1f9c99539abc4ce8cdbb434b60dfd60b75a98f4",
-			"revisionTime": "2016-10-24T11:34:52Z"
+			"revision": "e6bcb394bf7198ca03178558a9ac379a1b437f32",
+			"revisionTime": "2016-11-11T15:35:59Z"
 		},
 		{
 			"checksumSHA1": "vfzz7zTL9TZLpFO7NC1H6/Du3+s=",
@@ -66,8 +66,8 @@
 			"checksumSHA1": "SPMXWeoFQa5z0pLPmqpcFzyHqQQ=",
 			"origin": "github.com/coffeehc/logger/vendor/gopkg.in/yaml.v2",
 			"path": "gopkg.in/yaml.v2",
-			"revision": "c1f9c99539abc4ce8cdbb434b60dfd60b75a98f4",
-			"revisionTime": "2016-10-24T11:34:52Z"
+			"revision": "e6bcb394bf7198ca03178558a9ac379a1b437f32",
+			"revisionTime": "2016-11-11T15:35:59Z"
 		}
 	],
 	"rootPath": "github.com/coffeehc/commons"

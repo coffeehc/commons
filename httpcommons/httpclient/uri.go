@@ -14,7 +14,7 @@ func (this *_HttpUri)getFastHttpUri() *fasthttp.URI {
 }
 
 func (this *_HttpUri)CopyTo(dst HttpUri) {
-	this.uri.CopyTo(dst)
+	this.uri.CopyTo(dst.getFastHttpUri())
 }
 func (this *_HttpUri)Hash() []byte {
 	return this.uri.Hash()
@@ -26,7 +26,7 @@ func (this *_HttpUri)SetHashBytes(hash []byte) {
 	this.uri.SetHashBytes(hash)
 }
 func (this *_HttpUri)QueryString() []byte {
-	return this.uri.QueryArgs()
+	return this.uri.QueryString()
 }
 func (this *_HttpUri)SetQueryString(queryString string) {
 	this.uri.SetQueryString(queryString)
@@ -92,5 +92,7 @@ func (this *_HttpUri)WriteTo(w io.Writer) (int64, error) {
 	return this.uri.WriteTo(w)
 }
 func (this *_HttpUri)QueryArgs() HttpArgs {
-	return this.uri.QueryArgs()
+	return &_HttpArgs{
+		args:this.uri.QueryArgs(),
+	}
 }

@@ -44,7 +44,7 @@ func (this *_HttpRequestHeader)SetContentTypeBytes(contentType []byte) {
 	this.header.SetContentTypeBytes(contentType)
 }
 func (this *_HttpRequestHeader)SetMultipartFormBoundary(boundary string) {
-	this.header.SetMultipartFormBoundaryBytes(boundary)
+	this.header.SetMultipartFormBoundary(boundary)
 }
 func (this *_HttpRequestHeader)SetMultipartFormBoundaryBytes(boundary []byte) {
 	this.header.SetMultipartFormBoundaryBytes(boundary)
@@ -110,7 +110,7 @@ func (this *_HttpRequestHeader)IsHead() bool {
 	return this.header.IsHead()
 }
 func (this *_HttpRequestHeader)IsDelete() bool {
-	this.header.IsDelete()
+	return this.header.IsDelete()
 }
 func (this *_HttpRequestHeader)IsHTTP11() bool {
 	return this.header.IsHTTP11()
@@ -131,7 +131,7 @@ func (this *_HttpRequestHeader)Reset() {
 	this.header.Reset()
 }
 func (this *_HttpRequestHeader)CopyTo(dst HttpRequestHeader) {
-	this.header.CopyTo(dst)
+	this.header.CopyTo(dst.getFastHttpRequestHeader())
 }
 func (this *_HttpRequestHeader)VisitAll(f func(key, value []byte)) {
 	this.header.VisitAll(f)
@@ -169,8 +169,8 @@ func (this *_HttpRequestHeader)SetBytesKV(key, value []byte) {
 func (this *_HttpRequestHeader)SetCanonical(key, value []byte) {
 	this.header.SetCanonical(key, value)
 }
-func (this *_HttpRequestHeader)SetCookie(cookie HttpCookie) {
-	this.header.SetCookie(cookie.getFastHttpCookie())
+func (this *_HttpRequestHeader)SetCookie(key string,value string) {
+	this.header.SetCookie(key,value)
 }
 func (this *_HttpRequestHeader)SetCookieBytesK(key []byte, value string) {
 	this.header.SetCookieBytesK(key, value)
@@ -188,7 +188,7 @@ func (this *_HttpRequestHeader)Cookie(key string) []byte {
 	return this.header.Cookie(key)
 }
 func (this *_HttpRequestHeader)CookieBytes(key []byte) []byte {
-	return this.header.Cookie(key)
+	return this.header.CookieBytes(key)
 }
 func (this *_HttpRequestHeader)Read(r *bufio.Reader) error {
 	return this.header.Read(r)

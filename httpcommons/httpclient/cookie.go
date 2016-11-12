@@ -15,10 +15,10 @@ func (this *_HttpCookie)getFastHttpCookie() *fasthttp.Cookie {
 }
 
 func (this *_HttpCookie)CopyTo(src HttpCookie) {
-	this.cookie.CopyTo(src)
+	this.cookie.CopyTo(src.getFastHttpCookie())
 }
 func (this *_HttpCookie)HTTPOnly() bool {
-	this.cookie.HTTPOnly()
+	return this.cookie.HTTPOnly()
 }
 func (this *_HttpCookie)SetHTTPOnly(httpOnly bool) {
 	this.cookie.SetHTTPOnly(httpOnly)
