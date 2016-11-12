@@ -80,7 +80,7 @@ func (this *HttpClientOption)GetWriteTimeout() time.Duration {
 }
 func (this *HttpClientOption)GetMaxResponseBodySize() int {
 	if this.MaxResponseBodySize == 0 {
-		this.MaxResponseBodySize = 4 * 1024
+		this.MaxResponseBodySize = 4 * 1024 * 1024
 	}
 	return this.MaxResponseBodySize
 }
