@@ -15,16 +15,16 @@ type HttpClientService struct {
 	client HttpClient
 }
 
-func (this *HttpClientService)getClient() HttpClient{
+func (this *HttpClientService)GetGlobalClient() HttpClient{
 	if this.client == nil{
 		option := &HttpClientOption{
 			Name:this.defaultName,
 		}
-		this.client = this.newClient(option)
+		this.client = this.NewClient(option)
 	}
 	return  this.client
 }
 
-func (this *HttpClientService)newClient(option *HttpClientOption)HttpClient{
+func (this *HttpClientService)NewClient(option *HttpClientOption)HttpClient{
 	return NewHttpClient(option)
 }
