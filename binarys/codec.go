@@ -1,4 +1,4 @@
-package binary
+package binarys
 
 import "encoding/base64"
 
