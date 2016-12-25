@@ -1,34 +1,40 @@
 package cryptos
 
 import (
-	"hash"
 	"crypto/md5"
+	"hash"
 )
 
 var (
-	HashBudiler_md5 = func()hash.Hash {return md5.New()}
+	//HashBudilerMD5 MD5的 hash 服务构建方法
+	HashBudilerMD5 = func() hash.Hash { return md5.New() }
 )
 
+//HashService  hash service
+type HashService interface {
+	Hash(data []byte) []byte
+}
 
-type HashService struct {
+type _HashService struct {
 	pool chan hash.Hash
 }
 
-func NewHashService(hashBuilder func()hash.Hash,concurrent int){
-	pool := make(chan hash.Hash,concurrent)
-	for i:=0;i<concurrent;i++{
+//NewHashService new a HashService
+func NewHashService(hashBuilder func() hash.Hash, concurrent int) HashService {
+	pool := make(chan hash.Hash, concurrent)
+	for i := 0; i < concurrent; i++ {
 		pool <- hashBuilder()
 	}
-	return &HashService{
-		pool:pool,
+	return &_HashService{
+		pool: pool,
 	}
 }
 
-func (this *HashService)Hash(data []byte)[]byte{
-	hashImpl :=  <- this.pool
-	defer func(){
+func (service *_HashService) Hash(data []byte) []byte {
+	hashImpl := <-service.pool
+	defer func() {
 		hashImpl.Reset()
-		this.pool <- hashImpl
+		service.pool <- hashImpl
 	}()
 	hashImpl.Write(data)
 	return hashImpl.Sum(nil)

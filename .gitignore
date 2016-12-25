@@ -4,6 +4,7 @@
 
 # IntelliJ project files
 .idea
+.history
 *.iml
 out
 gen

@@ -1,37 +1,26 @@
 package commons
 
 import (
-	"encoding/base64"
-	"github.com/coffeehc/logger"
-	"os/exec"
-	"os"
-	"path/filepath"
-	"crypto/rand"
-	"net"
-	"syscall"
 	"fmt"
+	"github.com/coffeehc/logger"
+	"net"
+	"os"
+	"os/exec"
 	"os/signal"
+	"path/filepath"
+	"syscall"
 )
-
-func GetRand(size int) string {
-	bs := make([]byte, size)
-	_, err := rand.Read(bs)
-	if err != nil {
-		return GetRand(size)
-	}
-	return base64.RawStdEncoding.EncodeToString(bs)
-
-}
 
 var (
-	localIp = net.IPv4(127, 0, 0, 1)
+	_localIP = net.IPv4(127, 0, 0, 1)
 )
 
-func GetLocalIp() net.IP {
+//GetLocalIP 获取本地Ip
+func GetLocalIP() net.IP {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		logger.Error("无法获取网络接口信息,%s", err)
-		return localIp
+		return _localIP
 	}
 
 	for _, a := range addrs {
@@ -41,25 +30,22 @@ func GetLocalIp() net.IP {
 			}
 		}
 	}
-	return localIp
+	return _localIP
 }
 
+//GetAppPath 获取 App 路径
 func GetAppPath() string {
 	file, _ := exec.LookPath(os.Args[0])
 	path, _ := filepath.Abs(file)
 	return path
 }
 
-/*
-	获取App执行文件目录
-*/
+//GetAppDir 获取App执行文件目录
 func GetAppDir() string {
 	return filepath.Dir(GetAppPath())
 }
 
-/*
-	wait,一般是可执行函数的最后用于阻止程序退出
-*/
+//WaitStop 一般是可执行函数的最后用于阻止程序退出
 func WaitStop() {
 	var sigChan = make(chan os.Signal, 3)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)

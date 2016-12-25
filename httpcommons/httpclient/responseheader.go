@@ -1,165 +1,164 @@
 package httpclient
 
 import (
-	"github.com/valyala/fasthttp"
 	"bufio"
+	"github.com/valyala/fasthttp"
 	"io"
 	"time"
 )
 
-type _HttpResponseHeader struct {
+type _ResponseHeader struct {
 	headre *fasthttp.ResponseHeader
 }
 
-func (this *_HttpResponseHeader)getFastHttpResponseHeader() *fasthttp.ResponseHeader {
-	return this.headre
+func (responseHeader *_ResponseHeader) getFastHTTPResponseHeader() *fasthttp.ResponseHeader {
+	return responseHeader.headre
 }
 
-func (this *_HttpResponseHeader)SetContentRange(startPos, endPos, contentLength int){
-	this.headre.SetContentRange(startPos,endPos,contentLength)
+func (responseHeader *_ResponseHeader) SetContentRange(startPos, endPos, contentLength int) {
+	responseHeader.headre.SetContentRange(startPos, endPos, contentLength)
 }
-func (this *_HttpResponseHeader)StatusCode() int{
-	return this.headre.StatusCode()
+func (responseHeader *_ResponseHeader) StatusCode() int {
+	return responseHeader.headre.StatusCode()
 }
-func (this *_HttpResponseHeader)SetStatusCode(statusCode int){
-	this.headre.SetStatusCode(statusCode)
+func (responseHeader *_ResponseHeader) SetStatusCode(statusCode int) {
+	responseHeader.headre.SetStatusCode(statusCode)
 }
-func (this *_HttpResponseHeader)SetLastModified(t time.Time){
-	this.headre.SetLastModified(t)
+func (responseHeader *_ResponseHeader) SetLastModified(t time.Time) {
+	responseHeader.headre.SetLastModified(t)
 }
-func (this *_HttpResponseHeader)ConnectionClose() bool{
-	return this.headre.ConnectionClose()
+func (responseHeader *_ResponseHeader) ConnectionClose() bool {
+	return responseHeader.headre.ConnectionClose()
 }
-func (this *_HttpResponseHeader)SetConnectionClose(){
-	this.headre.SetConnectionClose()
+func (responseHeader *_ResponseHeader) SetConnectionClose() {
+	responseHeader.headre.SetConnectionClose()
 }
-func (this *_HttpResponseHeader)ResetConnectionClose(){
-	this.headre.ResetConnectionClose()
+func (responseHeader *_ResponseHeader) ResetConnectionClose() {
+	responseHeader.headre.ResetConnectionClose()
 }
-func (this *_HttpResponseHeader)ConnectionUpgrade() bool{
-	return this.headre.ConnectionUpgrade()
+func (responseHeader *_ResponseHeader) ConnectionUpgrade() bool {
+	return responseHeader.headre.ConnectionUpgrade()
 }
-func (this *_HttpResponseHeader)ContentLength() int{
-	return this.headre.ContentLength()
+func (responseHeader *_ResponseHeader) ContentLength() int {
+	return responseHeader.headre.ContentLength()
 }
-func (this *_HttpResponseHeader)SetContentLength(contentLength int){
-	this.headre.SetContentLength(contentLength)
+func (responseHeader *_ResponseHeader) SetContentLength(contentLength int) {
+	responseHeader.headre.SetContentLength(contentLength)
 }
-func (this *_HttpResponseHeader)ContentType() []byte{
-	return this.headre.ContentType()
+func (responseHeader *_ResponseHeader) ContentType() []byte {
+	return responseHeader.headre.ContentType()
 }
-func (this *_HttpResponseHeader)SetContentType(contentType string){
-	this.headre.SetContentType(contentType)
+func (responseHeader *_ResponseHeader) SetContentType(contentType string) {
+	responseHeader.headre.SetContentType(contentType)
 }
-func (this *_HttpResponseHeader)SetContentTypeBytes(contentType []byte){
-	this.headre.SetContentTypeBytes(contentType)
+func (responseHeader *_ResponseHeader) SetContentTypeBytes(contentType []byte) {
+	responseHeader.headre.SetContentTypeBytes(contentType)
 }
-func (this *_HttpResponseHeader)Server() []byte{
-	return this.headre.Server()
+func (responseHeader *_ResponseHeader) Server() []byte {
+	return responseHeader.headre.Server()
 }
-func (this *_HttpResponseHeader)SetServer(server string){
-	this.headre.SetServer(server)
+func (responseHeader *_ResponseHeader) SetServer(server string) {
+	responseHeader.headre.SetServer(server)
 }
-func (this *_HttpResponseHeader)SetServerBytes(server []byte){
-	this.headre.SetServerBytes(server)
+func (responseHeader *_ResponseHeader) SetServerBytes(server []byte) {
+	responseHeader.headre.SetServerBytes(server)
 }
-func (this *_HttpResponseHeader)IsHTTP11() bool{
-	return this.headre.IsHTTP11()
+func (responseHeader *_ResponseHeader) IsHTTP11() bool {
+	return responseHeader.headre.IsHTTP11()
 }
-func (this *_HttpResponseHeader)Len() int{
-	return this.headre.Len()
+func (responseHeader *_ResponseHeader) Len() int {
+	return responseHeader.headre.Len()
 }
-func (this *_HttpResponseHeader)DisableNormalizing(){
-	this.headre.DisableNormalizing()
+func (responseHeader *_ResponseHeader) DisableNormalizing() {
+	responseHeader.headre.DisableNormalizing()
 }
-func (this *_HttpResponseHeader)Reset(){
-	this.headre.Reset()
+func (responseHeader *_ResponseHeader) Reset() {
+	responseHeader.headre.Reset()
 }
-func (this *_HttpResponseHeader)CopyTo(dst HttpResponseHeader){
-	this.headre.CopyTo(dst.getFastHttpResponseHeader())
+func (responseHeader *_ResponseHeader) CopyTo(dst ResponseHeader) {
+	responseHeader.headre.CopyTo(dst.getFastHTTPResponseHeader())
 }
-func (this *_HttpResponseHeader)VisitAll(f func(key, value []byte)){
-	this.headre.VisitAll(f)
+func (responseHeader *_ResponseHeader) VisitAll(f func(key, value []byte)) {
+	responseHeader.headre.VisitAll(f)
 }
-func (this *_HttpResponseHeader)VisitAllCookie(f func(key, value []byte)){
-	this.headre.VisitAllCookie(f)
+func (responseHeader *_ResponseHeader) VisitAllCookie(f func(key, value []byte)) {
+	responseHeader.headre.VisitAllCookie(f)
 }
-func (this *_HttpResponseHeader)Del(key string){
-	this.headre.Del(key)
+func (responseHeader *_ResponseHeader) Del(key string) {
+	responseHeader.headre.Del(key)
 }
-func (this *_HttpResponseHeader)DelBytes(key []byte){
-	this.headre.DelBytes(key)
+func (responseHeader *_ResponseHeader) DelBytes(key []byte) {
+	responseHeader.headre.DelBytes(key)
 }
-func (this *_HttpResponseHeader)Add(key, value string){
-	this.headre.Add(key,value)
+func (responseHeader *_ResponseHeader) Add(key, value string) {
+	responseHeader.headre.Add(key, value)
 }
-func (this *_HttpResponseHeader)AddBytesK(key []byte, value string){
-	this.headre.AddBytesK(key,value)
+func (responseHeader *_ResponseHeader) AddBytesK(key []byte, value string) {
+	responseHeader.headre.AddBytesK(key, value)
 }
-func (this *_HttpResponseHeader)AddBytesV(key string, value []byte){
-	this.headre.AddBytesV(key,value)
+func (responseHeader *_ResponseHeader) AddBytesV(key string, value []byte) {
+	responseHeader.headre.AddBytesV(key, value)
 }
-func (this *_HttpResponseHeader)AddBytesKV(key, value []byte){
-	this.headre.AddBytesKV(key,value)
+func (responseHeader *_ResponseHeader) AddBytesKV(key, value []byte) {
+	responseHeader.headre.AddBytesKV(key, value)
 }
-func (this *_HttpResponseHeader)Set(key, value string){
-	this.headre.Set(key,value)
+func (responseHeader *_ResponseHeader) Set(key, value string) {
+	responseHeader.headre.Set(key, value)
 }
-func (this *_HttpResponseHeader)SetBytesK(key []byte, value string){
-	this.headre.SetBytesK(key,value)
+func (responseHeader *_ResponseHeader) SetBytesK(key []byte, value string) {
+	responseHeader.headre.SetBytesK(key, value)
 }
-func (this *_HttpResponseHeader)SetBytesV(key string, value []byte){
-	this.headre.SetBytesV(key,value)
+func (responseHeader *_ResponseHeader) SetBytesV(key string, value []byte) {
+	responseHeader.headre.SetBytesV(key, value)
 }
-func (this *_HttpResponseHeader)SetBytesKV(key, value []byte){
-	this.headre.SetBytesKV(key,value)
+func (responseHeader *_ResponseHeader) SetBytesKV(key, value []byte) {
+	responseHeader.headre.SetBytesKV(key, value)
 }
-func (this *_HttpResponseHeader)SetCanonical(key, value []byte){
-	this.headre.SetCanonical(key,value)
+func (responseHeader *_ResponseHeader) SetCanonical(key, value []byte) {
+	responseHeader.headre.SetCanonical(key, value)
 }
-func (this *_HttpResponseHeader)SetCookie(cookie HttpCookie){
-	this.headre.SetCookie(cookie.getFastHttpCookie())
+func (responseHeader *_ResponseHeader) SetCookie(cookie Cookie) {
+	responseHeader.headre.SetCookie(cookie.getFastHTTPCookie())
 }
-func (this *_HttpResponseHeader)DelClientCookie(key string){
-	this.headre.DelClientCookie(key)
+func (responseHeader *_ResponseHeader) DelClientCookie(key string) {
+	responseHeader.headre.DelClientCookie(key)
 }
-func (this *_HttpResponseHeader)DelClientCookieBytes(key []byte){
-	this.headre.DelClientCookieBytes(key)
+func (responseHeader *_ResponseHeader) DelClientCookieBytes(key []byte) {
+	responseHeader.headre.DelClientCookieBytes(key)
 }
-func (this *_HttpResponseHeader)DelCookieBytes(key []byte){
-	this.headre.DelCookieBytes(key)
+func (responseHeader *_ResponseHeader) DelCookieBytes(key []byte) {
+	responseHeader.headre.DelCookieBytes(key)
 }
-func (this *_HttpResponseHeader)DelCookie(key string){
-	this.headre.DelCookie(key)
+func (responseHeader *_ResponseHeader) DelCookie(key string) {
+	responseHeader.headre.DelCookie(key)
 }
-func (this *_HttpResponseHeader)DelAllCookies(){
-	this.headre.DelAllCookies()
+func (responseHeader *_ResponseHeader) DelAllCookies() {
+	responseHeader.headre.DelAllCookies()
 }
-func (this *_HttpResponseHeader)Peek(key string) []byte{
-	return this.headre.Peek(key)
+func (responseHeader *_ResponseHeader) Peek(key string) []byte {
+	return responseHeader.headre.Peek(key)
 }
-func (this *_HttpResponseHeader)PeekBytes(key []byte) []byte{
-	return this.headre.PeekBytes(key)
+func (responseHeader *_ResponseHeader) PeekBytes(key []byte) []byte {
+	return responseHeader.headre.PeekBytes(key)
 }
-func (this *_HttpResponseHeader)Cookie(cookie HttpCookie) bool {
-	return this.headre.Cookie(cookie.getFastHttpCookie())
+func (responseHeader *_ResponseHeader) Cookie(cookie Cookie) bool {
+	return responseHeader.headre.Cookie(cookie.getFastHTTPCookie())
 }
-func (this *_HttpResponseHeader)Read(r *bufio.Reader) error {
-	return this.headre.Read(r)
+func (responseHeader *_ResponseHeader) Read(r *bufio.Reader) error {
+	return responseHeader.headre.Read(r)
 }
-func (this *_HttpResponseHeader)Write(w *bufio.Writer) error {
-	return this.headre.Write(w)
+func (responseHeader *_ResponseHeader) Write(w *bufio.Writer) error {
+	return responseHeader.headre.Write(w)
 }
-func (this *_HttpResponseHeader)WriteTo(w io.Writer) (int64, error){
-	return this.headre.WriteTo(w)
+func (responseHeader *_ResponseHeader) WriteTo(w io.Writer) (int64, error) {
+	return responseHeader.headre.WriteTo(w)
 }
-func (this *_HttpResponseHeader)Header() []byte {
-	return this.headre.Header()
+func (responseHeader *_ResponseHeader) Header() []byte {
+	return responseHeader.headre.Header()
 }
-func (this *_HttpResponseHeader)String() string {
-	return this.headre.String()
+func (responseHeader *_ResponseHeader) String() string {
+	return responseHeader.headre.String()
 }
-func (this *_HttpResponseHeader)AppendBytes(dst []byte) []byte {
-	return this.headre.AppendBytes(dst)
+func (responseHeader *_ResponseHeader) AppendBytes(dst []byte) []byte {
+	return responseHeader.headre.AppendBytes(dst)
 }
-

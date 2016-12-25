@@ -2,59 +2,63 @@ package httpclient
 
 import "github.com/valyala/fasthttp"
 
-var default_HttpClientOption = &HttpClientOption{}
+var defaultHTTPClientOption = &Option{}
 
-func NewHttpClient(clientOption *HttpClientOption) HttpClient {
-	if clientOption == nil{
-		clientOption = default_HttpClientOption
+//NewHTTPClient 创建一个新的 HttpClient
+func NewHTTPClient(clientOption *Option) Client {
+	if clientOption == nil {
+		clientOption = defaultHTTPClientOption
 	}
 	client := &fasthttp.Client{
-		Name: clientOption.GetName(),
-		Dial: clientOption.GetDial(),
-		DialDualStack:clientOption.GetDialDualStack(),
-		TLSConfig:clientOption.GetTLSConfig(),
-		MaxConnsPerHost:clientOption.GetMaxConnsPerHost(),
-		MaxIdleConnDuration:clientOption.GetMaxIdleConnDuration(),
-		ReadBufferSize:clientOption.GetReadBufferSize(),
-		WriteBufferSize:clientOption.GetWriteBufferSize(),
-		ReadTimeout:clientOption.GetReadTimeout(),
-		WriteTimeout:clientOption.GetWriteTimeout(),
-		MaxResponseBodySize:clientOption.GetMaxResponseBodySize(),
-		DisableHeaderNamesNormalizing:true,
+		Name:                          clientOption.GetName(),
+		Dial:                          clientOption.GetDial(),
+		DialDualStack:                 clientOption.GetDialDualStack(),
+		TLSConfig:                     clientOption.GetTLSConfig(),
+		MaxConnsPerHost:               clientOption.GetMaxConnsPerHost(),
+		MaxIdleConnDuration:           clientOption.GetMaxIdleConnDuration(),
+		ReadBufferSize:                clientOption.GetReadBufferSize(),
+		WriteBufferSize:               clientOption.GetWriteBufferSize(),
+		ReadTimeout:                   clientOption.GetReadTimeout(),
+		WriteTimeout:                  clientOption.GetWriteTimeout(),
+		MaxResponseBodySize:           clientOption.GetMaxResponseBodySize(),
+		DisableHeaderNamesNormalizing: true,
 	}
 	return &_HttpClient{
 		client: client,
 	}
-	return nil
 }
 
-func NewHttpArgs() HttpArgs  {
-	return &_HttpArgs{
-		args:fasthttp.AcquireArgs(),
+//NewHTTPArgs 创建一个新的参数
+func NewHTTPArgs() Args {
+	return &_Args{
+		args: fasthttp.AcquireArgs(),
 	}
 }
 
-func NewHttpCookie() HttpCookie{
-	return &_HttpCookie{
-		cookie:fasthttp.AcquireCookie(),
+//NewHTTPCookie 创建一个 Cookie
+func NewHTTPCookie() Cookie {
+	return &_Cookie{
+		cookie: fasthttp.AcquireCookie(),
 	}
 }
 
-func NewHttpURI() HttpUri {
-	return &_HttpUri{
-		uri:fasthttp.AcquireURI(),
-	}
-	
-}
-
-func NewHttpRequest() HttpRequest{
-	return &_HttpRequest{
-		request:fasthttp.AcquireRequest(),
+//NewHTTPURI 创建一个新HTTPUri
+func NewHTTPURI() URI {
+	return &_HttpURI{
+		uri: fasthttp.AcquireURI(),
 	}
 }
 
-func NreHttpResponse() HttpResponse{
-	return &_HttpResponse{
-		response:fasthttp.AcquireResponse(),
+//NewHTTPRequest 创建新的 Request
+func NewHTTPRequest() Request {
+	return &_Request{
+		request: fasthttp.AcquireRequest(),
+	}
+}
+
+//NewHTTPResponse 创建新的 Response
+func NewHTTPResponse() Response {
+	return &_Response{
+		response: fasthttp.AcquireResponse(),
 	}
 }

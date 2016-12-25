@@ -2,93 +2,93 @@ package httpclient
 
 import (
 	"github.com/valyala/fasthttp"
-	"time"
 	"io"
+	"time"
 )
 
-type _HttpCookie struct {
+type _Cookie struct {
 	cookie *fasthttp.Cookie
 }
 
-func (this *_HttpCookie)getFastHttpCookie() *fasthttp.Cookie {
-	return this.cookie
+func (cookie *_Cookie) getFastHTTPCookie() *fasthttp.Cookie {
+	return cookie.cookie
 }
 
-func (this *_HttpCookie)CopyTo(src HttpCookie) {
-	this.cookie.CopyTo(src.getFastHttpCookie())
+func (cookie *_Cookie) CopyTo(src Cookie) {
+	cookie.cookie.CopyTo(src.getFastHTTPCookie())
 }
-func (this *_HttpCookie)HTTPOnly() bool {
-	return this.cookie.HTTPOnly()
+func (cookie *_Cookie) HTTPOnly() bool {
+	return cookie.cookie.HTTPOnly()
 }
-func (this *_HttpCookie)SetHTTPOnly(httpOnly bool) {
-	this.cookie.SetHTTPOnly(httpOnly)
+func (cookie *_Cookie) SetHTTPOnly(httpOnly bool) {
+	cookie.cookie.SetHTTPOnly(httpOnly)
 }
-func (this *_HttpCookie)Secure() bool {
-	return this.cookie.Secure()
+func (cookie *_Cookie) Secure() bool {
+	return cookie.cookie.Secure()
 }
-func (this *_HttpCookie)SetSecure(secure bool) {
-	this.cookie.SetSecure(secure)
+func (cookie *_Cookie) SetSecure(secure bool) {
+	cookie.cookie.SetSecure(secure)
 }
-func (this *_HttpCookie)Path() []byte {
-	return this.cookie.Path()
+func (cookie *_Cookie) Path() []byte {
+	return cookie.cookie.Path()
 }
-func (this *_HttpCookie)SetPath(path string) {
-	this.cookie.SetPath(path)
+func (cookie *_Cookie) SetPath(path string) {
+	cookie.cookie.SetPath(path)
 }
-func (this *_HttpCookie)SetPathBytes(path []byte) {
-	this.cookie.SetPathBytes(path)
+func (cookie *_Cookie) SetPathBytes(path []byte) {
+	cookie.cookie.SetPathBytes(path)
 }
-func (this *_HttpCookie)Domain() []byte {
-	return this.cookie.Domain()
+func (cookie *_Cookie) Domain() []byte {
+	return cookie.cookie.Domain()
 }
-func (this *_HttpCookie)SetDomain(domain string) {
-	this.cookie.SetDomain(domain)
+func (cookie *_Cookie) SetDomain(domain string) {
+	cookie.cookie.SetDomain(domain)
 }
-func (this *_HttpCookie)SetDomainBytes(domain []byte) {
-	this.cookie.SetDomainBytes(domain)
+func (cookie *_Cookie) SetDomainBytes(domain []byte) {
+	cookie.cookie.SetDomainBytes(domain)
 }
-func (this *_HttpCookie)Expire() time.Time {
-	return this.cookie.Expire()
+func (cookie *_Cookie) Expire() time.Time {
+	return cookie.cookie.Expire()
 }
-func (this *_HttpCookie)SetExpire(expire time.Time) {
-	this.cookie.SetExpire(expire)
+func (cookie *_Cookie) SetExpire(expire time.Time) {
+	cookie.cookie.SetExpire(expire)
 }
-func (this *_HttpCookie)Value() []byte {
-	return this.cookie.Value()
+func (cookie *_Cookie) Value() []byte {
+	return cookie.cookie.Value()
 }
-func (this *_HttpCookie)SetValue(value string) {
-	this.cookie.SetValue(value)
+func (cookie *_Cookie) SetValue(value string) {
+	cookie.cookie.SetValue(value)
 }
-func (this *_HttpCookie)SetValueBytes(value []byte) {
-	this.cookie.SetValueBytes(value)
+func (cookie *_Cookie) SetValueBytes(value []byte) {
+	cookie.cookie.SetValueBytes(value)
 }
-func (this *_HttpCookie)Key() []byte {
-	return this.cookie.Key()
+func (cookie *_Cookie) Key() []byte {
+	return cookie.cookie.Key()
 }
-func (this *_HttpCookie)SetKey(key string) {
-	this.cookie.SetKey(key)
+func (cookie *_Cookie) SetKey(key string) {
+	cookie.cookie.SetKey(key)
 }
-func (this *_HttpCookie)SetKeyBytes(key []byte) {
-	this.cookie.SetKeyBytes(key)
+func (cookie *_Cookie) SetKeyBytes(key []byte) {
+	cookie.cookie.SetKeyBytes(key)
 }
-func (this *_HttpCookie)Reset() {
-	this.cookie.Reset()
+func (cookie *_Cookie) Reset() {
+	cookie.cookie.Reset()
 }
-func (this *_HttpCookie)AppendBytes(dst []byte) []byte {
-	return this.cookie.AppendBytes(dst)
+func (cookie *_Cookie) AppendBytes(dst []byte) []byte {
+	return cookie.cookie.AppendBytes(dst)
 }
-func (this *_HttpCookie)Cookie() []byte {
-	return this.cookie.Cookie()
+func (cookie *_Cookie) Cookie() []byte {
+	return cookie.cookie.Cookie()
 }
-func (this *_HttpCookie)String() string {
-	return this.cookie.String()
+func (cookie *_Cookie) String() string {
+	return cookie.cookie.String()
 }
-func (this *_HttpCookie)WriteTo(w io.Writer) (int64, error) {
-	return this.cookie.WriteTo(w)
+func (cookie *_Cookie) WriteTo(w io.Writer) (int64, error) {
+	return cookie.cookie.WriteTo(w)
 }
-func (this *_HttpCookie)Parse(src string) error {
-	return this.cookie.Parse(src)
+func (cookie *_Cookie) Parse(src string) error {
+	return cookie.cookie.Parse(src)
 }
-func (this *_HttpCookie)ParseBytes(src []byte) error {
-	return this.cookie.ParseBytes(src)
+func (cookie *_Cookie) ParseBytes(src []byte) error {
+	return cookie.cookie.ParseBytes(src)
 }

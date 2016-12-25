@@ -1,18 +1,19 @@
 package httpclient
 
 import (
+	"bufio"
+	"github.com/valyala/fasthttp"
 	"io"
 	"mime/multipart"
-	"bufio"
 	"time"
-	"github.com/valyala/fasthttp"
 )
 
-type HttpArgs interface {
-	getFastHttpAtgs() *fasthttp.Args
+//Args  http Client k-v
+type Args interface {
+	getFastHTTPArgs() *fasthttp.Args
 
 	Reset()
-	CopyTo(dst HttpArgs)
+	CopyTo(dst Args)
 	VisitAll(f func(key, value []byte))
 	Len() int
 	Parse(s string)
@@ -45,10 +46,11 @@ type HttpArgs interface {
 	GetUfloatOrZero(key string) float64
 }
 
-type HttpCookie interface {
-	getFastHttpCookie() *fasthttp.Cookie
+//Cookie Cookie
+type Cookie interface {
+	getFastHTTPCookie() *fasthttp.Cookie
 
-	CopyTo(src HttpCookie)
+	CopyTo(src Cookie)
 	HTTPOnly() bool
 	SetHTTPOnly(httpOnly bool)
 	Secure() bool
@@ -76,10 +78,11 @@ type HttpCookie interface {
 	ParseBytes(src []byte) error
 }
 
-type HttpUri interface {
-	getFastHttpUri() *fasthttp.URI
+//URI  uri
+type URI interface {
+	getFastHTTPURI() *fasthttp.URI
 
-	CopyTo(dst HttpUri)
+	CopyTo(dst URI)
 	Hash() []byte
 	SetHash(hash string)
 	SetHashBytes(hash []byte)
@@ -105,11 +108,12 @@ type HttpUri interface {
 	FullURI() []byte
 	AppendBytes(dst []byte) []byte
 	WriteTo(w io.Writer) (int64, error)
-	QueryArgs() HttpArgs
+	QueryArgs() Args
 }
 
-type HttpRequestHeader interface {
-	getFastHttpRequestHeader() *fasthttp.RequestHeader
+//RequestHeader request headers
+type RequestHeader interface {
+	getFastHTTPRequestHeader() *fasthttp.RequestHeader
 
 	SetByteRange(startPos, endPos int)
 	ConnectionClose() bool
@@ -150,14 +154,14 @@ type HttpRequestHeader interface {
 	Len() int
 	DisableNormalizing()
 	Reset()
-	CopyTo(dst HttpRequestHeader)
+	CopyTo(dst RequestHeader)
 	VisitAll(f func(key, value []byte))
 	VisitAllCookie(f func(key, value []byte))
 	Del(key string)
 	DelBytes(key []byte)
-	SetCookie(key string,value string)
+	SetCookie(key string, value string)
 	SetCookieBytesK(key []byte, value string)
-	SetCookieBytesKV(key []byte,value []byte)
+	SetCookieBytesKV(key []byte, value []byte)
 	DelCookieBytes(key []byte)
 	DelCookie(key string)
 	DelAllCookies()
@@ -179,11 +183,11 @@ type HttpRequestHeader interface {
 	Header() []byte
 	String() string
 	AppendBytes(dst []byte) []byte
-
 }
 
-type HttpResponseHeader interface {
-	getFastHttpResponseHeader() *fasthttp.ResponseHeader
+//ResponseHeader you konw
+type ResponseHeader interface {
+	getFastHTTPResponseHeader() *fasthttp.ResponseHeader
 
 	SetContentRange(startPos, endPos, contentLength int)
 	StatusCode() int
@@ -205,7 +209,7 @@ type HttpResponseHeader interface {
 	Len() int
 	DisableNormalizing()
 	Reset()
-	CopyTo(dst HttpResponseHeader)
+	CopyTo(dst ResponseHeader)
 	VisitAll(f func(key, value []byte))
 	VisitAllCookie(f func(key, value []byte))
 	Del(key string)
@@ -219,7 +223,7 @@ type HttpResponseHeader interface {
 	SetBytesV(key string, value []byte)
 	SetBytesKV(key, value []byte)
 	SetCanonical(key, value []byte)
-	SetCookie(cookie HttpCookie)
+	SetCookie(cookie Cookie)
 	DelClientCookie(key string)
 	DelClientCookieBytes(key []byte)
 	DelCookieBytes(key []byte)
@@ -227,7 +231,7 @@ type HttpResponseHeader interface {
 	DelAllCookies()
 	Peek(key string) []byte
 	PeekBytes(key []byte) []byte
-	Cookie(cookie HttpCookie) bool
+	Cookie(cookie Cookie) bool
 	Read(r *bufio.Reader) error
 	Write(w *bufio.Writer) error
 	WriteTo(w io.Writer) (int64, error)
@@ -236,9 +240,9 @@ type HttpResponseHeader interface {
 	AppendBytes(dst []byte) []byte
 }
 
-
-type HttpRequest interface {
-	getFastHttpRequest() *fasthttp.Request
+// Request  a request interface
+type Request interface {
+	getFastHTTPRequest() *fasthttp.Request
 
 	SetHost(host string)
 	SetHostBytes(host []byte)
@@ -262,9 +266,9 @@ type HttpRequest interface {
 	SetBody(body []byte)
 	SetBodyString(body string)
 	ResetBody()
-	CopyTo(dst HttpRequest)
-	URI() HttpUri
-	PostArgs() HttpArgs
+	CopyTo(dst Request)
+	URI() URI
+	PostArgs() Args
 	MultipartForm() (*multipart.Form, error)
 	Reset()
 	RemoveMultipartFormFiles()
@@ -277,8 +281,9 @@ type HttpRequest interface {
 	String() string
 }
 
-type HttpResponse interface {
-	getFastHttpResponse() *fasthttp.Response
+//Response the response interface
+type Response interface {
+	getFastHTTPResponse() *fasthttp.Response
 
 	StatusCode() int
 	SetStatusCode(statusCode int)
@@ -300,7 +305,7 @@ type HttpResponse interface {
 	ResetBody()
 	ReleaseBody(size int)
 	SwapBody(body []byte) []byte
-	CopyTo(dst HttpResponse)
+	CopyTo(dst Response)
 	Reset()
 	Read(r *bufio.Reader) error
 	ReadLimitBody(r *bufio.Reader, maxBodySize int) error
@@ -313,14 +318,13 @@ type HttpResponse interface {
 	String() string
 }
 
-type HttpClient interface {
+//Client the httpclient interface
+type Client interface {
 	Get(dst []byte, url string) (statusCode int, body []byte, err error)
 	GetTimeout(dst []byte, url string, timeout time.Duration) (statusCode int, body []byte, err error)
 	GetDeadline(dst []byte, url string, deadline time.Time) (statusCode int, body []byte, err error)
-	Post(dst []byte, url string, postArgs HttpArgs) (statusCode int, body []byte, err error)
-	DoTimeout(req HttpRequest, resp HttpResponse, timeout time.Duration) error
-	DoDeadline(req HttpRequest, resp HttpResponse, deadline time.Time) error
-	Do(req HttpRequest, resp HttpResponse) error
+	Post(dst []byte, url string, postArgs Args) (statusCode int, body []byte, err error)
+	DoTimeout(req Request, resp Response, timeout time.Duration) error
+	DoDeadline(req Request, resp Response, deadline time.Time) error
+	Do(req Request, resp Response) error
 }
-
-

@@ -1,30 +1,33 @@
 package httpclient
 
-
-func NewHttpClientService(defaultName string) *HttpClientService{
-	if defaultName == ""{
+//NewHTTPClientService 创建新的 HttpClientServie
+func NewHTTPClientService(defaultName string) *Service {
+	if defaultName == "" {
 		defaultName = "coffee's go http client"
 	}
-	return &HttpClientService{
-		defaultName:defaultName,
+	return &Service{
+		defaultName: defaultName,
 	}
 }
 
-type HttpClientService struct {
-	defaultName  string
-	client HttpClient
+//Service  a http client Service
+type Service struct {
+	defaultName string
+	client      Client
 }
 
-func (this *HttpClientService)GetGlobalClient() HttpClient{
-	if this.client == nil{
-		option := &HttpClientOption{
-			Name:this.defaultName,
+//GetGlobalClient 获取全局的使用的 Client
+func (service *Service) GetGlobalClient() Client {
+	if service.client == nil {
+		option := &Option{
+			Name: service.defaultName,
 		}
-		this.client = this.NewClient(option)
+		service.client = service.NewClient(option)
 	}
-	return  this.client
+	return service.client
 }
 
-func (this *HttpClientService)NewClient(option *HttpClientOption)HttpClient{
-	return NewHttpClient(option)
+//NewClient 创建一个新的 Client
+func (*Service) NewClient(option *Option) Client {
+	return NewHTTPClient(option)
 }

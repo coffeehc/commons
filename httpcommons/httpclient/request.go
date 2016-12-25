@@ -1,124 +1,125 @@
 package httpclient
 
 import (
+	"bufio"
 	"github.com/valyala/fasthttp"
 	"io"
 	"mime/multipart"
-	"bufio"
 )
 
-type _HttpRequest struct {
+type _Request struct {
 	request *fasthttp.Request
 }
-func (this *_HttpRequest)getFastHttpRequest() *fasthttp.Request {
-	return this.request
+
+func (request *_Request) getFastHTTPRequest() *fasthttp.Request {
+	return request.request
 }
-func (this *_HttpRequest)SetHost(host string) {
-	this.request.SetHost(host)
+func (request *_Request) SetHost(host string) {
+	request.request.SetHost(host)
 }
-func (this *_HttpRequest)SetHostBytes(host []byte) {
-	this.request.SetHostBytes(host)
+func (request *_Request) SetHostBytes(host []byte) {
+	request.request.SetHostBytes(host)
 }
-func (this *_HttpRequest)Host() []byte {
-	return this.request.Host()
+func (request *_Request) Host() []byte {
+	return request.request.Host()
 }
-func (this *_HttpRequest)SetRequestURI(requestURI string){
-	this.request.SetRequestURI(requestURI)
+func (request *_Request) SetRequestURI(requestURI string) {
+	request.request.SetRequestURI(requestURI)
 }
-func (this *_HttpRequest)SetRequestURIBytes(requestURI []byte) {
-	this.request.SetRequestURIBytes(requestURI)
+func (request *_Request) SetRequestURIBytes(requestURI []byte) {
+	request.request.SetRequestURIBytes(requestURI)
 }
-func (this *_HttpRequest)RequestURI() []byte {
-	return this.request.RequestURI()
+func (request *_Request) RequestURI() []byte {
+	return request.request.RequestURI()
 }
-func (this *_HttpRequest)ConnectionClose() bool {
-	return this.request.ConnectionClose()
+func (request *_Request) ConnectionClose() bool {
+	return request.request.ConnectionClose()
 }
-func (this *_HttpRequest)SetConnectionClose() {
-	this.request.SetConnectionClose()
+func (request *_Request) SetConnectionClose() {
+	request.request.SetConnectionClose()
 }
-func (this *_HttpRequest)SetBodyStream(bodyStream io.Reader, bodySize int) {
-	this.request.SetBodyStream(bodyStream, bodySize)
+func (request *_Request) SetBodyStream(bodyStream io.Reader, bodySize int) {
+	request.request.SetBodyStream(bodyStream, bodySize)
 }
-func (this *_HttpRequest)SetBodyStreamWriter(sw func(w *bufio.Writer)) {
-	this.request.SetBodyStreamWriter(sw)
+func (request *_Request) SetBodyStreamWriter(sw func(w *bufio.Writer)) {
+	request.request.SetBodyStreamWriter(sw)
 }
-func (this *_HttpRequest)BodyWriter() io.Writer {
-	return this.request.BodyWriter()
+func (request *_Request) BodyWriter() io.Writer {
+	return request.request.BodyWriter()
 }
-func (this *_HttpRequest)BodyGunzip() ([]byte, error) {
-	return this.request.BodyGunzip()
+func (request *_Request) BodyGunzip() ([]byte, error) {
+	return request.request.BodyGunzip()
 }
-func (this *_HttpRequest)BodyInflate() ([]byte, error) {
-	return this.request.BodyInflate()
+func (request *_Request) BodyInflate() ([]byte, error) {
+	return request.request.BodyInflate()
 }
-func (this *_HttpRequest)BodyWriteTo(w io.Writer) error {
-	return this.request.BodyWriteTo(w)
+func (request *_Request) BodyWriteTo(w io.Writer) error {
+	return request.request.BodyWriteTo(w)
 }
-func (this *_HttpRequest)ReleaseBody(size int) {
-	this.request.ReleaseBody(size)
+func (request *_Request) ReleaseBody(size int) {
+	request.request.ReleaseBody(size)
 }
-func (this *_HttpRequest)SwapBody(body []byte) []byte {
-	return this.request.SwapBody(body)
+func (request *_Request) SwapBody(body []byte) []byte {
+	return request.request.SwapBody(body)
 }
-func (this *_HttpRequest)Body() []byte {
-	return this.request.Body()
+func (request *_Request) Body() []byte {
+	return request.request.Body()
 }
-func (this *_HttpRequest)AppendBody(p []byte) {
-	this.request.AppendBody(p)
+func (request *_Request) AppendBody(p []byte) {
+	request.request.AppendBody(p)
 }
-func (this *_HttpRequest)AppendBodyString(s string) {
-	this.request.AppendBodyString(s)
+func (request *_Request) AppendBodyString(s string) {
+	request.request.AppendBodyString(s)
 }
-func (this *_HttpRequest)SetBody(body []byte) {
-	this.request.SetBody(body)
+func (request *_Request) SetBody(body []byte) {
+	request.request.SetBody(body)
 }
-func (this *_HttpRequest)SetBodyString(body string) {
-	this.request.SetBodyString(body)
+func (request *_Request) SetBodyString(body string) {
+	request.request.SetBodyString(body)
 }
-func (this *_HttpRequest)ResetBody() {
-	this.request.ResetBody()
+func (request *_Request) ResetBody() {
+	request.request.ResetBody()
 }
-func (this *_HttpRequest)CopyTo(dst HttpRequest) {
-	this.request.CopyTo(dst.getFastHttpRequest())
+func (request *_Request) CopyTo(dst Request) {
+	request.request.CopyTo(dst.getFastHTTPRequest())
 }
-func (this *_HttpRequest)URI() HttpUri {
-	return &_HttpUri{
-		uri:this.request.URI(),
+func (request *_Request) URI() URI {
+	return &_HttpURI{
+		uri: request.request.URI(),
 	}
 }
-func (this *_HttpRequest)PostArgs() HttpArgs {
-	return &_HttpArgs{
-		args:this.request.PostArgs(),
+func (request *_Request) PostArgs() Args {
+	return &_Args{
+		args: request.request.PostArgs(),
 	}
 }
-func (this *_HttpRequest)MultipartForm() (*multipart.Form, error) {
-	return this.request.MultipartForm()
+func (request *_Request) MultipartForm() (*multipart.Form, error) {
+	return request.request.MultipartForm()
 }
-func (this *_HttpRequest)Reset() {
-	this.request.Reset()
+func (request *_Request) Reset() {
+	request.request.Reset()
 }
-func (this *_HttpRequest)RemoveMultipartFormFiles() {
-	this.request.RemoveMultipartFormFiles()
+func (request *_Request) RemoveMultipartFormFiles() {
+	request.request.RemoveMultipartFormFiles()
 }
-func (this *_HttpRequest)Read(r *bufio.Reader) error {
-	return this.request.Read(r)
+func (request *_Request) Read(r *bufio.Reader) error {
+	return request.request.Read(r)
 }
-func (this *_HttpRequest)ReadLimitBody(r *bufio.Reader, maxBodySize int) error {
-	return this.request.ReadLimitBody(r, maxBodySize)
+func (request *_Request) ReadLimitBody(r *bufio.Reader, maxBodySize int) error {
+	return request.request.ReadLimitBody(r, maxBodySize)
 }
-func (this *_HttpRequest)MayContinue() bool {
-	return this.request.MayContinue()
+func (request *_Request) MayContinue() bool {
+	return request.request.MayContinue()
 }
-func (this *_HttpRequest)ContinueReadBody(r *bufio.Reader, maxBodySize int) error {
-	return this.request.ContinueReadBody(r, maxBodySize)
+func (request *_Request) ContinueReadBody(r *bufio.Reader, maxBodySize int) error {
+	return request.request.ContinueReadBody(r, maxBodySize)
 }
-func (this *_HttpRequest)WriteTo(w io.Writer) (int64, error) {
-	return this.request.WriteTo(w)
+func (request *_Request) WriteTo(w io.Writer) (int64, error) {
+	return request.request.WriteTo(w)
 }
-func (this *_HttpRequest)Write(w *bufio.Writer) error {
-	return this.request.Write(w)
+func (request *_Request) Write(w *bufio.Writer) error {
+	return request.request.Write(w)
 }
-func (this *_HttpRequest)String() string {
-	return this.request.String()
+func (request *_Request) String() string {
+	return request.request.String()
 }

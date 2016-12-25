@@ -5,107 +5,107 @@ import (
 	"io"
 )
 
-type _HttpArgs struct {
+type _Args struct {
 	args *fasthttp.Args
 }
 
-func (this *_HttpArgs)getFastHttpAtgs() *fasthttp.Args {
-	return this.args
+func (args *_Args) getFastHTTPArgs() *fasthttp.Args {
+	return args.args
 }
 
-func (this *_HttpArgs)Reset() {
-	this.args.Reset()
+func (args *_Args) Reset() {
+	args.args.Reset()
 }
-func (this *_HttpArgs)CopyTo(dst HttpArgs) {
-	this.args.CopyTo(dst.getFastHttpAtgs())
+func (args *_Args) CopyTo(dst Args) {
+	args.args.CopyTo(dst.getFastHTTPArgs())
 }
-func (this *_HttpArgs)VisitAll(f func(key, value []byte)) {
-	this.args.VisitAll(f)
+func (args *_Args) VisitAll(f func(key, value []byte)) {
+	args.args.VisitAll(f)
 }
-func (this *_HttpArgs)Len() int {
-	return this.args.Len()
+func (args *_Args) Len() int {
+	return args.args.Len()
 }
-func (this *_HttpArgs)Parse(s string) {
-	this.args.Parse(s)
+func (args *_Args) Parse(s string) {
+	args.args.Parse(s)
 }
-func (this *_HttpArgs)ParseBytes(b []byte) {
-	this.args.ParseBytes(b)
+func (args *_Args) ParseBytes(b []byte) {
+	args.args.ParseBytes(b)
 }
-func (this *_HttpArgs)String() string {
-	return this.args.String()
+func (args *_Args) String() string {
+	return args.args.String()
 }
-func (this *_HttpArgs)QueryString() []byte {
-	return this.args.QueryString()
+func (args *_Args) QueryString() []byte {
+	return args.args.QueryString()
 }
-func (this *_HttpArgs)AppendBytes(dst []byte) []byte {
-	return this.args.AppendBytes(dst)
+func (args *_Args) AppendBytes(dst []byte) []byte {
+	return args.args.AppendBytes(dst)
 }
-func (this *_HttpArgs)WriteTo(w io.Writer) (int64, error) {
-	return this.args.WriteTo(w)
+func (args *_Args) WriteTo(w io.Writer) (int64, error) {
+	return args.args.WriteTo(w)
 }
-func (this *_HttpArgs)Del(key string) {
-	this.args.Del(key)
+func (args *_Args) Del(key string) {
+	args.args.Del(key)
 }
-func (this *_HttpArgs)DelBytes(key []byte) {
-	this.args.DelBytes(key)
+func (args *_Args) DelBytes(key []byte) {
+	args.args.DelBytes(key)
 }
-func (this *_HttpArgs)Add(key, value string) {
-	this.args.Add(key, value)
+func (args *_Args) Add(key, value string) {
+	args.args.Add(key, value)
 }
-func (this *_HttpArgs)AddBytesK(key []byte, value string) {
-	this.args.AddBytesK(key, value)
+func (args *_Args) AddBytesK(key []byte, value string) {
+	args.args.AddBytesK(key, value)
 }
-func (this *_HttpArgs)AddBytesV(key string, value []byte) {
-	this.args.AddBytesV(key, value)
+func (args *_Args) AddBytesV(key string, value []byte) {
+	args.args.AddBytesV(key, value)
 }
-func (this *_HttpArgs)AddBytesKV(key, value []byte) {
-	this.args.AddBytesKV(key, value)
+func (args *_Args) AddBytesKV(key, value []byte) {
+	args.args.AddBytesKV(key, value)
 }
-func (this *_HttpArgs)Set(key, value string) {
-	this.args.Set(key, value)
+func (args *_Args) Set(key, value string) {
+	args.args.Set(key, value)
 }
-func (this *_HttpArgs)SetBytesK(key []byte, value string) {
-	this.args.SetBytesK(key, value)
+func (args *_Args) SetBytesK(key []byte, value string) {
+	args.args.SetBytesK(key, value)
 }
-func (this *_HttpArgs)SetBytesV(key string, value []byte) {
-	this.args.SetBytesV(key, value)
+func (args *_Args) SetBytesV(key string, value []byte) {
+	args.args.SetBytesV(key, value)
 }
-func (this *_HttpArgs)SetBytesKV(key, value []byte) {
-	this.args.SetBytesKV(key, value)
+func (args *_Args) SetBytesKV(key, value []byte) {
+	args.args.SetBytesKV(key, value)
 }
-func (this *_HttpArgs)Peek(key string) []byte {
-	return this.args.Peek(key)
+func (args *_Args) Peek(key string) []byte {
+	return args.args.Peek(key)
 }
-func (this *_HttpArgs)PeekBytes(key []byte) []byte {
-	return this.args.PeekBytes(key)
+func (args *_Args) PeekBytes(key []byte) []byte {
+	return args.args.PeekBytes(key)
 }
-func (this *_HttpArgs)PeekMulti(key string) [][]byte {
-	return this.args.PeekMulti(key)
+func (args *_Args) PeekMulti(key string) [][]byte {
+	return args.args.PeekMulti(key)
 }
-func (this *_HttpArgs)PeekMultiBytes(key []byte) [][]byte {
-	return this.args.PeekMultiBytes(key)
+func (args *_Args) PeekMultiBytes(key []byte) [][]byte {
+	return args.args.PeekMultiBytes(key)
 }
-func (this *_HttpArgs)Has(key string) bool {
-	return this.args.Has(key)
+func (args *_Args) Has(key string) bool {
+	return args.args.Has(key)
 }
-func (this *_HttpArgs)HasBytes(key []byte) bool {
-	return this.args.HasBytes(key)
+func (args *_Args) HasBytes(key []byte) bool {
+	return args.args.HasBytes(key)
 }
-func (this *_HttpArgs)GetUint(key string) (int, error) {
-	return this.args.GetUint(key)
+func (args *_Args) GetUint(key string) (int, error) {
+	return args.args.GetUint(key)
 }
-func (this *_HttpArgs)SetUint(key string, value int) {
-	this.args.SetUint(key, value)
+func (args *_Args) SetUint(key string, value int) {
+	args.args.SetUint(key, value)
 }
-func (this *_HttpArgs)SetUintBytes(key []byte, value int) {
-	this.args.SetUintBytes(key, value)
+func (args *_Args) SetUintBytes(key []byte, value int) {
+	args.args.SetUintBytes(key, value)
 }
-func (this *_HttpArgs)GetUintOrZero(key string) int {
-	return this.args.GetUintOrZero(key)
+func (args *_Args) GetUintOrZero(key string) int {
+	return args.args.GetUintOrZero(key)
 }
-func (this *_HttpArgs)GetUfloat(key string) (float64, error) {
-	return this.args.GetUfloat(key)
+func (args *_Args) GetUfloat(key string) (float64, error) {
+	return args.args.GetUfloat(key)
 }
-func (this *_HttpArgs)GetUfloatOrZero(key string) float64 {
-	return this.args.GetUfloatOrZero(key)
+func (args *_Args) GetUfloatOrZero(key string) float64 {
+	return args.args.GetUfloatOrZero(key)
 }
