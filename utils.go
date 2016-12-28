@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"unsafe"
 )
 
 var (
@@ -51,4 +52,16 @@ func WaitStop() {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	sig := <-sigChan
 	fmt.Printf("接收到指令:%s,立即关闭程序", sig)
+}
+
+//Str2byte String 转换为 []byte,但是共享底层空间,修改了[] byte 则 string 的值也会改,用于确定只读的情况
+func Str2byte(s string) []byte {
+	x := (*[2]uintptr)unsafe.Pointer(&s)
+	h := [3]uintptr{x[0],x[1],x[1]}
+	return *(*[]byte)(unsafe.Pointer(&h))
+}
+
+//Str2byte []byte 转换为 String,但是共享底层空间,修改了[] byte 则 string 的值也会改,用于确定只读的情况
+func Byte2str(b []byte) string{
+	return *(*string)(unsafe.Pointer(&b))
 }
