@@ -2,8 +2,9 @@ package httpclient
 
 import (
 	"errors"
-	"github.com/valyala/fasthttp"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 type _HttpClient struct {

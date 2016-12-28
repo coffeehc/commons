@@ -2,9 +2,10 @@ package httpclient
 
 import (
 	"bufio"
-	"github.com/valyala/fasthttp"
 	"io"
 	"mime/multipart"
+
+	"github.com/valyala/fasthttp"
 )
 
 type _Request struct {

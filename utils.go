@@ -2,14 +2,14 @@ package commons
 
 import (
 	"fmt"
-	"github.com/coffeehc/logger"
 	"net"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"syscall"
-	"unsafe"
+
+	"github.com/coffeehc/logger"
 )
 
 var (

@@ -1,8 +1,9 @@
 package httpclient
 
 import (
-	"github.com/valyala/fasthttp"
 	"io"
+
+	"github.com/valyala/fasthttp"
 )
 
 type _HttpURI struct {

@@ -2,10 +2,11 @@ package httpclient
 
 import (
 	"bufio"
-	"github.com/valyala/fasthttp"
 	"io"
 	"mime/multipart"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 //Args  http Client k-v

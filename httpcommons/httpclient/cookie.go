@@ -1,9 +1,10 @@
 package httpclient
 
 import (
-	"github.com/valyala/fasthttp"
 	"io"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 type _Cookie struct {

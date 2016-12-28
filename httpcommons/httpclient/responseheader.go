@@ -2,9 +2,10 @@ package httpclient
 
 import (
 	"bufio"
-	"github.com/valyala/fasthttp"
 	"io"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 type _ResponseHeader struct {

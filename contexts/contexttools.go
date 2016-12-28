@@ -67,6 +67,7 @@ func AsInt64(cxt context.Context, key string) int64 {
 	}
 	return 0
 }
+
 //AsUint64 从上下文获取 Key 对应的值,并转换为 uint64
 func AsUint64(cxt context.Context, key string) uint64 {
 	v := cxt.Value(key)
@@ -76,7 +77,7 @@ func AsUint64(cxt context.Context, key string) uint64 {
 	return 0
 }
 
-//AsInt64Point 从上下文获取 Key 对应的值,并转换为 int64
+//AsUint64Point 从上下文获取 Key 对应的值,并转换为 int64
 func AsUint64Point(cxt context.Context, key string) *uint64 {
 	v := cxt.Value(key)
 	if i, ok := v.(*uint64); ok {
@@ -93,8 +94,6 @@ func AsInt64Point(cxt context.Context, key string) *int64 {
 	}
 	return nil
 }
-
-
 
 //AsFloat32 从上下文获取 Key 对应的值,并转换为 float32
 func AsFloat32(cxt context.Context, key string) float32 {
