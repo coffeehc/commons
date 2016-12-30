@@ -1,13 +1,13 @@
 package cryptos
 
 import (
-	"crypto/md5"
+	"crypto/sha512"
 	"hash"
 )
 
 var (
-	//HashBudilerMD5 MD5的 hash 服务构建方法
-	HashBudilerMD5 = func() hash.Hash { return md5.New() }
+	//SHA512HashService sha512的 hash 服务,默认支持100并发hash 请求
+	SHA512HashService = NewHashService(func() hash.Hash { return sha512.New() }, 100)
 )
 
 //HashService  hash service
