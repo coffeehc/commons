@@ -8,13 +8,22 @@ import (
 )
 
 type _Response struct {
-	response *fasthttp.Response
+	response       *fasthttp.Response
+	responseHeader ResponseHeader
 }
 
 func (response *_Response) getFastHTTPResponse() *fasthttp.Response {
 	return response.response
 }
 
+func (response *_Response) GetResponseHeader() ResponseHeader {
+	if response.responseHeader == nil {
+		response.responseHeader = &_ResponseHeader{
+			headre: response.response.Header,
+		}
+	}
+	return response.responseHeader
+}
 func (response *_Response) StatusCode() int {
 	return response.response.StatusCode()
 }

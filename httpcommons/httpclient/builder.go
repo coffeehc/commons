@@ -35,11 +35,21 @@ func NewHTTPArgs() Args {
 	}
 }
 
+// ReleaseArgs 释放 Args对象
+func ReleaseArgs(args Args) {
+	fasthttp.ReleaseArgs(args.getFastHTTPArgs())
+}
+
 //NewHTTPCookie 创建一个 Cookie
 func NewHTTPCookie() Cookie {
 	return &_Cookie{
 		cookie: fasthttp.AcquireCookie(),
 	}
+}
+
+//ReleaseCookie 释放 Cookie 对象
+func ReleaseCookie(cookie Cookie) {
+	fasthttp.ReleaseCookie(cookie.getFastHTTPCookie())
 }
 
 //NewHTTPURI 创建一个新HTTPUri
@@ -49,6 +59,11 @@ func NewHTTPURI() URI {
 	}
 }
 
+//ReleaseURI 释放 URI 对象
+func ReleaseURI(uri URI) {
+	fasthttp.ReleaseURI(uri.getFastHTTPURI())
+}
+
 //NewHTTPRequest 创建新的 Request
 func NewHTTPRequest() Request {
 	return &_Request{
@@ -56,9 +71,19 @@ func NewHTTPRequest() Request {
 	}
 }
 
+//ReleaseRequest 释放 Request 对象
+func ReleaseRequest(request Request) {
+	fasthttp.ReleaseRequest(request.getFastHTTPRequest())
+}
+
 //NewHTTPResponse 创建新的 Response
 func NewHTTPResponse() Response {
 	return &_Response{
 		response: fasthttp.AcquireResponse(),
 	}
+}
+
+//ReleaseResponse 释放Response对象
+func ReleaseResponse(request Response) {
+	fasthttp.ReleaseResponse(request.getFastHTTPResponse())
 }

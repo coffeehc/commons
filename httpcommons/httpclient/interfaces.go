@@ -245,6 +245,7 @@ type ResponseHeader interface {
 type Request interface {
 	getFastHTTPRequest() *fasthttp.Request
 
+	GetRequestHeader() RequestHeader
 	SetHost(host string)
 	SetHostBytes(host []byte)
 	Host() []byte
@@ -286,6 +287,7 @@ type Request interface {
 type Response interface {
 	getFastHTTPResponse() *fasthttp.Response
 
+	GetResponseHeader() ResponseHeader
 	StatusCode() int
 	SetStatusCode(statusCode int)
 	ConnectionClose() bool

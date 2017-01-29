@@ -9,12 +9,23 @@ import (
 )
 
 type _Request struct {
-	request *fasthttp.Request
+	request       *fasthttp.Request
+	requestHeader RequestHeader
 }
 
 func (request *_Request) getFastHTTPRequest() *fasthttp.Request {
 	return request.request
 }
+
+func (request *_Request) GetRequestHeader() RequestHeader {
+	if request.requestHeader == nil {
+		request.requestHeader = &_RequestHeader{
+			header: request.request.Header,
+		}
+	}
+	return request.requestHeader
+}
+
 func (request *_Request) SetHost(host string) {
 	request.request.SetHost(host)
 }

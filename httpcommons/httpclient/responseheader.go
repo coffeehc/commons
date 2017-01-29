@@ -9,11 +9,11 @@ import (
 )
 
 type _ResponseHeader struct {
-	headre *fasthttp.ResponseHeader
+	headre fasthttp.ResponseHeader
 }
 
 func (responseHeader *_ResponseHeader) getFastHTTPResponseHeader() *fasthttp.ResponseHeader {
-	return responseHeader.headre
+	return &responseHeader.headre
 }
 
 func (responseHeader *_ResponseHeader) SetContentRange(startPos, endPos, contentLength int) {

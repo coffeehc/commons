@@ -8,11 +8,11 @@ import (
 )
 
 type _RequestHeader struct {
-	header *fasthttp.RequestHeader
+	header fasthttp.RequestHeader
 }
 
 func (requestHeader *_RequestHeader) getFastHTTPRequestHeader() *fasthttp.RequestHeader {
-	return requestHeader.header
+	return &requestHeader.header
 }
 func (requestHeader *_RequestHeader) SetByteRange(startPos, endPos int) {
 	requestHeader.header.SetByteRange(startPos, endPos)
