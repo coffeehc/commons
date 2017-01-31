@@ -2,9 +2,10 @@ package stackless
 
 import (
 	"fmt"
-	"github.com/valyala/bytebufferpool"
 	"io"
 	"runtime"
+
+	"github.com/valyala/bytebufferpool"
 )
 
 // Writer is an interface stackless writer must conform to.
