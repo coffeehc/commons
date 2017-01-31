@@ -20,7 +20,7 @@ func (request *_Request) getFastHTTPRequest() *fasthttp.Request {
 func (request *_Request) GetRequestHeader() RequestHeader {
 	if request.requestHeader == nil {
 		request.requestHeader = &_RequestHeader{
-			header: request.request.Header,
+			header: &request.request.Header,
 		}
 	}
 	return request.requestHeader

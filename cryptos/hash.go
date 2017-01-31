@@ -1,18 +1,14 @@
 package cryptos
 
 import (
-	"crypto/sha512"
+	"encoding/hex"
 	"hash"
-)
-
-var (
-	//SHA512HashService sha512的 hash 服务,默认支持100并发hash 请求
-	SHA512HashService = NewHashService(func() hash.Hash { return sha512.New() }, 100)
 )
 
 //HashService  hash service
 type HashService interface {
 	Hash(data []byte) []byte
+	HashToHexString(data []byte) string
 }
 
 type _HashService struct {
@@ -38,4 +34,8 @@ func (service *_HashService) Hash(data []byte) []byte {
 	}()
 	hashImpl.Write(data)
 	return hashImpl.Sum(nil)
+}
+
+func (service *_HashService) HashToHexString(data []byte) string {
+	return hex.EncodeToString(service.Hash(data))
 }

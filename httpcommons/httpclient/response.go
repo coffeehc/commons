@@ -19,7 +19,7 @@ func (response *_Response) getFastHTTPResponse() *fasthttp.Response {
 func (response *_Response) GetResponseHeader() ResponseHeader {
 	if response.responseHeader == nil {
 		response.responseHeader = &_ResponseHeader{
-			headre: response.response.Header,
+			headre: &response.response.Header,
 		}
 	}
 	return response.responseHeader

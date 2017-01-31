@@ -323,11 +323,48 @@ type Response interface {
 
 //Client the httpclient interface
 type Client interface {
-	Get(dst []byte, url string) (statusCode int, body []byte, err error)
-	GetTimeout(dst []byte, url string, timeout time.Duration) (statusCode int, body []byte, err error)
-	GetDeadline(dst []byte, url string, deadline time.Time) (statusCode int, body []byte, err error)
-	Post(dst []byte, url string, postArgs Args) (statusCode int, body []byte, err error)
+	Get(url string) (statusCode int, body []byte, err error)
+	GetTimeout(url string, timeout time.Duration) (statusCode int, body []byte, err error)
+	GetDeadline(url string, deadline time.Time) (statusCode int, body []byte, err error)
+	Post(url string, postArgs Args) (statusCode int, body []byte, err error)
 	DoTimeout(req Request, resp Response, timeout time.Duration) error
 	DoDeadline(req Request, resp Response, deadline time.Time) error
 	Do(req Request, resp Response) error
+	DoTimeoutByContext(cxt ClientContext, timeout time.Duration) (int, []byte, error)
+	DoDeadlineByContext(cxt ClientContext, deadline time.Time) (int, []byte, error)
+	DoByContext(cxt ClientContext) (int, []byte, error)
+}
+
+type ClientContext interface {
+	Reset(cookieManager CookieManager)
+	Release()
+	SetDefaultRequestHeader(header RequestHeader)
+	GetRequest() Request
+	GetResponse() Response
+	GetTempArgs() Args
+	GetTempURI() URI
+	InjectRequestHeader()
+	HandleResponseHeader()
+	GetHost() string
+	GetCookieManager() CookieManager
+
+	SetMethod(method string)
+	SetMethodToGET()
+	SetMethodToPOST()
+	SetMethodToPUT()
+	SetMethodToDEL()
+	SetMethodToHEAD()
+
+	SetURI(uri string)
+
+	GetRequestHeader() RequestHeader
+}
+
+type CookieFactory interface {
+	GetCookieManager(scope string) CookieManager
+}
+
+type CookieManager interface {
+	SetCookie(cookie Cookie)
+	GetCookies(domain string) []Cookie
 }

@@ -28,6 +28,12 @@ func NewHTTPClient(clientOption *Option) Client {
 	}
 }
 
+func NewRequestHeader() RequestHeader {
+	return &_RequestHeader{
+		header: &fasthttp.RequestHeader{},
+	}
+}
+
 //NewHTTPArgs 创建一个新的参数
 func NewHTTPArgs() Args {
 	return &_Args{
