@@ -55,7 +55,7 @@ func (httpClient *_HttpClient) Do(req Request, resp Response) error {
 	return httpClient.client.Do(req.getFastHTTPRequest(), resp.getFastHTTPResponse())
 }
 
-func (httpClient *_HttpClient) DoTimeoutByContext(cxt ClientContext, timeout time.Duration) (int, []byte, error) {
+func (httpClient *_HttpClient) DoTimeoutByContext(cxt ClientContext, timeout time.Duration, releaseContext bool) (int, []byte, error) {
 	cxt.InjectRequestHeader()
 	response := cxt.GetResponse()
 	err := httpClient.DoTimeout(cxt.GetRequest(), response, timeout)
@@ -63,10 +63,15 @@ func (httpClient *_HttpClient) DoTimeoutByContext(cxt ClientContext, timeout tim
 		return 0, nil, err
 	}
 	cxt.HandleResponseHeader()
-	defer cxt.Release()
+	defer func() {
+		code := response.StatusCode()
+		if (code < 300 || code >= 400) && releaseContext {
+			cxt.Release()
+		}
+	}()
 	return response.StatusCode(), response.Body(), nil
 }
-func (httpClient *_HttpClient) DoDeadlineByContext(cxt ClientContext, deadline time.Time) (int, []byte, error) {
+func (httpClient *_HttpClient) DoDeadlineByContext(cxt ClientContext, deadline time.Time, releaseContext bool) (int, []byte, error) {
 	cxt.InjectRequestHeader()
 	response := cxt.GetResponse()
 	err := httpClient.DoDeadline(cxt.GetRequest(), response, deadline)
@@ -74,10 +79,15 @@ func (httpClient *_HttpClient) DoDeadlineByContext(cxt ClientContext, deadline t
 		return 0, nil, err
 	}
 	cxt.HandleResponseHeader()
-	defer cxt.Release()
+	defer func() {
+		code := response.StatusCode()
+		if (code < 300 || code >= 400) && releaseContext {
+			cxt.Release()
+		}
+	}()
 	return response.StatusCode(), response.Body(), nil
 }
-func (httpClient *_HttpClient) DoByContext(cxt ClientContext) (int, []byte, error) {
+func (httpClient *_HttpClient) DoByContext(cxt ClientContext, releaseContext bool) (int, []byte, error) {
 	cxt.InjectRequestHeader()
 	response := cxt.GetResponse()
 	err := httpClient.Do(cxt.GetRequest(), cxt.GetResponse())
@@ -85,6 +95,11 @@ func (httpClient *_HttpClient) DoByContext(cxt ClientContext) (int, []byte, erro
 		return 0, nil, err
 	}
 	cxt.HandleResponseHeader()
-	defer cxt.Release()
+	defer func() {
+		code := response.StatusCode()
+		if (code < 300 || code >= 400) && releaseContext {
+			cxt.Release()
+		}
+	}()
 	return response.StatusCode(), response.Body(), nil
 }

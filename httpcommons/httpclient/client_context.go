@@ -25,8 +25,6 @@ func (cxt *_ClientContext) Reset(cookieManager CookieManager) {
 }
 
 func (cxt *_ClientContext) Release() {
-	cxt.cookieManager = nil
-	cxt.host = ""
 	if cxt.req != nil {
 		ReleaseRequest(cxt.req)
 		cxt.req = nil

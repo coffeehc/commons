@@ -330,9 +330,9 @@ type Client interface {
 	DoTimeout(req Request, resp Response, timeout time.Duration) error
 	DoDeadline(req Request, resp Response, deadline time.Time) error
 	Do(req Request, resp Response) error
-	DoTimeoutByContext(cxt ClientContext, timeout time.Duration) (int, []byte, error)
-	DoDeadlineByContext(cxt ClientContext, deadline time.Time) (int, []byte, error)
-	DoByContext(cxt ClientContext) (int, []byte, error)
+	DoTimeoutByContext(cxt ClientContext, timeout time.Duration, releaseContext bool) (int, []byte, error)
+	DoDeadlineByContext(cxt ClientContext, deadline time.Time, releaseContext bool) (int, []byte, error)
+	DoByContext(cxt ClientContext, releaseContext bool) (int, []byte, error)
 }
 
 type ClientContext interface {
