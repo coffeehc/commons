@@ -2,6 +2,7 @@ package httpclient
 
 func NewClientContext(cookieManager CookieManager) ClientContext {
 	cxt := &_ClientContext{}
+	cxt.defaultReqHeader = NewRequestHeader()
 	cxt.Reset(cookieManager)
 	return cxt
 }
