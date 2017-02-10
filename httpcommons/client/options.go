@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type ClientOptions struct {
+type HTTPClientOptions struct {
 	UserAgent                      string
 	Timeout                        time.Duration //对应从连接(Dial)到读完response body的整个时间(包含所有的redirect的时间)
 	DialerTimeout                  time.Duration //限制建立TCP连接的时间
@@ -20,59 +20,59 @@ type ClientOptions struct {
 	Transport *http.Transport
 }
 
-func (co *ClientOptions) GetUserAgent() string {
+func (co *HTTPClientOptions) GetUserAgent() string {
 	if co.UserAgent == "" {
 		co.UserAgent = "coffee client"
 	}
 	return co.UserAgent
 }
 
-func (co *ClientOptions) getTimeout() time.Duration {
+func (co *HTTPClientOptions) getTimeout() time.Duration {
 	if co.Timeout == 0 {
 		co.Timeout = 30 * time.Second
 	}
 	return co.Timeout
 }
-func (co *ClientOptions) getDialerTimeout() time.Duration {
+func (co *HTTPClientOptions) getDialerTimeout() time.Duration {
 	if co.DialerTimeout == 0 {
 		co.DialerTimeout = 3 * time.Second
 	}
 	return co.DialerTimeout
 }
-func (co *ClientOptions) getDialerKeepAlive() time.Duration {
+func (co *HTTPClientOptions) getDialerKeepAlive() time.Duration {
 	if co.DialerKeepAlive == 0 {
 		co.DialerKeepAlive = 60 * time.Second
 	}
 	return co.DialerKeepAlive
 }
-func (co *ClientOptions) getTransportTLSHandshakeTimeout() time.Duration {
+func (co *HTTPClientOptions) getTransportTLSHandshakeTimeout() time.Duration {
 	if co.TransportTLSHandshakeTimeout == 0 {
 		co.TransportTLSHandshakeTimeout = 3 * time.Second
 	}
 	return co.TransportTLSHandshakeTimeout
 }
-func (co *ClientOptions) getTransportResponseHeaderTimeout() time.Duration {
+func (co *HTTPClientOptions) getTransportResponseHeaderTimeout() time.Duration {
 	if co.TransportResponseHeaderTimeout == 0 {
 		co.TransportResponseHeaderTimeout = 3 * time.Second
 	}
 	return co.TransportResponseHeaderTimeout
 }
 
-func (co *ClientOptions) getTransportIdleConnTimeout() time.Duration {
+func (co *HTTPClientOptions) getTransportIdleConnTimeout() time.Duration {
 	if co.TransportIdleConnTimeout == 0 {
 		co.TransportIdleConnTimeout = 90 * time.Second
 	}
 	return co.TransportIdleConnTimeout
 }
 
-func (co *ClientOptions) getTransportMaxIdleConns() int {
+func (co *HTTPClientOptions) getTransportMaxIdleConns() int {
 	if co.TransportMaxIdleConns == 0 {
 		co.TransportMaxIdleConns = 1000
 	}
 	return co.TransportMaxIdleConns
 }
 
-func (co *ClientOptions) getTransport() *http.Transport {
+func (co *HTTPClientOptions) getTransport() *http.Transport {
 	if co.Transport == nil {
 		co.Transport = &http.Transport{
 			//Proxy: http.ProxyFromEnvironment,
@@ -89,7 +89,7 @@ func (co *ClientOptions) getTransport() *http.Transport {
 	return co.Transport
 }
 
-func (co *ClientOptions) setClientOptions(c *http.Client) {
+func (co *HTTPClientOptions) setClientOptions(c *http.Client) {
 	if c.Transport == nil {
 		c.Transport = co.getTransport()
 	}

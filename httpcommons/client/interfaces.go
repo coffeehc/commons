@@ -10,13 +10,13 @@ const (
 	ContentTypeStream = "application/octet-stream"
 )
 
-type Client interface {
-	Get(url string) (Response, error)
-	POST(url string, body io.Reader, contentType string) (Response, error)
-	Do(Request) (Response, error)
+type HTTPClient interface {
+	Get(url string) (HTTPResponse, error)
+	POST(url string, body io.Reader, contentType string) (HTTPResponse, error)
+	Do(HTTPRequest) (HTTPResponse, error)
 }
 
-type Request interface {
+type HTTPRequest interface {
 	SeMethod(method string)
 	SetHeader(k, v string)
 	SetCookieJar(http.CookieJar)
@@ -36,7 +36,7 @@ type Request interface {
 	//UseProxy(proxyIP string, scheme string)
 }
 
-type Response interface {
+type HTTPResponse interface {
 	GetBody() io.ReadCloser
 	GetRealResponse() *http.Response
 	GetHeader() http.Header

@@ -17,7 +17,7 @@ import (
 )
 
 // ReadBodyToString 读取 body 内容
-func ReadBody(resp Response, charset string) ([]byte, error) {
+func ReadBody(resp HTTPResponse, charset string) ([]byte, error) {
 	if resp == nil {
 		return nil, errors.New("response is nil")
 	}

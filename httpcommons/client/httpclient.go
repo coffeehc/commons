@@ -6,9 +6,9 @@ import (
 	"net/http"
 )
 
-func NewClient(defaultOptions *ClientOptions) Client {
+func NewHTTPClient(defaultOptions *HTTPClientOptions) HTTPClient {
 	if defaultOptions == nil {
-		defaultOptions = &ClientOptions{}
+		defaultOptions = &HTTPClientOptions{}
 	}
 	return &_Client{
 		defaultOptions: defaultOptions,
@@ -16,17 +16,17 @@ func NewClient(defaultOptions *ClientOptions) Client {
 }
 
 type _Client struct {
-	defaultOptions *ClientOptions
+	defaultOptions *HTTPClientOptions
 }
 
-func (c *_Client) Get(url string) (Response, error) {
+func (c *_Client) Get(url string) (HTTPResponse, error) {
 	req := NewRequest()
 	req.SeMethod("GET")
 	req.SetURI(url)
 	return c.Do(req)
 }
 
-func (c *_Client) POST(url string, body io.Reader, contentType string) (Response, error) {
+func (c *_Client) POST(url string, body io.Reader, contentType string) (HTTPResponse, error) {
 	req := NewRequest()
 	req.SeMethod("POST")
 	req.SetURI(url)
@@ -41,8 +41,8 @@ func (c *_Client) POST(url string, body io.Reader, contentType string) (Response
 	return c.Do(req)
 }
 
-func (c *_Client) Do(req Request) (Response, error) {
-	_req := req.(*_Request)
+func (c *_Client) Do(req HTTPRequest) (HTTPResponse, error) {
+	_req := req.(*_HTTPRequest)
 	client := new(http.Client)
 	c.defaultOptions.setClientOptions(client)
 	//TODO 组装 Request
