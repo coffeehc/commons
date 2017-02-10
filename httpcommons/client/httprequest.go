@@ -8,7 +8,7 @@ import (
 	"net/url"
 )
 
-func NewRequest() HTTPRequest {
+func NewHTTPRequest() HTTPRequest {
 	return &_HTTPRequest{
 		req: new(http.Request),
 	}
@@ -20,7 +20,7 @@ type _HTTPRequest struct {
 	reader    io.ReadCloser
 }
 
-func (_req *_HTTPRequest) SeMethod(method string) {
+func (_req *_HTTPRequest) SetMethod(method string) {
 	_req.req.Method = method
 }
 func (_req *_HTTPRequest) SetHeader(k, v string) {

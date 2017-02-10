@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func newResponse(resp *http.Response) HTTPResponse {
+func newHTTPResponse(resp *http.Response) HTTPResponse {
 	return &_HTTPResponse{
 		resp: resp,
 	}
@@ -28,4 +28,8 @@ func (r *_HTTPResponse) GetHeader() http.Header {
 
 func (r *_HTTPResponse) GetContentType() string {
 	return r.resp.Header.Get("Content-Type")
+}
+
+func (r *_HTTPResponse) SetStatusCode() int {
+	return r.resp.StatusCode
 }

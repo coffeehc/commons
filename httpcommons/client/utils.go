@@ -58,5 +58,5 @@ func BuildUrl(urlStr string, values url.Values) (string, error) {
 		return "", err
 	}
 	_url.RawQuery = values.Encode()
-	return _url.String()
+	return _url.String(), nil
 }

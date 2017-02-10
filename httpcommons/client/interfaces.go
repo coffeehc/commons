@@ -17,7 +17,7 @@ type HTTPClient interface {
 }
 
 type HTTPRequest interface {
-	SeMethod(method string)
+	SetMethod(method string)
 	SetHeader(k, v string)
 	SetCookieJar(http.CookieJar)
 	SetBody(body []byte)
@@ -41,6 +41,7 @@ type HTTPResponse interface {
 	GetRealResponse() *http.Response
 	GetHeader() http.Header
 	GetContentType() string
+	SetStatusCode() int
 }
 
 type CookieJarManager interface {

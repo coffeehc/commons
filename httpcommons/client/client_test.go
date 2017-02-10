@@ -21,7 +21,7 @@ func Test_Client_Do(t *testing.T) {
 		t.FailNow()
 	}
 	t.Logf("body is %s", body)
-	request := client.NewRequest()
+	request := client.NewHTTPRequest()
 	t.Logf("request is %v", request)
 	request.SetURI("http://www.baidu.com")
 	resp, err = _client.Do(request)

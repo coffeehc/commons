@@ -20,15 +20,15 @@ type _Client struct {
 }
 
 func (c *_Client) Get(url string) (HTTPResponse, error) {
-	req := NewRequest()
-	req.SeMethod("GET")
+	req := NewHTTPRequest()
+	req.SetMethod("GET")
 	req.SetURI(url)
 	return c.Do(req)
 }
 
 func (c *_Client) POST(url string, body io.Reader, contentType string) (HTTPResponse, error) {
-	req := NewRequest()
-	req.SeMethod("POST")
+	req := NewHTTPRequest()
+	req.SetMethod("POST")
 	req.SetURI(url)
 	var readerCloser io.ReadCloser
 	if rc, ok := body.(io.ReadCloser); ok {
@@ -53,5 +53,7 @@ func (c *_Client) Do(req HTTPRequest) (HTTPResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newResponse(resp), nil
+	//TODO 异步检测 client 的关闭
+	//TODO 不要自动重定向
+	return newHTTPResponse(resp), nil
 }
