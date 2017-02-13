@@ -74,6 +74,7 @@ func (co *HTTPClientOptions) getTransportMaxIdleConns() int {
 
 func (co *HTTPClientOptions) getTransport() *http.Transport {
 	if co.Transport == nil {
+		//必须保证这里设置
 		co.Transport = &http.Transport{
 			//Proxy: http.ProxyFromEnvironment,
 			DialContext: (&net.Dialer{

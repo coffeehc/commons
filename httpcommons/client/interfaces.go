@@ -13,7 +13,7 @@ const (
 type HTTPClient interface {
 	Get(url string) (HTTPResponse, error)
 	POST(url string, body io.Reader, contentType string) (HTTPResponse, error)
-	Do(HTTPRequest) (HTTPResponse, error)
+	Do(req HTTPRequest, autoRedirect bool) (HTTPResponse, error)
 }
 
 type HTTPRequest interface {

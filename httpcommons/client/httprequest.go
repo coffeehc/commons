@@ -10,7 +10,9 @@ import (
 
 func NewHTTPRequest() HTTPRequest {
 	return &_HTTPRequest{
-		req: new(http.Request),
+		req: &http.Request{
+			Method: "GET",
+		},
 	}
 }
 
