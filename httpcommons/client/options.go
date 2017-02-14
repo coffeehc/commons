@@ -3,11 +3,11 @@ package client
 import (
 	"net"
 	"net/http"
+	"sync"
 	"time"
 )
 
 type HTTPClientOptions struct {
-	UserAgent                      string
 	Timeout                        time.Duration //对应从连接(Dial)到读完response body的整个时间(包含所有的redirect的时间)
 	DialerTimeout                  time.Duration //限制建立TCP连接的时间
 	DialerKeepAlive                time.Duration
@@ -18,13 +18,27 @@ type HTTPClientOptions struct {
 	TransportMaxIdleConns    int
 
 	Transport *http.Transport
+
+	GlobalHeaderSetting HeaderSetting
+
+	mutex *sync.Mutex
 }
 
-func (co *HTTPClientOptions) GetUserAgent() string {
-	if co.UserAgent == "" {
-		co.UserAgent = "coffee client"
+func (co *HTTPClientOptions) checkMuext() {
+	if co.mutex == nil {
+		co.mutex = new(sync.Mutex)
 	}
-	return co.UserAgent
+}
+
+func (co *HTTPClientOptions) AddHeaderSetting(hs HeaderSetting) {
+	co.checkMuext()
+	co.mutex.Lock()
+	defer co.mutex.Unlock()
+	if co.GlobalHeaderSetting == nil {
+		co.GlobalHeaderSetting = hs
+		return
+	}
+	co.GlobalHeaderSetting = co.GlobalHeaderSetting.AddSetting(hs)
 }
 
 func (co *HTTPClientOptions) getTimeout() time.Duration {
@@ -93,5 +107,11 @@ func (co *HTTPClientOptions) getTransport() *http.Transport {
 func (co *HTTPClientOptions) setClientOptions(c *http.Client) {
 	if c.Transport == nil {
 		c.Transport = co.getTransport()
+	}
+}
+
+func (co *HTTPClientOptions) setHeader(req *http.Request) {
+	if co.GlobalHeaderSetting != nil {
+		co.GlobalHeaderSetting.Setting(req.Header)
 	}
 }

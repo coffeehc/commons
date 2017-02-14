@@ -60,6 +60,7 @@ func (c *_Client) Do(req HTTPRequest, autoRedirect bool) (HTTPResponse, error) {
 }
 
 func (c *_Client) do(client *http.Client, req *http.Request, autoRedirect bool) (*http.Response, error) {
+	c.defaultOptions.setHeader(req)
 	if autoRedirect {
 		method := req.Method
 		if method == "GET" || method == "HEAD" {
