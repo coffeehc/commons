@@ -25,10 +25,10 @@ func (cjm *_CookieJarManager) GetCookieJar(key string) http.CookieJar {
 	if ok {
 		return jar
 	}
-	jar, _ = cookiejar.New(nil)
 	cjm.rwMutex.Lock()
 	jar, ok = cjm.jars[key]
 	if !ok {
+		jar, _ = cookiejar.New(nil)
 		cjm.jars[key] = jar
 	}
 	cjm.rwMutex.Unlock()

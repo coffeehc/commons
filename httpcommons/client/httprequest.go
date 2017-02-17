@@ -8,18 +8,19 @@ import (
 	"net/url"
 )
 
-func NewHTTPRequest() HTTPRequest {
-	return &_HTTPRequest{
-		req: &http.Request{
-			Method: "GET",
-		},
+func NewHTTPRequest(method, urlStr string) (HTTPRequest, error) {
+	req, err := http.NewRequest(method, urlStr, nil)
+	if err != nil {
+		return nil, err
 	}
+	return &_HTTPRequest{
+		req: req,
+	}, nil
 }
 
 type _HTTPRequest struct {
 	req       *http.Request
 	cookieJar http.CookieJar
-	reader    io.ReadCloser
 }
 
 func (_req *_HTTPRequest) SetMethod(method string) {
@@ -32,10 +33,10 @@ func (_req *_HTTPRequest) SetCookieJar(cookieJar http.CookieJar) {
 	_req.cookieJar = cookieJar
 }
 func (_req *_HTTPRequest) SetBody(body []byte) {
-	_req.reader = ioutil.NopCloser(bytes.NewReader(body))
+	_req.req.Body = ioutil.NopCloser(bytes.NewReader(body))
 }
 func (_req *_HTTPRequest) SetBodyStream(reader io.ReadCloser) {
-	_req.reader = reader
+	_req.req.Body = reader
 }
 
 func (_req *_HTTPRequest) SetURI(requestURL string) error {

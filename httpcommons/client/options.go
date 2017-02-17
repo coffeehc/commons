@@ -14,11 +14,11 @@ type HTTPClientOptions struct {
 	TransportTLSHandshakeTimeout   time.Duration //限制 TLS握手的时间
 	TransportResponseHeaderTimeout time.Duration //限制读取response header的时间
 	//TransportExpectContinueTimeout time.Duration //(可能引起不必要的风险,直接忽略这个值)限制client在发送包含 Expect: 100-continue的header到收到继续发送body的response之间的时间等待。注意在1.6中设置这个值会禁用HTTP/2(DefaultTransport自1.6.2起是个特例)
-	TransportIdleConnTimeout time.Duration //控制连接池中一个连接可以idle多长时间
-	TransportMaxIdleConns    int
+	TransportIdleConnTimeout     time.Duration //控制连接池中一个连接可以idle多长时间
+	TransportMaxIdleConns        int
+	TransportMaxIdleConnsPerHost int
 
-	Transport *http.Transport
-
+	Transport           *http.Transport
 	GlobalHeaderSetting HeaderSetting
 
 	mutex *sync.Mutex
@@ -41,64 +41,78 @@ func (co *HTTPClientOptions) AddHeaderSetting(hs HeaderSetting) {
 	co.GlobalHeaderSetting = co.GlobalHeaderSetting.AddSetting(hs)
 }
 
-func (co *HTTPClientOptions) getTimeout() time.Duration {
+func (co *HTTPClientOptions) GetTimeout() time.Duration {
 	if co.Timeout == 0 {
 		co.Timeout = 30 * time.Second
 	}
 	return co.Timeout
 }
-func (co *HTTPClientOptions) getDialerTimeout() time.Duration {
+func (co *HTTPClientOptions) GetDialerTimeout() time.Duration {
 	if co.DialerTimeout == 0 {
 		co.DialerTimeout = 3 * time.Second
 	}
 	return co.DialerTimeout
 }
-func (co *HTTPClientOptions) getDialerKeepAlive() time.Duration {
+func (co *HTTPClientOptions) GetDialerKeepAlive() time.Duration {
 	if co.DialerKeepAlive == 0 {
 		co.DialerKeepAlive = 60 * time.Second
 	}
 	return co.DialerKeepAlive
 }
-func (co *HTTPClientOptions) getTransportTLSHandshakeTimeout() time.Duration {
+func (co *HTTPClientOptions) GetTransportTLSHandshakeTimeout() time.Duration {
 	if co.TransportTLSHandshakeTimeout == 0 {
 		co.TransportTLSHandshakeTimeout = 3 * time.Second
 	}
 	return co.TransportTLSHandshakeTimeout
 }
-func (co *HTTPClientOptions) getTransportResponseHeaderTimeout() time.Duration {
+func (co *HTTPClientOptions) GetTransportResponseHeaderTimeout() time.Duration {
 	if co.TransportResponseHeaderTimeout == 0 {
 		co.TransportResponseHeaderTimeout = 3 * time.Second
 	}
 	return co.TransportResponseHeaderTimeout
 }
 
-func (co *HTTPClientOptions) getTransportIdleConnTimeout() time.Duration {
+func (co *HTTPClientOptions) GetTransportIdleConnTimeout() time.Duration {
 	if co.TransportIdleConnTimeout == 0 {
 		co.TransportIdleConnTimeout = 90 * time.Second
 	}
 	return co.TransportIdleConnTimeout
 }
 
-func (co *HTTPClientOptions) getTransportMaxIdleConns() int {
+func (co *HTTPClientOptions) GetTransportMaxIdleConns() int {
 	if co.TransportMaxIdleConns == 0 {
 		co.TransportMaxIdleConns = 1000
 	}
 	return co.TransportMaxIdleConns
 }
 
-func (co *HTTPClientOptions) getTransport() *http.Transport {
+func (co *HTTPClientOptions) GetTransportMaxIdleConnsPerHost() int {
+	if co.TransportMaxIdleConnsPerHost == 0 {
+		co.TransportMaxIdleConnsPerHost = 1000
+	}
+	return co.TransportMaxIdleConnsPerHost
+}
+
+func (co *HTTPClientOptions) GetTransport() *http.Transport {
 	if co.Transport == nil {
+		disableKeepAlives := false
+		if co.GetDialerKeepAlive() == 0 {
+			disableKeepAlives = true
+		}
 		//必须保证这里设置
 		co.Transport = &http.Transport{
 			//Proxy: http.ProxyFromEnvironment,
 			DialContext: (&net.Dialer{
-				Timeout:   co.getDialerTimeout(),
-				KeepAlive: co.getDialerKeepAlive(),
+				Timeout:   co.GetDialerTimeout(),
+				KeepAlive: co.GetDialerKeepAlive(),
 			}).DialContext,
-			MaxIdleConns:        co.getTransportMaxIdleConns(),
-			IdleConnTimeout:     co.getTransportIdleConnTimeout(),
-			TLSHandshakeTimeout: co.getTransportTLSHandshakeTimeout(),
+			MaxIdleConnsPerHost: co.GetTransportMaxIdleConnsPerHost(),
+			MaxIdleConns:        co.GetTransportMaxIdleConns(),
+			IdleConnTimeout:     co.GetTransportIdleConnTimeout(),
+			TLSHandshakeTimeout: co.GetTransportTLSHandshakeTimeout(),
 			//ExpectContinueTimeout: 1 * time.Second,
+			DisableKeepAlives:  disableKeepAlives,
+			DisableCompression: true,
 		}
 	}
 	return co.Transport
@@ -106,12 +120,22 @@ func (co *HTTPClientOptions) getTransport() *http.Transport {
 
 func (co *HTTPClientOptions) setClientOptions(c *http.Client) {
 	if c.Transport == nil {
-		c.Transport = co.getTransport()
+		c.Transport = co.GetTransport()
 	}
 }
 
 func (co *HTTPClientOptions) setHeader(req *http.Request) {
 	if co.GlobalHeaderSetting != nil {
 		co.GlobalHeaderSetting.Setting(req.Header)
+	}
+}
+
+//Utils
+func NewTransport(timeout time.Duration, keepAlive time.Duration) *http.Transport {
+	return &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   timeout,
+			KeepAlive: keepAlive,
+		}).DialContext,
 	}
 }

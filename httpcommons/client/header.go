@@ -21,7 +21,7 @@ func (h *defaultHeaderSetting) Setting(header http.Header) {
 		h.prev.Setting(header)
 	}
 }
-func (h *defaultHeaderSetting) AddSetting(hs HeaderSetting) {
+func (h *defaultHeaderSetting) AddSetting(hs HeaderSetting) HeaderSetting {
 	h.prev = hs
 	return hs
 }

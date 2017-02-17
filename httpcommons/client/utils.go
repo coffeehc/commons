@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/coffeehc/logger"
 	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
@@ -21,7 +20,6 @@ func ReadBody(resp HTTPResponse, charset string) ([]byte, error) {
 	defer bodyReader.Close()
 	var reader io.Reader = bodyReader
 	if charset == "" {
-		logger.Debug("Conetent-Type is %s", resp.GetContentType())
 		_, params, _ := mime.ParseMediaType(resp.GetContentType())
 		charset = params["charset"]
 		charset = strings.ToUpper(charset)

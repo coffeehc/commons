@@ -27,15 +27,20 @@ type _Client struct {
 }
 
 func (c *_Client) Get(url string) (HTTPResponse, error) {
-	req := NewHTTPRequest()
+	req, err := NewHTTPRequest("GET", url)
+	if err != nil {
+		return nil, err
+	}
 	req.SetMethod("GET")
 	req.SetURI(url)
 	return c.Do(req, true)
 }
 
 func (c *_Client) POST(url string, body io.Reader, contentType string) (HTTPResponse, error) {
-	req := NewHTTPRequest()
-	req.SetMethod("POST")
+	req, err := NewHTTPRequest("POST", url)
+	if err != nil {
+		return nil, err
+	}
 	req.SetURI(url)
 	var readerCloser io.ReadCloser
 	if rc, ok := body.(io.ReadCloser); ok {
