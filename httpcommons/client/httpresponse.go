@@ -30,6 +30,6 @@ func (r *_HTTPResponse) GetContentType() string {
 	return r.resp.Header.Get("Content-Type")
 }
 
-func (r *_HTTPResponse) SetStatusCode() int {
+func (r *_HTTPResponse) GetStatusCode() int {
 	return r.resp.StatusCode
 }
