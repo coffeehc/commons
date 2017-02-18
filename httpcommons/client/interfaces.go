@@ -17,6 +17,7 @@ type HTTPClient interface {
 }
 
 type HTTPRequest interface {
+	SetTransportBuilder(transportBuilder TransportBuilder)
 	SetMethod(method string)
 	SetHeader(k, v string)
 	SetCookieJar(http.CookieJar)

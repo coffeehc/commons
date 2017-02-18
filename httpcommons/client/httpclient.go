@@ -81,7 +81,11 @@ func (c *_Client) do(client *http.Client, req *http.Request, autoRedirect bool) 
 func (c *_Client) buildHTTPClient(req HTTPRequest) *http.Client {
 	_req := req.(*_HTTPRequest)
 	client := new(http.Client) //TODO 考虑pool化
-	c.defaultOptions.setClientOptions(client)
+	transportBuilder := _req.transportBuilder
+	if transportBuilder == nil {
+		transportBuilder = c.defaultOptions.GetTransportBuilder()
+	}
+	client.Transport = buildTransport(transportBuilder)
 	//TODO 组装 Request
 	if _req.cookieJar != nil {
 		client.Jar = _req.cookieJar

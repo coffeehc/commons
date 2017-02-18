@@ -18,7 +18,7 @@ type HTTPClientOptions struct {
 	TransportMaxIdleConns        int
 	TransportMaxIdleConnsPerHost int
 
-	Transport           *http.Transport
+	TransportBuilder    TransportBuilder
 	GlobalHeaderSetting HeaderSetting
 
 	mutex *sync.Mutex
@@ -93,35 +93,11 @@ func (co *HTTPClientOptions) GetTransportMaxIdleConnsPerHost() int {
 	return co.TransportMaxIdleConnsPerHost
 }
 
-func (co *HTTPClientOptions) GetTransport() *http.Transport {
-	if co.Transport == nil {
-		disableKeepAlives := false
-		if co.GetDialerKeepAlive() == 0 {
-			disableKeepAlives = true
-		}
-		//必须保证这里设置
-		co.Transport = &http.Transport{
-			//Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:   co.GetDialerTimeout(),
-				KeepAlive: co.GetDialerKeepAlive(),
-			}).DialContext,
-			MaxIdleConnsPerHost: co.GetTransportMaxIdleConnsPerHost(),
-			MaxIdleConns:        co.GetTransportMaxIdleConns(),
-			IdleConnTimeout:     co.GetTransportIdleConnTimeout(),
-			TLSHandshakeTimeout: co.GetTransportTLSHandshakeTimeout(),
-			//ExpectContinueTimeout: 1 * time.Second,
-			DisableKeepAlives:  disableKeepAlives,
-			DisableCompression: true,
-		}
+func (co *HTTPClientOptions) GetTransportBuilder() TransportBuilder {
+	if co.TransportBuilder == nil {
+		co.TransportBuilder = co.NewTransport
 	}
-	return co.Transport
-}
-
-func (co *HTTPClientOptions) setClientOptions(c *http.Client) {
-	if c.Transport == nil {
-		c.Transport = co.GetTransport()
-	}
+	return co.TransportBuilder
 }
 
 func (co *HTTPClientOptions) setHeader(req *http.Request) {
@@ -130,12 +106,23 @@ func (co *HTTPClientOptions) setHeader(req *http.Request) {
 	}
 }
 
-//Utils
-func NewTransport(timeout time.Duration, keepAlive time.Duration) *http.Transport {
+func (co *HTTPClientOptions) NewTransport() *http.Transport {
+	disableKeepAlives := false
+	if co.GetDialerKeepAlive() == 0 {
+		disableKeepAlives = true
+	}
 	return &http.Transport{
+		//Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
-			Timeout:   timeout,
-			KeepAlive: keepAlive,
+			Timeout:   co.GetDialerTimeout(),
+			KeepAlive: co.GetDialerKeepAlive(),
 		}).DialContext,
+		MaxIdleConnsPerHost: co.GetTransportMaxIdleConnsPerHost(),
+		MaxIdleConns:        co.GetTransportMaxIdleConns(),
+		IdleConnTimeout:     co.GetTransportIdleConnTimeout(),
+		TLSHandshakeTimeout: co.GetTransportTLSHandshakeTimeout(),
+		//ExpectContinueTimeout: 1 * time.Second,
+		DisableKeepAlives:  disableKeepAlives,
+		DisableCompression: true,
 	}
 }
