@@ -18,9 +18,8 @@ func Test_Client_Do(t *testing.T) {
 	}
 	option.AddHeaderSetting(client.NewHeaderUserAgent("123"))
 	_client := client.NewHTTPClient(option, option.NewTransport())
-	//resp, err := _client.Get("http://www.163.com")
-	dataStr := `{"ip":"110.164.58.147","port":"9001"}`
-	resp, err := _client.POST("http://api.xiagaogao.com:36987/api/v1/proxyipcheck", bytes.NewReader(convers.StringToBytes(dataStr)), "")
+	dataStr := `ip=myip`
+	resp, err := _client.POST("http://ip.taobao.com/service/getIpInfo2.php", bytes.NewReader(convers.StringToBytes(dataStr)), "application/x-www-form-urlencoded")
 	if err != nil {
 		t.Fatalf("error is %#v[%s]", err, err.Error())
 		t.FailNow()
@@ -36,9 +35,10 @@ func Test_Client_Do(t *testing.T) {
 		HttpProxys:  []string{"110.164.58.147:9001"},
 		HttpsProxys: []string{},
 	})
-	req, _ := client.NewHTTPRequest("POST", "http://api.xiagaogao.com:36987/api/v1/proxyipcheck")
+	req, _ := client.NewHTTPRequest("POST", "http://ip.taobao.com/service/getIpInfo2.php")
 	req.SetTransport(transport)
 	req.SetBody(convers.StringToBytes(dataStr))
+	req.SetContentType("application/x-www-form-urlencoded")
 	resp, err = _client.Do(req, false)
 	if err != nil {
 		t.Fatalf("error is %#v[%s]", err, err.Error())
