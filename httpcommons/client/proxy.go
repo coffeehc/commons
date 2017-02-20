@@ -3,7 +3,6 @@ package client
 import (
 	"errors"
 	"fmt"
-	"github.com/coffeehc/logger"
 	"math/rand"
 	"net"
 	"net/http"
