@@ -18,7 +18,6 @@ type HTTPClientOptions struct {
 	TransportMaxIdleConns        int
 	TransportMaxIdleConnsPerHost int
 
-	TransportBuilder    TransportBuilder
 	GlobalHeaderSetting HeaderSetting
 
 	mutex *sync.Mutex
@@ -91,13 +90,6 @@ func (co *HTTPClientOptions) GetTransportMaxIdleConnsPerHost() int {
 		co.TransportMaxIdleConnsPerHost = 1000
 	}
 	return co.TransportMaxIdleConnsPerHost
-}
-
-func (co *HTTPClientOptions) GetTransportBuilder() TransportBuilder {
-	if co.TransportBuilder == nil {
-		co.TransportBuilder = co.NewTransport
-	}
-	return co.TransportBuilder
 }
 
 func (co *HTTPClientOptions) setHeader(req *http.Request) {

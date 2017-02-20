@@ -14,10 +14,11 @@ type HTTPClient interface {
 	Get(url string) (HTTPResponse, error)
 	POST(url string, body io.Reader, contentType string) (HTTPResponse, error)
 	Do(req HTTPRequest, autoRedirect bool) (HTTPResponse, error)
+	Config() *HTTPClientOptions
 }
 
 type HTTPRequest interface {
-	SetTransportBuilder(transportBuilder TransportBuilder)
+	SetTransport(transport *http.Transport)
 	SetMethod(method string)
 	SetHeader(k, v string)
 	SetCookieJar(http.CookieJar)

@@ -3,30 +3,45 @@ package client_test
 import (
 	"testing"
 
+	"bytes"
+	"github.com/coffeehc/commons/convers"
 	"github.com/coffeehc/commons/httpcommons/client"
 	"github.com/coffeehc/logger"
+	"time"
 )
 
 func Test_Client_Do(t *testing.T) {
 	logger.SetDefaultLevel("/", logger.LevelDebug)
-	_client := client.NewHTTPClient(nil)
-	resp, err := _client.Get("http://www.163.com")
+	option := &client.HTTPClientOptions{
+		Timeout:       3 * time.Second,
+		DialerTimeout: 3 * time.Second,
+	}
+	option.AddHeaderSetting(client.NewHeaderUserAgent("123"))
+	_client := client.NewHTTPClient(option)
+	//resp, err := _client.Get("http://www.163.com")
+	dataStr := `{"ip":"110.164.58.147","port":"9001"}`
+	resp, err := _client.POST("http://api.xiagaogao.com:36987/api/v1/proxyipcheck", bytes.NewReader(convers.StringToBytes(dataStr)), "")
 	if err != nil {
-		t.Fatalf("error is %s", err)
+		t.Fatalf("error is %#v[%s]", err, err.Error())
 		t.FailNow()
 	}
 	body, err := client.ReadBody(resp, "")
+	t.Logf("body is %s", body)
 	if err != nil {
-		t.Fatalf("error is %s", err)
+		t.Fatalf("error is %#v[%s]", err, err.Error())
 		t.FailNow()
 	}
-	t.Logf("body is %s", body)
-	request := client.NewHTTPRequest()
-	t.Logf("request is %v", request)
-	request.SetURI("http://www.baidu.com")
-	resp, err = _client.Do(request, false)
+	transport := option.NewTransport()
+	transport.Proxy, _ = client.NewProxyByAddrProviter(&client.AddrsProxyProvicer{
+		HttpProxys:  []string{"110.164.58.147:9001"},
+		HttpsProxys: []string{},
+	})
+	req, _ := client.NewHTTPRequest("POST", "http://api.xiagaogao.com:36987/api/v1/proxyipcheck")
+	req.SetTransport(transport)
+	req.SetBody(convers.StringToBytes(dataStr))
+	resp, err = _client.Do(req, false)
 	if err != nil {
-		t.Fatalf("error is %s", err)
+		t.Fatalf("error is %#v[%s]", err, err.Error())
 		t.FailNow()
 	}
 	body, err = client.ReadBody(resp, "")
@@ -35,5 +50,5 @@ func Test_Client_Do(t *testing.T) {
 		t.FailNow()
 	}
 	t.Logf("body is %s", body)
-
+	time.Sleep(time.Millisecond * 300)
 }

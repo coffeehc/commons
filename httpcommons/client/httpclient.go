@@ -17,13 +17,20 @@ func NewHTTPClient(defaultOptions *HTTPClientOptions) HTTPClient {
 	if defaultOptions == nil {
 		defaultOptions = &HTTPClientOptions{}
 	}
+	t := defaultOptions.NewTransport()
 	return &_Client{
-		defaultOptions: defaultOptions,
+		options:          defaultOptions,
+		defaultTransport: t,
 	}
 }
 
 type _Client struct {
-	defaultOptions *HTTPClientOptions
+	options          *HTTPClientOptions
+	defaultTransport *http.Transport
+}
+
+func (c *_Client) Config() *HTTPClientOptions {
+	return c.options
 }
 
 func (c *_Client) Get(url string) (HTTPResponse, error) {
@@ -65,7 +72,7 @@ func (c *_Client) Do(req HTTPRequest, autoRedirect bool) (HTTPResponse, error) {
 }
 
 func (c *_Client) do(client *http.Client, req *http.Request, autoRedirect bool) (*http.Response, error) {
-	c.defaultOptions.setHeader(req)
+	c.options.setHeader(req)
 	if autoRedirect {
 		method := req.Method
 		if method == "GET" || method == "HEAD" {
@@ -81,11 +88,10 @@ func (c *_Client) do(client *http.Client, req *http.Request, autoRedirect bool) 
 func (c *_Client) buildHTTPClient(req HTTPRequest) *http.Client {
 	_req := req.(*_HTTPRequest)
 	client := new(http.Client) //TODO 考虑pool化
-	transportBuilder := _req.transportBuilder
-	if transportBuilder == nil {
-		transportBuilder = c.defaultOptions.GetTransportBuilder()
+	client.Transport = c.defaultTransport
+	if _req.transport != nil {
+		client.Transport = _req.transport
 	}
-	client.Transport = buildTransport(transportBuilder)
 	//TODO 组装 Request
 	if _req.cookieJar != nil {
 		client.Jar = _req.cookieJar

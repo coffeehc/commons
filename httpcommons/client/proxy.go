@@ -3,6 +3,8 @@ package client
 import (
 	"errors"
 	"fmt"
+	"github.com/coffeehc/logger"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -10,41 +12,56 @@ import (
 	"strings"
 )
 
-type ProxyGetter interface {
+type ProxyProvider interface {
 	GetHTTPSProxy() string
 	GetHTTPProxy() string
 }
 
-var _noProxyGetter = &noProxyGetter{}
-
-type noProxyGetter struct {
+type AddrsProxyProvicer struct {
+	HttpProxys  []string
+	HttpsProxys []string
 }
 
-func (noProxyGetter) GetHTTPSProxy() string {
-	return ""
-}
-func (noProxyGetter) GetHTTPProxy() string {
-	return ""
-}
-
-func newProxy(getter ProxyGetter) *proxy {
-	if getter == nil {
-		getter = _noProxyGetter
+func (pg *AddrsProxyProvicer) GetHTTPSProxy() string {
+	length := len(pg.HttpsProxys)
+	if length == 0 {
+		return ""
 	}
-	return &proxy{proxyGetter: getter}
+	if length == 1 {
+		return pg.HttpsProxys[0]
+	}
+	return pg.HttpsProxys[rand.Int31n(int32(length))]
+}
+func (pg *AddrsProxyProvicer) GetHTTPProxy() string {
+	length := len(pg.HttpProxys)
+	if length == 0 {
+		return ""
+	}
+	if length == 1 {
+		return pg.HttpProxys[0]
+	}
+	return pg.HttpProxys[rand.Int31n(int32(length))]
+}
+
+func NewProxyByAddrProviter(provider ProxyProvider) (func(req *http.Request) (*url.URL, error), error) {
+	if provider == nil {
+		return nil, errors.New("ProxyProvider is nil")
+	}
+	p := &proxy{provider: provider}
+	return p.proxyFromGetter, nil
 }
 
 type proxy struct {
-	proxyGetter ProxyGetter
+	provider ProxyProvider
 }
 
-func (p *proxy) proxyFromEnvironment(req *http.Request) (*url.URL, error) {
+func (p *proxy) proxyFromGetter(req *http.Request) (*url.URL, error) {
 	var proxy string
 	if req.URL.Scheme == "https" {
-		proxy = p.proxyGetter.GetHTTPSProxy()
+		proxy = p.provider.GetHTTPSProxy()
 	}
 	if proxy == "" {
-		proxy = p.proxyGetter.GetHTTPProxy()
+		proxy = p.provider.GetHTTPProxy()
 		if proxy != "" && os.Getenv("REQUEST_METHOD") != "" {
 			return nil, errors.New("net/http: refusing to use HTTP_PROXY value in CGI environment; see golang.org/s/cgihttpproxy")
 		}

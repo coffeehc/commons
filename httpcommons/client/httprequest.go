@@ -19,13 +19,13 @@ func NewHTTPRequest(method, urlStr string) (HTTPRequest, error) {
 }
 
 type _HTTPRequest struct {
-	req              *http.Request
-	cookieJar        http.CookieJar
-	transportBuilder TransportBuilder
+	req       *http.Request
+	cookieJar http.CookieJar
+	transport *http.Transport
 }
 
-func (_req *_HTTPRequest) SetTransportBuilder(transportBuilder TransportBuilder) {
-	_req.transportBuilder = transportBuilder
+func (_req *_HTTPRequest) SetTransport(transport *http.Transport) {
+	_req.transport = transport
 }
 
 func (_req *_HTTPRequest) SetMethod(method string) {
