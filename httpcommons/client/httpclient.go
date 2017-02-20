@@ -13,14 +13,16 @@ import (
 	"time"
 )
 
-func NewHTTPClient(defaultOptions *HTTPClientOptions) HTTPClient {
+func NewHTTPClient(defaultOptions *HTTPClientOptions, globalTransport *http.Transport) HTTPClient {
 	if defaultOptions == nil {
 		defaultOptions = &HTTPClientOptions{}
 	}
-	t := defaultOptions.NewTransport()
+	if globalTransport == nil {
+		globalTransport = defaultOptions.NewTransport()
+	}
 	return &_Client{
 		options:          defaultOptions,
-		defaultTransport: t,
+		defaultTransport: globalTransport,
 	}
 }
 

@@ -17,7 +17,7 @@ func Test_Client_Do(t *testing.T) {
 		DialerTimeout: 3 * time.Second,
 	}
 	option.AddHeaderSetting(client.NewHeaderUserAgent("123"))
-	_client := client.NewHTTPClient(option)
+	_client := client.NewHTTPClient(option, option.NewTransport())
 	//resp, err := _client.Get("http://www.163.com")
 	dataStr := `{"ip":"110.164.58.147","port":"9001"}`
 	resp, err := _client.POST("http://api.xiagaogao.com:36987/api/v1/proxyipcheck", bytes.NewReader(convers.StringToBytes(dataStr)), "")
