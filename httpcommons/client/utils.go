@@ -8,8 +8,12 @@ import (
 	"net/url"
 	"strings"
 
+	"flag"
+	"github.com/coffeehc/logger"
 	"golang.org/x/text/encoding/simplifiedchinese"
 )
+
+var printBody = flag.Bool("printbody", false, "读取body的时候打印body")
 
 // ReadBodyToString 读取 body 内容
 func ReadBody(resp HTTPResponse, charset string) ([]byte, error) {
@@ -36,6 +40,9 @@ func ReadBody(resp HTTPResponse, charset string) ([]byte, error) {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, err
+	}
+	if *printBody {
+		logger.Debug("body is %s", data)
 	}
 	return data, nil
 }
