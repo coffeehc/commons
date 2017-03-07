@@ -42,7 +42,7 @@ func ReadBody(resp HTTPResponse, charset string) ([]byte, error) {
 		return nil, err
 	}
 	if *printBody {
-		logger.Debug("body is %s", data)
+		logger.Debug("code is %d,body is %s", resp.GetStatusCode(), data)
 	}
 	return data, nil
 }
