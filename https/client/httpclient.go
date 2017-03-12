@@ -18,7 +18,7 @@ func NewHTTPClient(defaultOptions *HTTPClientOptions, globalTransport *http.Tran
 		defaultOptions = &HTTPClientOptions{}
 	}
 	if globalTransport == nil {
-		globalTransport = defaultOptions.NewTransport()
+		globalTransport = defaultOptions.NewTransport(nil)
 	}
 	return &_Client{
 		options:          defaultOptions,

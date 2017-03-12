@@ -5,7 +5,7 @@ import (
 
 	"bytes"
 	"github.com/coffeehc/commons/convers"
-	"github.com/coffeehc/commons/httpcommons/client"
+	"github.com/coffeehc/commons/https/client"
 	"github.com/coffeehc/logger"
 	"time"
 )
@@ -17,7 +17,7 @@ func Test_Client_Do(t *testing.T) {
 		DialerTimeout: 3 * time.Second,
 	}
 	option.AddHeaderSetting(client.NewHeaderUserAgent("123"))
-	_client := client.NewHTTPClient(option, option.NewTransport())
+	_client := client.NewHTTPClient(option, option.NewTransport(nil))
 	dataStr := `ip=myip`
 	resp, err := _client.POST("http://ip.taobao.com/service/getIpInfo2.php", bytes.NewReader(convers.StringToBytes(dataStr)), "application/x-www-form-urlencoded")
 	if err != nil {
@@ -30,11 +30,16 @@ func Test_Client_Do(t *testing.T) {
 		t.Fatalf("error is %#v[%s]", err, err.Error())
 		t.FailNow()
 	}
-	transport := option.NewTransport()
-	transport.Proxy, _ = client.NewProxyByAddrProviter(&client.AddrsProxyProvicer{
-		HttpProxys:  []string{"110.164.58.147:9001"},
-		HttpsProxys: []string{},
-	})
+	proxyDialer, err := client.NewProxyDialer("socks5://127.0.0.1:1080", option.NewDialer())
+	if err != nil {
+		t.Fatalf("error is %#v[%s]", err, err.Error())
+		t.FailNow()
+	}
+	transport := option.NewTransport(proxyDialer.DialContext)
+	//transport.Proxy, _ = client.NewProxyByAddrProviter(&client.AddrsProxyProvicer{
+	//	HttpProxys:  []string{"110.164.58.147:9001"},
+	//	HttpsProxys: []string{},
+	//})
 	req, _ := client.NewHTTPRequest("POST", "http://ip.taobao.com/service/getIpInfo2.php")
 	req.SetTransport(transport)
 	req.SetBody(convers.StringToBytes(dataStr))

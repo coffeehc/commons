@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"sync"
@@ -98,17 +99,23 @@ func (co *HTTPClientOptions) setHeader(req *http.Request) {
 	}
 }
 
-func (co *HTTPClientOptions) NewTransport() *http.Transport {
+func (co *HTTPClientOptions) NewDialer() *net.Dialer {
+	return &net.Dialer{
+		Timeout:   co.GetDialerTimeout(),
+		KeepAlive: co.GetDialerKeepAlive(),
+	}
+}
+
+func (co *HTTPClientOptions) NewTransport(dialContext func(ctx context.Context, network, address string) (net.Conn, error)) *http.Transport {
 	disableKeepAlives := false
 	if co.GetDialerKeepAlive() == 0 {
 		disableKeepAlives = true
 	}
+	if dialContext == nil {
+		dialContext = co.NewDialer().DialContext
+	}
 	return &http.Transport{
-		//Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   co.GetDialerTimeout(),
-			KeepAlive: co.GetDialerKeepAlive(),
-		}).DialContext,
+		DialContext:         dialContext,
 		MaxIdleConnsPerHost: co.GetTransportMaxIdleConnsPerHost(),
 		MaxIdleConns:        co.GetTransportMaxIdleConns(),
 		IdleConnTimeout:     co.GetTransportIdleConnTimeout(),
