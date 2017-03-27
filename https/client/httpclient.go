@@ -4,13 +4,14 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/coffeehc/logger"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/coffeehc/logger"
 )
 
 func NewHTTPClient(defaultOptions *HTTPClientOptions, globalTransport *http.Transport) HTTPClient {
@@ -23,12 +24,14 @@ func NewHTTPClient(defaultOptions *HTTPClientOptions, globalTransport *http.Tran
 	return &_Client{
 		options:          defaultOptions,
 		defaultTransport: globalTransport,
+		timeout:          defaultOptions.GetTimeout(),
 	}
 }
 
 type _Client struct {
 	options          *HTTPClientOptions
 	defaultTransport *http.Transport
+	timeout          time.Duration
 }
 
 func (c *_Client) Config() *HTTPClientOptions {
@@ -63,64 +66,78 @@ func (c *_Client) POST(url string, body io.Reader, contentType string) (HTTPResp
 }
 
 func (c *_Client) Do(req HTTPRequest, autoRedirect bool) (HTTPResponse, error) {
-	client := c.buildHTTPClient(req)
-	httpRequest := req.GetRealRequest()
-	resp, err := c.do(client, httpRequest, autoRedirect)
+	_req := c.init(req)
+	resp, err := c.do(_req, autoRedirect)
 	if err != nil {
 		return nil, err
 	}
 	//TODO 异步关闭response的body,防止使用者没有关闭body
+	go func() {
+		timeout := c.Config().Timeout
+		if timeout == 0 || timeout > time.Second*5 {
+			timeout = time.Second * 3
+		}
+		time.Sleep(timeout)
+		if !resp.Close && resp.Body != nil {
+			resp.Body.Close()
+		}
+		req := _req.GetRealRequest()
+		if !req.Close && req.Body != nil {
+			req.Body.Close()
+		}
+	}()
 	return newHTTPResponse(resp), nil
 }
 
-func (c *_Client) do(client *http.Client, req *http.Request, autoRedirect bool) (*http.Response, error) {
-	c.options.setHeader(req)
+func (c *_Client) do(req *_HTTPRequest, autoRedirect bool) (*http.Response, error) {
+	realRequest := req.GetRealRequest()
+	c.options.setHeader(realRequest)
 	if autoRedirect {
-		method := req.Method
+		method := realRequest.Method
 		if method == "GET" || method == "HEAD" {
-			return doFollowingRedirects(client, req, shouldRedirectGet)
+			return doFollowingRedirects(c.timeout, req, shouldRedirectGet)
 		}
 		if method == "POST" || method == "PUT" {
-			return doFollowingRedirects(client, req, shouldRedirectPost)
+			return doFollowingRedirects(c.timeout, req, shouldRedirectPost)
 		}
 	}
-	return c.send(client, req)
+	return c.send(req)
 }
 
-func (c *_Client) buildHTTPClient(req HTTPRequest) *http.Client {
+func (c *_Client) init(req HTTPRequest) *_HTTPRequest {
 	_req := req.(*_HTTPRequest)
-	client := new(http.Client) //TODO 考虑pool化
-	client.Transport = c.defaultTransport
-	if _req.transport != nil {
-		client.Transport = _req.transport
+	if _req.transport == nil {
+		_req.transport = c.defaultTransport
 	}
-	//TODO 组装 Request
+	realRequest := req.GetRealRequest()
 	if _req.cookieJar != nil {
-		client.Jar = _req.cookieJar
-	}
-	return client
-}
-
-func (c *_Client) send(client *http.Client, req *http.Request) (*http.Response, error) {
-	deadline := deadline(client)
-	if client.Jar != nil {
-		for _, cookie := range client.Jar.Cookies(req.URL) {
-			req.AddCookie(cookie)
+		for _, cookie := range _req.cookieJar.Cookies(realRequest.URL) {
+			realRequest.AddCookie(cookie)
 		}
 	}
-	resp, err := send(req, client.Transport, deadline)
+	//TODO 是否要处理Cookie
+	return _req
+}
+
+func (c *_Client) send(req *_HTTPRequest) (*http.Response, error) {
+	deadline := deadline(c.timeout)
+	resp, err := send(req, deadline)
 	if err != nil {
 		return nil, err
 	}
-	if client.Jar != nil {
+	if req.cookieJar != nil {
+		_url := req.GetRealRequest().URL
 		if rc := resp.Cookies(); len(rc) > 0 {
-			client.Jar.SetCookies(req.URL, rc)
+			req.cookieJar.SetCookies(_url, rc)
 		}
 	}
 	return resp, nil
 }
 
-func send(ireq *http.Request, rt http.RoundTripper, deadline time.Time) (*http.Response, error) {
+func send(_req *_HTTPRequest, deadline time.Time) (*http.Response, error) {
+	//ireq *http.Request, rt http.RoundTripper
+	ireq := _req.GetRealRequest()
+	rt := _req.transport
 	req := ireq // req is either the original request, or a modified fork
 
 	if rt == nil {
@@ -194,14 +211,15 @@ func send(ireq *http.Request, rt http.RoundTripper, deadline time.Time) (*http.R
 	return resp, nil
 }
 
-func doFollowingRedirects(c *http.Client, req *http.Request, shouldRedirect func(int) bool) (*http.Response, error) {
+func doFollowingRedirects(timeout time.Duration, _req *_HTTPRequest, shouldRedirect func(int) bool) (*http.Response, error) {
+	req := _req.GetRealRequest()
 	if req.URL == nil {
 		closeBody(req.Body)
 		return nil, errors.New("http: nil Request.URL")
 	}
 
 	var (
-		deadline = deadline(c)
+		deadline = deadline(timeout)
 		reqs     []*http.Request
 		resp     *http.Response
 	)
@@ -250,8 +268,7 @@ func doFollowingRedirects(c *http.Client, req *http.Request, shouldRedirect func
 			if ref := refererForURL(reqs[len(reqs)-1].URL, req.URL); ref != "" {
 				req.Header.Set("Referer", ref)
 			}
-			err = checkRedirect(c, req, reqs)
-
+			err = defaultCheckRedirect(req, reqs)
 			// Sentinel error to let users select the
 			// previous response, without closing its
 			// body. See Issue 10069.
@@ -284,7 +301,7 @@ func doFollowingRedirects(c *http.Client, req *http.Request, shouldRedirect func
 		reqs = append(reqs, req)
 
 		var err error
-		if resp, err = send(req, c.Transport, deadline); err != nil {
+		if resp, err = send(_req, deadline); err != nil {
 			if !deadline.IsZero() && !time.Now().Before(deadline) {
 				err = &httpError{
 					err:     err.Error() + " (Client.Timeout exceeded while awaiting headers)",
@@ -322,14 +339,7 @@ func refererForURL(lastReq, newReq *url.URL) string {
 	return referer
 }
 
-func checkRedirect(c *http.Client, req *http.Request, via []*http.Request) error {
-	fn := c.CheckRedirect
-	if fn == nil {
-		fn = defaultCheckRedirect
-	}
-	return fn(req, via)
-}
-
+//TODO 这个使用默认的,暂时是不需要单独处理的
 func defaultCheckRedirect(req *http.Request, via []*http.Request) error {
 	if len(via) >= 10 {
 		return errors.New("stopped after 10 redirects")

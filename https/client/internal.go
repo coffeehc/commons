@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -72,11 +73,15 @@ func setRequestCancel(req *http.Request, rt http.RoundTripper, deadline time.Tim
 	stopTimer = func() { once.Do(func() { close(stopTimerCh) }) }
 
 	timer := time.NewTimer(deadline.Sub(time.Now()))
+	var timedOut atomicBool
+
 	go func() {
 		select {
 		case <-initialReqCancel:
 			doCancel()
+			timer.Stop()
 		case <-timer.C:
+			timedOut.setTrue()
 			doCancel()
 		case <-stopTimerCh:
 			timer.Stop()
@@ -85,6 +90,11 @@ func setRequestCancel(req *http.Request, rt http.RoundTripper, deadline time.Tim
 
 	return stopTimer, wasCanceled
 }
+
+type atomicBool int32
+
+func (b *atomicBool) isSet() bool { return atomic.LoadInt32((*int32)(b)) != 0 }
+func (b *atomicBool) setTrue()    { atomic.StoreInt32((*int32)(b), 1) }
 
 func nop() {}
 
@@ -133,9 +143,9 @@ func (e *httpError) Error() string   { return e.err }
 func (e *httpError) Timeout() bool   { return e.timeout }
 func (e *httpError) Temporary() bool { return true }
 
-func deadline(c *http.Client) time.Time {
-	if c.Timeout > 0 {
-		return time.Now().Add(c.Timeout)
+func deadline(timeout time.Duration) time.Time {
+	if timeout > 0 {
+		return time.Now().Add(timeout)
 	}
 	return time.Time{}
 }

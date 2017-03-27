@@ -54,9 +54,9 @@ func (co *HTTPClientOptions) GetDialerTimeout() time.Duration {
 	return co.DialerTimeout
 }
 func (co *HTTPClientOptions) GetDialerKeepAlive() time.Duration {
-	if co.DialerKeepAlive == 0 {
-		co.DialerKeepAlive = 60 * time.Second
-	}
+	//if co.DialerKeepAlive == 0 {
+	//	co.DialerKeepAlive = 60 * time.Second
+	//}
 	return co.DialerKeepAlive
 }
 func (co *HTTPClientOptions) GetTransportTLSHandshakeTimeout() time.Duration {

@@ -3,21 +3,27 @@ package client
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"errors"
-	"github.com/coffeehc/commons/convers"
-	"golang.org/x/net/idna"
-	"golang.org/x/net/proxy"
-	"golang.org/x/text/unicode/norm"
-	"golang.org/x/text/width"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/coffeehc/commons/convers"
+	"golang.org/x/net/idna"
+	"golang.org/x/net/proxy"
+	"golang.org/x/text/unicode/norm"
+	"golang.org/x/text/width"
 )
 
 var NotSuportScheme = errors.New("not suport proxy scheme")
+
+var defauleTLSConfig = &tls.Config{
+	InsecureSkipVerify: false,
+}
 
 func NewProxyDialer(proxyTarget string, forward *net.Dialer) (*ProxyDialer, error) {
 	_url, err := url.Parse(proxyTarget)
@@ -57,7 +63,7 @@ func (d *ProxyDialer) DialContext(ctx context.Context, network, address string) 
 	switch d.proxyType {
 	case "http":
 		return d.connectHTTPProxy(ctx, network, address)
-	case "https:":
+	case "https":
 		return d.connectHTTPSProxy(ctx, network, address)
 	case "socks5":
 		return d.connectSOCKS5Proxy(ctx, network, address)
@@ -90,10 +96,11 @@ func (d *ProxyDialer) connectHTTPProxy(ctx context.Context, network, address str
 }
 
 func (d *ProxyDialer) connectHTTPSProxy(ctx context.Context, network, address string) (net.Conn, error) {
-	conn, err := d.forward.DialContext(ctx, "tcp", d.proxyAddr)
+	conn, err := tls.DialWithDialer(d.forward, "tcp", d.proxyAddr, defauleTLSConfig)
 	if err != nil {
 		return nil, &net.OpError{Op: "proxyconnect", Net: "tcp", Err: err}
 	}
+
 	connectReq := &http.Request{
 		Method: "CONNECT",
 		URL:    &url.URL{Opaque: address},

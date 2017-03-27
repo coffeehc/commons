@@ -1,13 +1,13 @@
 package client_test
 
 import (
-	"testing"
-
 	"bytes"
+	"testing"
+	"time"
+
 	"github.com/coffeehc/commons/convers"
 	"github.com/coffeehc/commons/https/client"
 	"github.com/coffeehc/logger"
-	"time"
 )
 
 func Test_Client_Do(t *testing.T) {
