@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"sync"
@@ -123,5 +124,9 @@ func (co *HTTPClientOptions) NewTransport(dialContext func(ctx context.Context, 
 		//ExpectContinueTimeout: 1 * time.Second,
 		DisableKeepAlives:  disableKeepAlives,
 		DisableCompression: true,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify:          true,
+			DynamicRecordSizingDisabled: true,
+		},
 	}
 }

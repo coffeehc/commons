@@ -101,11 +101,7 @@ func (d *ProxyDialer) connectHTTPSProxy(ctx context.Context, network, address st
 	if err != nil {
 		return nil, &net.OpError{Op: "proxyconnect", Net: "tcp", Err: err}
 	}
-	_conn := tls.Client(conn, defauleTLSConfig)
-	err = _conn.Handshake()
-	if err != nil {
-		return nil, &net.OpError{Op: "proxyconnect", Net: "tcp", Err: err}
-	}
+	//握手实在CONECT之后的,看Transport的源码就知道了
 	connectReq := &http.Request{
 		Method: "CONNECT",
 		URL:    &url.URL{Opaque: address},
