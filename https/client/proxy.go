@@ -22,7 +22,8 @@ import (
 var NotSuportScheme = errors.New("not suport proxy scheme")
 
 var defauleTLSConfig = &tls.Config{
-	InsecureSkipVerify: false,
+	InsecureSkipVerify:          true,
+	DynamicRecordSizingDisabled: true,
 }
 
 func NewProxyDialer(proxyTarget string, forward *net.Dialer) (*ProxyDialer, error) {
@@ -96,11 +97,15 @@ func (d *ProxyDialer) connectHTTPProxy(ctx context.Context, network, address str
 }
 
 func (d *ProxyDialer) connectHTTPSProxy(ctx context.Context, network, address string) (net.Conn, error) {
-	conn, err := tls.DialWithDialer(d.forward, "tcp", d.proxyAddr, defauleTLSConfig)
+	conn, err := d.forward.DialContext(ctx, "tcp", d.proxyAddr)
 	if err != nil {
 		return nil, &net.OpError{Op: "proxyconnect", Net: "tcp", Err: err}
 	}
-
+	_conn := tls.Client(conn, defauleTLSConfig)
+	err = _conn.Handshake()
+	if err != nil {
+		return nil, &net.OpError{Op: "proxyconnect", Net: "tcp", Err: err}
+	}
 	connectReq := &http.Request{
 		Method: "CONNECT",
 		URL:    &url.URL{Opaque: address},
