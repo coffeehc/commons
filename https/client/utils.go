@@ -2,13 +2,13 @@ package client
 
 import (
 	"errors"
+	"flag"
 	"io"
 	"io/ioutil"
 	"mime"
 	"net/url"
 	"strings"
 
-	"flag"
 	"github.com/coffeehc/logger"
 	"golang.org/x/text/encoding/simplifiedchinese"
 )
