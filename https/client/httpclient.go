@@ -125,12 +125,6 @@ func (c *_Client) send(req *_HTTPRequest) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	if req.cookieJar != nil {
-		_url := req.GetRealRequest().URL
-		if rc := resp.Cookies(); len(rc) > 0 {
-			req.cookieJar.SetCookies(_url, rc)
-		}
-	}
 	return resp, nil
 }
 
@@ -200,6 +194,13 @@ func send(_req *_HTTPRequest, deadline time.Time) (*http.Response, error) {
 			}
 		}
 		return nil, err
+	}
+	//设置Cookie
+	if _req.cookieJar != nil {
+		_url := req.URL
+		if rc := resp.Cookies(); len(rc) > 0 {
+			_req.cookieJar.SetCookies(_url, rc)
+		}
 	}
 	if !deadline.IsZero() {
 		resp.Body = &cancelTimerBody{
@@ -313,6 +314,9 @@ func doFollowingRedirects(timeout time.Duration, _req *_HTTPRequest, shouldRedir
 
 		if !shouldRedirect(resp.StatusCode) {
 			return resp, nil
+		}
+		for _, cookie := range resp.Cookies() {
+			req.AddCookie(cookie)
 		}
 	}
 }
