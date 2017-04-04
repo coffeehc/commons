@@ -297,6 +297,7 @@ func doFollowingRedirects(timeout time.Duration, _req *_HTTPRequest, shouldRedir
 				ue.(*url.Error).URL = loc
 				return resp, ue
 			}
+			_req.req = req
 		}
 
 		reqs = append(reqs, req)
@@ -315,9 +316,7 @@ func doFollowingRedirects(timeout time.Duration, _req *_HTTPRequest, shouldRedir
 		if !shouldRedirect(resp.StatusCode) {
 			return resp, nil
 		}
-		for _, cookie := range resp.Cookies() {
-			req.AddCookie(cookie)
-		}
+		_req.cookieJar.SetCookies(resp.Request.URL, resp.Cookies())
 	}
 }
 
