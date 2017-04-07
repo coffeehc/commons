@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/coffeehc/logger"
+	"net/http/cookiejar"
 )
 
 func NewHTTPClient(defaultOptions *HTTPClientOptions, globalTransport *http.Transport) HTTPClient {
@@ -316,7 +317,12 @@ func doFollowingRedirects(timeout time.Duration, _req *_HTTPRequest, shouldRedir
 		if !shouldRedirect(resp.StatusCode) {
 			return resp, nil
 		}
-		_req.cookieJar.SetCookies(resp.Request.URL, resp.Cookies())
+		if len(resp.Cookies()) > 0 {
+			if _req.cookieJar == nil {
+				_req.cookieJar, _ = cookiejar.New(nil)
+			}
+			_req.cookieJar.SetCookies(resp.Request.URL, resp.Cookies())
+		}
 	}
 }
 

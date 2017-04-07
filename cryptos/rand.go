@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
+	mathrand "math/rand"
 )
 
 //GetRandInt64 获取随机的64位整数
@@ -34,4 +35,9 @@ func GetRandBytes(size int) []byte {
 		return GetRandBytes(size)
 	}
 	return bs
+}
+
+func GetRandInt(max, min int) int {
+	v := mathrand.Intn(max - min)
+	return v + min
 }

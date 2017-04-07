@@ -19,6 +19,8 @@ import (
 	"golang.org/x/text/width"
 )
 
+var ErrorScope_ProxyConnect = "proxyconnect"
+
 var NotSuportScheme = errors.New("not suport proxy scheme")
 
 var defauleTLSConfig = &tls.Config{
@@ -83,7 +85,7 @@ func (d *ProxyDialer) connectSOCKS5Proxy(ctx context.Context, network, address s
 	}
 	dialer, err := proxy.SOCKS5("tcp", d.proxyAddr, auth, d.forward)
 	if err != nil {
-		return nil, &net.OpError{Op: "proxyconnect", Net: "tcp", Err: err}
+		return nil, &net.OpError{Op: ErrorScope_ProxyConnect, Net: "tcp", Err: err}
 	}
 	return dialer.Dial(network, address)
 }
@@ -91,7 +93,7 @@ func (d *ProxyDialer) connectSOCKS5Proxy(ctx context.Context, network, address s
 func (d *ProxyDialer) connectHTTPProxy(ctx context.Context, network, address string) (net.Conn, error) {
 	conn, err := d.forward.DialContext(ctx, "tcp", d.proxyAddr)
 	if err != nil {
-		return nil, &net.OpError{Op: "proxyconnect", Net: "tcp", Err: err}
+		return nil, &net.OpError{Op: ErrorScope_ProxyConnect, Net: "tcp", Err: err}
 	}
 	return conn, nil
 }
@@ -99,7 +101,7 @@ func (d *ProxyDialer) connectHTTPProxy(ctx context.Context, network, address str
 func (d *ProxyDialer) connectHTTPSProxy(ctx context.Context, network, address string) (net.Conn, error) {
 	conn, err := d.forward.DialContext(ctx, "tcp", d.proxyAddr)
 	if err != nil {
-		return nil, &net.OpError{Op: "proxyconnect", Net: "tcp", Err: err}
+		return nil, &net.OpError{Op: ErrorScope_ProxyConnect, Net: "tcp", Err: err}
 	}
 	//握手实在CONECT之后的,看Transport的源码就知道了
 	connectReq := &http.Request{
