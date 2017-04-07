@@ -48,4 +48,5 @@ type HTTPResponse interface {
 
 type CookieJarManager interface {
 	GetCookieJar(key string) http.CookieJar
+	RemoveCookieJar(key string)
 }

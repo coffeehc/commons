@@ -34,3 +34,9 @@ func (cjm *_CookieJarManager) GetCookieJar(key string) http.CookieJar {
 	cjm.rwMutex.Unlock()
 	return jar
 }
+
+func (cjm *_CookieJarManager) RemoveCookieJar(key string) {
+	cjm.rwMutex.Lock()
+	defer cjm.rwMutex.Unlock()
+	delete(cjm.jars, key)
+}
