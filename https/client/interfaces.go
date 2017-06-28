@@ -44,6 +44,7 @@ type HTTPResponse interface {
 	GetHeader() http.Header
 	GetContentType() string
 	GetStatusCode() int
+	GetCookies() []*http.Cookie
 }
 
 type CookieJarManager interface {
