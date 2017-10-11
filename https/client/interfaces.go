@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	ContentTypeJson   = "application/json"
-	ContentTypeStream = "application/octet-stream"
+	ContentTypeJson          = "application/json"
+	ContentTypeStream        = "application/octet-stream"
+	ContentTypeFormUrlencode = "application/x-www-form-urlencoded"
 )
 
 type HTTPClient interface {
