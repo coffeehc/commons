@@ -3,13 +3,13 @@ package client
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
 	"net/url"
 	"strings"
 
-	"github.com/coffeehc/logger"
 	"github.com/pquerna/ffjson/ffjson"
 	"golang.org/x/text/encoding/simplifiedchinese"
 )
@@ -17,7 +17,7 @@ import (
 var printBody = flag.Bool("printbody", false, "读取body的时候打印body")
 
 // ReadBodyToString 读取 body 内容
-func ReadBody(resp HTTPResponse, charset string) ([]byte, error) {
+func (impl *clientImpl)ReadBody(resp HTTPResponse, charset string) ([]byte, error) {
 	if resp == nil {
 		return nil, errors.New("response is nil")
 	}
@@ -43,13 +43,13 @@ func ReadBody(resp HTTPResponse, charset string) ([]byte, error) {
 		return nil, err
 	}
 	if *printBody {
-		logger.Debug("code is %d,body is %s", resp.GetStatusCode(), data)
+		impl.logger.Debug(fmt.Sprintf("code is %d,body is %s", resp.GetStatusCode(), data))
 	}
 	return data, nil
 }
 
-func ReaderBodyByJson(resp HTTPResponse, t interface{}) error {
-	data, err := ReadBody(resp, "")
+func (impl *clientImpl)ReaderBodyByJson(resp HTTPResponse, t interface{}) error {
+	data, err := impl.ReadBody(resp, "")
 	if err != nil {
 		return err
 	}

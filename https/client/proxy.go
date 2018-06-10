@@ -12,7 +12,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/coffeehc/commons/convers"
+	"git.xiagaogao.com/coffee/commons/convers"
 	"golang.org/x/net/idna"
 	"golang.org/x/net/proxy"
 	"golang.org/x/text/unicode/norm"

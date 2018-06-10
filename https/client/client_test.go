@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coffeehc/commons/convers"
-	"github.com/coffeehc/commons/https/client"
-	"github.com/coffeehc/logger"
+	"git.xiagaogao.com/coffee/commons/convers"
+	"git.xiagaogao.com/coffee/commons/https/client"
+	"go.uber.org/zap"
 )
 
 func Test_Client_Do(t *testing.T) {
-	logger.SetDefaultLevel("/", logger.LevelDebug)
+	logger,_ := zap.NewDevelopment()
 	option := &client.HTTPClientOptions{
 		Timeout:       3 * time.Second,
 		DialerTimeout: 3 * time.Second,

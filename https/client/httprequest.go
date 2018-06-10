@@ -6,71 +6,78 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"git.xiagaogao.com/coffee/boot/errors"
+	"go.uber.org/zap"
 )
 
-func NewHTTPRequest(method, urlStr string) (HTTPRequest, error) {
+func NewHTTPRequest(method, urlStr string,errorService errors.Service,logger *zap.Logger) (HTTPRequest, error) {
 	req, err := http.NewRequest(method, urlStr, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &_HTTPRequest{
+	return &httpRequestImpl{
 		req: req,
+		errorService:errorService,
+		logger:logger,
 	}, nil
 }
 
-type _HTTPRequest struct {
+type httpRequestImpl struct {
 	req       *http.Request
 	cookieJar http.CookieJar
 	transport *http.Transport
+	errorService errors.Service
+	logger *zap.Logger
 }
 
-func (_req *_HTTPRequest) SetTransport(transport *http.Transport) {
-	_req.transport = transport
+func (impl *httpRequestImpl) SetTransport(transport *http.Transport) {
+	impl.transport = transport
 }
 
-func (_req *_HTTPRequest) SetMethod(method string) {
-	_req.req.Method = method
+func (impl *httpRequestImpl) SetMethod(method string) {
+	impl.req.Method = method
 }
-func (_req *_HTTPRequest) SetHeader(k, v string) {
-	_req.req.Header.Set(k, v)
+func (impl *httpRequestImpl) SetHeader(k, v string) {
+	impl.req.Header.Set(k, v)
 }
-func (_req *_HTTPRequest) SetCookieJar(cookieJar http.CookieJar) {
-	_req.cookieJar = cookieJar
+func (impl *httpRequestImpl) SetCookieJar(cookieJar http.CookieJar) {
+	impl.cookieJar = cookieJar
 }
-func (_req *_HTTPRequest) SetBody(body []byte) {
-	_req.req.Body = ioutil.NopCloser(bytes.NewReader(body))
+func (impl *httpRequestImpl) SetBody(body []byte) {
+	impl.req.Body = ioutil.NopCloser(bytes.NewReader(body))
 }
-func (_req *_HTTPRequest) SetBodyStream(reader io.ReadCloser) {
-	_req.req.Body = reader
+func (impl *httpRequestImpl) SetBodyStream(reader io.ReadCloser) {
+	impl.req.Body = reader
 }
 
-func (_req *_HTTPRequest) SetURI(requestURL string) error {
+func (impl *httpRequestImpl) SetURI(requestURL string) error {
 	_url, err := url.ParseRequestURI(requestURL)
 	if err != nil {
 		return err
 	}
-	_req.req.URL = _url
+	impl.req.URL = _url
 	return nil
 }
-func (_req *_HTTPRequest) SetBasicAuth(username, password string) {
-	_req.req.SetBasicAuth(username, password)
+func (impl *httpRequestImpl) SetBasicAuth(username, password string) {
+	impl.req.SetBasicAuth(username, password)
 }
-func (_req *_HTTPRequest) SetContentType(contentType string) {
-	_req.req.Header.Set("Content-Type", contentType)
+func (impl *httpRequestImpl) SetContentType(contentType string) {
+	impl.req.Header.Set("Content-Type", contentType)
 }
-func (_req *_HTTPRequest) SetCookie(cookie *http.Cookie) {
-	_req.req.AddCookie(cookie)
+func (impl *httpRequestImpl) SetCookie(cookie *http.Cookie) {
+	impl.req.AddCookie(cookie)
 }
-func (_req *_HTTPRequest) SetReferer(referer string) {
-	_req.req.Header.Set("referer", referer)
+func (impl *httpRequestImpl) SetReferer(referer string) {
+	impl.req.Header.Set("referer", referer)
 }
-func (_req *_HTTPRequest) SetUserAgent(userAgent string) {
-	_req.req.Header.Set("user-agent", userAgent)
+func (impl *httpRequestImpl) SetUserAgent(userAgent string) {
+	impl.req.Header.Set("user-agent", userAgent)
 }
 
-func (_req *_HTTPRequest) SetProto(proto string) {
-	_req.req.Proto = proto
+func (impl *httpRequestImpl) SetProto(proto string) {
+	impl.req.Proto = proto
 }
-func (_req *_HTTPRequest) GetRealRequest() *http.Request {
-	return _req.req
+func (impl *httpRequestImpl) GetRealRequest() *http.Request {
+	return impl.req
 }

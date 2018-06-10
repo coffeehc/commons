@@ -2,7 +2,6 @@ package client
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,46 +10,53 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coffeehc/logger"
 	"net/http/cookiejar"
+
+	"git.xiagaogao.com/coffee/boot/errors"
+	"go.uber.org/zap"
 )
 
-func NewHTTPClient(defaultOptions *HTTPClientOptions, globalTransport *http.Transport) HTTPClient {
+func NewHTTPClient(defaultOptions *HTTPClientOptions, globalTransport *http.Transport,errorService errors.Service,logger *zap.Logger) HTTPClient {
+	errorService = errorService.NewService("httpclient")
 	if defaultOptions == nil {
 		defaultOptions = &HTTPClientOptions{}
 	}
 	if globalTransport == nil {
 		globalTransport = defaultOptions.NewTransport(nil)
 	}
-	return &_Client{
+	return &clientImpl{
 		options:          defaultOptions,
 		defaultTransport: globalTransport,
 		timeout:          defaultOptions.GetTimeout(),
+		errorService:errorService,
+		logger:logger,
 	}
 }
 
-type _Client struct {
+type clientImpl struct {
 	options          *HTTPClientOptions
 	defaultTransport *http.Transport
 	timeout          time.Duration
+	errorService errors.Service
+	logger *zap.Logger
 }
 
-func (c *_Client) Config() *HTTPClientOptions {
-	return c.options
+func (impl *clientImpl) Config() *HTTPClientOptions {
+	return impl.options
 }
 
-func (c *_Client) Get(url string) (HTTPResponse, error) {
-	req, err := NewHTTPRequest("GET", url)
+func (impl *clientImpl) Get(url string) (HTTPResponse, error) {
+	req, err := NewHTTPRequest("GET", url,impl.errorService,impl.logger)
 	if err != nil {
 		return nil, err
 	}
 	req.SetMethod("GET")
 	req.SetURI(url)
-	return c.Do(req, true)
+	return impl.Do(req, true)
 }
 
-func (c *_Client) POST(url string, body io.Reader, contentType string) (HTTPResponse, error) {
-	req, err := NewHTTPRequest("POST", url)
+func (impl *clientImpl) POST(url string, body io.Reader, contentType string) (HTTPResponse, error) {
+	req, err := NewHTTPRequest("POST", url,impl.errorService,impl.logger)
 	if err != nil {
 		return nil, err
 	}
@@ -63,18 +69,18 @@ func (c *_Client) POST(url string, body io.Reader, contentType string) (HTTPResp
 	}
 	req.SetBodyStream(readerCloser)
 	req.SetContentType(contentType)
-	return c.Do(req, true)
+	return impl.Do(req, true)
 }
 
-func (c *_Client) Do(req HTTPRequest, autoRedirect bool) (HTTPResponse, error) {
-	_req := c.init(req)
-	resp, err := c.do(_req, autoRedirect)
+func (impl *clientImpl) Do(req HTTPRequest, autoRedirect bool) (HTTPResponse, error) {
+	_req := impl.init(req)
+	resp, err := impl.do(_req, autoRedirect)
 	if err != nil {
 		return nil, err
 	}
 	//TODO 异步关闭response的body,防止使用者没有关闭body
 	go func() {
-		timeout := c.Config().Timeout
+		timeout := impl.Config().Timeout
 		if timeout == 0 || timeout > time.Second*5 {
 			timeout = time.Second * 3
 		}
@@ -87,28 +93,28 @@ func (c *_Client) Do(req HTTPRequest, autoRedirect bool) (HTTPResponse, error) {
 			req.Body.Close()
 		}
 	}()
-	return newHTTPResponse(resp), nil
+	return newHTTPResponse(resp,impl.errorService,impl.logger), nil
 }
 
-func (c *_Client) do(req *_HTTPRequest, autoRedirect bool) (*http.Response, error) {
+func (impl *clientImpl) do(req *httpRequestImpl, autoRedirect bool) (*http.Response, error) {
 	realRequest := req.GetRealRequest()
-	c.options.setHeader(realRequest)
+	impl.options.setHeader(realRequest)
 	if autoRedirect {
 		method := realRequest.Method
 		if method == "GET" || method == "HEAD" {
-			return doFollowingRedirects(c.timeout, req, shouldRedirectGet)
+			return impl.doFollowingRedirects(impl.timeout, req, impl.shouldRedirectGet)
 		}
 		if method == "POST" || method == "PUT" {
-			return doFollowingRedirects(c.timeout, req, shouldRedirectPost)
+			return impl.doFollowingRedirects(impl.timeout, req, impl.shouldRedirectPost)
 		}
 	}
-	return c.send(req)
+	return impl.send(req)
 }
 
-func (c *_Client) init(req HTTPRequest) *_HTTPRequest {
-	_req := req.(*_HTTPRequest)
+func (impl *clientImpl) init(req HTTPRequest) *httpRequestImpl {
+	_req := req.(*httpRequestImpl)
 	if _req.transport == nil {
-		_req.transport = c.defaultTransport
+		_req.transport = impl.defaultTransport
 	}
 	realRequest := req.GetRealRequest()
 	if _req.cookieJar != nil {
@@ -120,8 +126,8 @@ func (c *_Client) init(req HTTPRequest) *_HTTPRequest {
 	return _req
 }
 
-func (c *_Client) send(req *_HTTPRequest) (*http.Response, error) {
-	deadline := deadline(c.timeout)
+func (impl *clientImpl) send(req *httpRequestImpl) (*http.Response, error) {
+	deadline := deadline(impl.timeout)
 	resp, err := send(req, deadline)
 	if err != nil {
 		return nil, err
@@ -129,7 +135,7 @@ func (c *_Client) send(req *_HTTPRequest) (*http.Response, error) {
 	return resp, nil
 }
 
-func send(_req *_HTTPRequest, deadline time.Time) (*http.Response, error) {
+func send(_req *httpRequestImpl, deadline time.Time) (*http.Response, error) {
 	//ireq *http.Request, rt http.RoundTripper
 	ireq := _req.GetRealRequest()
 	rt := _req.transport
@@ -137,17 +143,17 @@ func send(_req *_HTTPRequest, deadline time.Time) (*http.Response, error) {
 
 	if rt == nil {
 		closeBody(req.Body)
-		return nil, errors.New("http: no Client.Transport or DefaultTransport")
+		return nil, _req.errorService.SystemError("http: no Client.Transport or DefaultTransport")
 	}
 
 	if req.URL == nil {
 		closeBody(req.Body)
-		return nil, errors.New("http: nil Request.URL")
+		return nil, _req.errorService.SystemError("http: nil Request.URL")
 	}
 
 	if req.RequestURI != "" {
 		closeBody(req.Body)
-		return nil, errors.New("http: Request.RequestURI can't be set in client requests.")
+		return nil, _req.errorService.SystemError("http: Request.RequestURI can't be set in client requests.")
 	}
 
 	// forkReq forks req into a shallow clone of ireq the first
@@ -184,14 +190,14 @@ func send(_req *_HTTPRequest, deadline time.Time) (*http.Response, error) {
 	if err != nil {
 		stopTimer()
 		if resp != nil {
-			logger.Warn("RoundTripper returned a response & error; ignoring response")
+			_req.logger.Warn("RoundTripper returned a response & error; ignoring response")
 		}
 		if tlsErr, ok := err.(tls.RecordHeaderError); ok {
 			// If we get a bad TLS record header, check to see if the
 			// response looks like HTTP and give a more helpful error.
 			// See golang.org/issue/11111.
 			if string(tlsErr.RecordHeader[:]) == "HTTP/" {
-				err = errors.New("http: server gave HTTP response to HTTPS client")
+				err = _req.errorService.SystemError("http: server gave HTTP response to HTTPS client")
 			}
 		}
 		return nil, err
@@ -213,11 +219,11 @@ func send(_req *_HTTPRequest, deadline time.Time) (*http.Response, error) {
 	return resp, nil
 }
 
-func doFollowingRedirects(timeout time.Duration, _req *_HTTPRequest, shouldRedirect func(int) bool) (*http.Response, error) {
+func (impl *clientImpl)doFollowingRedirects(timeout time.Duration, _req *httpRequestImpl, shouldRedirect func(int) bool) (*http.Response, error) {
 	req := _req.GetRealRequest()
 	if req.URL == nil {
 		closeBody(req.Body)
-		return nil, errors.New("http: nil Request.URL")
+		return nil, _req.errorService.SystemError("http: nil Request.URL")
 	}
 
 	var (
@@ -270,7 +276,7 @@ func doFollowingRedirects(timeout time.Duration, _req *_HTTPRequest, shouldRedir
 			if ref := refererForURL(reqs[len(reqs)-1].URL, req.URL); ref != "" {
 				req.Header.Set("Referer", ref)
 			}
-			err = defaultCheckRedirect(req, reqs)
+			err = impl.defaultCheckRedirect(req, reqs)
 			// Sentinel error to let users select the
 			// previous response, without closing its
 			// body. See Issue 10069.
@@ -349,16 +355,16 @@ func refererForURL(lastReq, newReq *url.URL) string {
 }
 
 //TODO 这个使用默认的,暂时是不需要单独处理的
-func defaultCheckRedirect(req *http.Request, via []*http.Request) error {
+func (impl *clientImpl)defaultCheckRedirect(req *http.Request, via []*http.Request) error {
 	if len(via) >= 10 {
-		return errors.New("stopped after 10 redirects")
+		return impl.errorService.SystemError("stopped after 10 redirects")
 	}
 	return nil
 }
 
 // True if the specified HTTP status code is one for which the Get utility should
 // automatically redirect.
-func shouldRedirectGet(statusCode int) bool {
+func (impl *clientImpl)shouldRedirectGet(statusCode int) bool {
 	switch statusCode {
 	case http.StatusMovedPermanently, http.StatusFound, http.StatusSeeOther, http.StatusTemporaryRedirect:
 		return true
@@ -368,7 +374,7 @@ func shouldRedirectGet(statusCode int) bool {
 
 // True if the specified HTTP status code is one for which the Post utility should
 // automatically redirect.
-func shouldRedirectPost(statusCode int) bool {
+func (impl *clientImpl)shouldRedirectPost(statusCode int) bool {
 	switch statusCode {
 	case http.StatusFound, http.StatusSeeOther:
 		return true

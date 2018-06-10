@@ -3,37 +3,44 @@ package client
 import (
 	"io"
 	"net/http"
+
+	"git.xiagaogao.com/coffee/boot/errors"
+	"go.uber.org/zap"
 )
 
-func newHTTPResponse(resp *http.Response) HTTPResponse {
-	return &_HTTPResponse{
+func newHTTPResponse(resp *http.Response,errorService errors.Service,logger *zap.Logger) HTTPResponse {
+	return &httpResponseImpl{
 		resp: resp,
+		errorService:errorService,
+		logger:logger,
 	}
 }
 
-type _HTTPResponse struct {
+type httpResponseImpl struct {
 	resp *http.Response
+	errorService errors.Service
+	logger *zap.Logger
 }
 
-func (r *_HTTPResponse) GetBody() io.ReadCloser {
-	return r.resp.Body
+func ( impl *httpResponseImpl) GetBody() io.ReadCloser {
+	return impl.resp.Body
 }
-func (r *_HTTPResponse) GetRealResponse() *http.Response {
-	return r.resp
-}
-
-func (r *_HTTPResponse) GetHeader() http.Header {
-	return r.resp.Header
+func ( impl *httpResponseImpl) GetRealResponse() *http.Response {
+	return impl.resp
 }
 
-func (r *_HTTPResponse) GetContentType() string {
-	return r.resp.Header.Get("Content-Type")
+func ( impl *httpResponseImpl) GetHeader() http.Header {
+	return impl.resp.Header
 }
 
-func (r *_HTTPResponse) GetStatusCode() int {
-	return r.resp.StatusCode
+func ( impl *httpResponseImpl) GetContentType() string {
+	return impl.resp.Header.Get("Content-Type")
 }
 
-func (r *_HTTPResponse) GetCookies() []*http.Cookie {
-	return r.resp.Cookies()
+func ( impl *httpResponseImpl) GetStatusCode() int {
+	return impl.resp.StatusCode
+}
+
+func ( impl *httpResponseImpl) GetCookies() []*http.Cookie {
+	return impl.resp.Cookies()
 }

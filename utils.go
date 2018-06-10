@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/coffeehc/logger"
+	"git.xiagaogao.com/coffee/boot/logs"
+	"go.uber.org/zap"
 )
 
 var (
@@ -17,10 +18,10 @@ var (
 )
 
 //GetLocalIP 获取本地Ip
-func GetLocalIP() net.IP {
+func GetLocalIP(logger *zap.Logger) net.IP {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		logger.Error("无法获取网络接口信息,%s", err)
+		logger.Error("无法获取网络接口信息,%s", logs.F_Error(err))
 		return _localIP
 	}
 
