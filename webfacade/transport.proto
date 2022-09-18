@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package webutils;
+
+import "google/protobuf/any.proto";
+
+option go_package = "gituhb.com/coffeehc/commons/webfacade;webfacade";
+
+//Http 头封装
+message Header {
+    string key = 1;
+    string value = 2;
+}
+
+message HttpRequest {
+    string url = 1;
+    string method = 2;
+    repeated Header headers = 3;
+    bytes body = 4;
+}
+
+message HttpResponse {
+    int64 status_code = 1;
+    repeated Header headers = 2;
+    string content_type = 3;
+    bytes body = 4;
+}
+
+message PBResponse{
+    int64 code = 1;
+    string message = 2;
+    int64 request_id= 3;
+    bool success = 4;
+    bytes payload = 5;
+}
+
+message PBBody{
+    map<string,google.protobuf.Any > payload = 1;
+}

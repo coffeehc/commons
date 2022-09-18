@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package sequences;
+
+
+option go_package = "github.com/coffeehc/commons/sequences;sequences";
+
+message Sequence{
+	int64 id = 1;
+	int64 createTimeMS = 2;
+  int64 nodeID  =3;
+  int64 index = 4;
+  int64 dcID = 5;
+}

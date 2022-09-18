@@ -1,41 +1,53 @@
 package cryptos
 
 import (
+	"crypto/md5"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"hash"
+	"sync"
 )
 
-//HashService  hash service
+var HashServiceWithMd5 = NewHashService(md5.New)
+var HashServiceWithSh1 = NewHashService(sha1.New)
+var HashServiceWithSha512 = NewHashService(sha512.New)
+var HashServiceWithSha256 = NewHashService(sha256.New)
+
+// HashService  hash service
 type HashService interface {
 	Hash(data []byte) []byte
 	HashToHexString(data []byte) string
 }
 
-type _HashService struct {
-	pool chan hash.Hash
+type hashServiceImpl struct {
+	pool sync.Pool // chan hash.Hash
 }
 
-//NewHashService new a HashService
-func NewHashService(hashBuilder func() hash.Hash, concurrent int) HashService {
-	pool := make(chan hash.Hash, concurrent)
-	for i := 0; i < concurrent; i++ {
-		pool <- hashBuilder()
+// NewHashService new a HashService
+func NewHashService(hashBuilder func() hash.Hash) HashService {
+	pool := sync.Pool{
+		New: func() interface{} {
+			return hashBuilder()
+		},
 	}
-	return &_HashService{
+	return &hashServiceImpl{
 		pool: pool,
 	}
 }
 
-func (service *_HashService) Hash(data []byte) []byte {
-	hashImpl := <-service.pool
+func (impl *hashServiceImpl) Hash(data []byte) []byte {
+	v := impl.pool.Get()
+	hashImpl := v.(hash.Hash)
 	defer func() {
 		hashImpl.Reset()
-		service.pool <- hashImpl
+		impl.pool.Put(hashImpl)
 	}()
 	hashImpl.Write(data)
 	return hashImpl.Sum(nil)
 }
 
-func (service *_HashService) HashToHexString(data []byte) string {
-	return hex.EncodeToString(service.Hash(data))
+func (impl *hashServiceImpl) HashToHexString(data []byte) string {
+	return hex.EncodeToString(impl.Hash(data))
 }
