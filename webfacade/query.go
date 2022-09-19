@@ -2,14 +2,14 @@ package webfacade
 
 import (
 	"fmt"
+	"github.com/coffeehc/commons/dbsource/sqlbuilder"
+	"github.com/coffeehc/commons/sequences"
+	"github.com/coffeehc/commons/utils"
 	"math"
 	"strconv"
 	"strings"
 	"time"
 
-	"git.xiagaogao.com/base/cloudcommons/dbsource/sqlbuilder"
-	"git.xiagaogao.com/base/cloudcommons/sequences"
-	"git.xiagaogao.com/base/cloudcommons/utils"
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
 	"github.com/gin-gonic/gin"

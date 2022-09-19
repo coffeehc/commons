@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"git.xiagaogao.com/base/cloudcommons/webfacade"
+	"github.com/coffeehc/commons/webfacade"
 	"github.com/gin-gonic/gin"
 )
 

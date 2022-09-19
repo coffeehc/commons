@@ -2,11 +2,11 @@ package middlewares
 
 import (
 	"context"
+	"github.com/coffeehc/commons/webfacade"
 	"net/http"
 	"strings"
 	"time"
 
-	"git.xiagaogao.com/base/cloudcommons/webfacade"
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/httpx"
