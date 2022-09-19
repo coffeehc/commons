@@ -2,9 +2,9 @@ package sqlbuilder
 
 import (
 	"fmt"
+	"github.com/coffeehc/commons/utils"
 	"time"
 
-	"git.xiagaogao.com/base/cloudcommons/utils"
 	"github.com/coffeehc/base/errors"
 )
 

@@ -2,20 +2,20 @@ package utils
 
 import (
 	"errors"
+	"github.com/coffeehc/commons/models"
 	"reflect"
 	"time"
 
-	"git.xiagaogao.com/base/cloudcommons/pb"
 	"google.golang.org/protobuf/proto"
 )
 
-func BuildError(message string) *pb.Error {
-	return &pb.Error{
+func BuildError(message string) *models.Error {
+	return &models.Error{
 		Message: message,
 	}
 }
 
-func ParsePayloadResponse(resp *pb.PayloadResponse, payload proto.Message) *pb.Error {
+func ParsePayloadResponse(resp *models.PayloadResponse, payload proto.Message) *models.Error {
 	err := resp.GetErr()
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func ParsePayloadResponse(resp *pb.PayloadResponse, payload proto.Message) *pb.E
 }
 
 func EncodeCacheSingleBytes(data []byte, exp time.Duration) ([]byte, error) {
-	cacheSingle := &pb.CacheSingle{
+	cacheSingle := &models.CacheSingle{
 		Data: data,
 		Exp:  time.Now().Add(exp).UnixNano(),
 	}
@@ -42,7 +42,7 @@ func EncodeCacheSingleProtoBuf(message proto.Message, exp time.Duration) ([]byte
 }
 
 func DecodeCacheSingleData(data []byte) ([]byte, error) {
-	cacheSingle := &pb.CacheSingle{}
+	cacheSingle := &models.CacheSingle{}
 	err := proto.Unmarshal(data, cacheSingle)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func EncodeCacheRepeatedProtoBuf(messages interface{}, exp time.Duration) ([]byt
 		}
 		datas[i] = data
 	}
-	cacheRepeated := &pb.CacheRepeated{
+	cacheRepeated := &models.CacheRepeated{
 		Datas: datas,
 		Exp:   time.Now().Add(exp).UnixNano(),
 	}
@@ -84,7 +84,7 @@ func EncodeCacheRepeatedProtoBuf(messages interface{}, exp time.Duration) ([]byt
 }
 
 func DecodeCacheRepeatedProtoBuf(data []byte, messagesPtr interface{}) error {
-	cacheRepeated := &pb.CacheRepeated{}
+	cacheRepeated := &models.CacheRepeated{}
 	err := proto.Unmarshal(data, cacheRepeated)
 	if err != nil {
 		return err

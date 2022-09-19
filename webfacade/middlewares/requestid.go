@@ -1,9 +1,9 @@
 package middlewares
 
 import (
-	"git.xiagaogao.com/base/cloudcommons/sequences"
-	"git.xiagaogao.com/base/cloudcommons/webfacade/internal"
 	"github.com/coffeehc/base/log"
+	"github.com/coffeehc/commons/sequences"
+	"github.com/coffeehc/commons/webfacade/internal"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )

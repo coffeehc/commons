@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package commons.model;
+
+option go_package = "gituhb.com/coffeehc/commons/models;models";
+
+//错误定义
+message Error {
+    string message = 1;
+    int64 ErrorCode = 2;
+}
+//分页查询
+message PageQuery {
+    int64 lastId = 1; //最后的ID
+    int64 pageNumber = 3; //页数
+    int64 pageSize = 2; //页大小
+    bool return_total = 4;
+}
+
+message PayloadRequest {
+    bytes payload = 1;
+}
+
+//通用Respose
+message PayloadResponse {
+    Error err = 1;
+    bytes payload = 2;
+}
+
+message CacheSingle {
+    bytes data = 1; //数据
+    int64 Exp = 2; //过期时间
+}
+
+message CacheRepeated {
+    repeated bytes datas = 1; //数据
+    int64 Exp = 2; //过期时间
+}
+
+message Empty {
+
+}

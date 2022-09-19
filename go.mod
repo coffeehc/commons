@@ -3,7 +3,6 @@ module github.com/coffeehc/commons
 go 1.19
 
 require (
-	git.xiagaogao.com/base/cloudcommons v0.0.0-20220823062742-d6e280c10870
 	github.com/RussellLuo/timingwheel v0.0.0-20220218152713-54845bda3108
 	github.com/cockroachdb/pebble v0.0.0-20220916170419-c04d128767e6
 	github.com/coffeehc/base v1.0.0

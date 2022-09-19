@@ -2,11 +2,11 @@ package middlewares
 
 import (
 	"encoding/base64"
+	"github.com/coffeehc/commons/utils"
+	"github.com/coffeehc/commons/webfacade"
 	"net/http"
 	"sync"
 
-	"git.xiagaogao.com/base/cloudcommons/utils"
-	"git.xiagaogao.com/base/cloudcommons/webfacade"
 	"github.com/coffeehc/base/errors"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"

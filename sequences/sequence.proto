@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package sequences;
+package commons.sequences;
 
 
 option go_package = "github.com/coffeehc/commons/sequences;sequences";

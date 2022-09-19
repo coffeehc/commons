@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package sqlbuilder;
+package commons.sqlbuilder;
 
-option go_package = "gituhb.com/coffeehc/commons/dbsource/sqlbuilder";
+option go_package = "gituhb.com/coffeehc/commons/dbsource/sqlbuilder;sqlbuilder";
 
 message PageQuery {
     int64 page_size = 1;
