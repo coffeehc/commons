@@ -17,7 +17,6 @@ func newService(_ context.Context) Service {
 
 type serviceImpl struct {
 	poolFactory sync.Map
-	mutex       sync.Mutex
 }
 
 func (impl *serviceImpl) GetByte(size int) []byte {
@@ -26,15 +25,16 @@ func (impl *serviceImpl) GetByte(size int) []byte {
 }
 
 func (impl *serviceImpl) getPool(size int) *sync.Pool {
-	v, loader := impl.poolFactory.Load(size)
-	if !loader {
-		mutex.Lock()
+	v, loaded := impl.poolFactory.Load(size)
+	if !loaded {
 		pool := &sync.Pool{}
 		pool.New = func() any {
 			return make([]byte, size)
 		}
-		v = pool
-		impl.poolFactory.LoadOrStore(size, pool)
+		v, loaded = impl.poolFactory.LoadOrStore(size, pool)
+		if loaded {
+			return v.(*sync.Pool)
+		}
 		return pool
 	}
 	return v.(*sync.Pool)
