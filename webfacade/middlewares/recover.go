@@ -17,7 +17,10 @@ func RecoverMiddleware(timeout time.Duration) gin.HandlerFunc {
 	log.Debug("构建异常处理中间件")
 	return func(c *gin.Context) {
 		ctx := context.WithValue(c.Request.Context(), "path", c.Request.RequestURI)
-		ctx, cancelFunc := context.WithTimeout(ctx, timeout)
+		cancelFunc := func() {}
+		if timeout > 0 {
+			ctx, cancelFunc = context.WithTimeout(ctx, timeout)
+		}
 		c.Request = c.Request.WithContext(ctx)
 		defer func() {
 			if err := recover(); err != nil {
@@ -46,7 +49,10 @@ func RecoverMiddleware(timeout time.Duration) gin.HandlerFunc {
 func RecoverJsonMiddleware(timeout time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := context.WithValue(c.Request.Context(), "path", c.Request.RequestURI)
-		ctx, cancelFunc := context.WithTimeout(ctx, timeout)
+		cancelFunc := func() {}
+		if timeout > 0 {
+			ctx, cancelFunc = context.WithTimeout(ctx, timeout)
+		}
 		c.Request = c.Request.WithContext(ctx)
 		defer func() {
 			if err := recover(); err != nil {
