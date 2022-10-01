@@ -1,8 +1,7 @@
-package ipcreater_test
+package ipcreator_test
 
 import (
 	"context"
-	"github.com/coffeehc/commons/ipcreater"
 	"go.uber.org/zap"
 	"testing"
 	"time"
@@ -35,12 +34,12 @@ func (s *suite) SetUpSuite(c *check.C) {
 	configuration.InitConfiguration(context.TODO(), configuration.ServiceInfo{
 		ServiceName: "test",
 	})
-	ipcreater.EnablePlugin(s.ctx)
+	ipcreator.EnablePlugin(s.ctx)
 	plugin.StartPlugins(s.ctx)
 }
 
 func (impl *suite) TestGetDir(c *check.C) {
-	service := ipcreater.GetService()
+	service := ipcreator.GetService()
 	ip, err := service.GetProvinceRandomIp("上海")
 	if err != nil {
 		log.Error("错误", zap.Error(err))

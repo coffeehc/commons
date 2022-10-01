@@ -1,4 +1,4 @@
-package ipcreater
+package ipcreator
 
 import (
 	"context"

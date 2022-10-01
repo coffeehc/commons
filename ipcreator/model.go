@@ -1,4 +1,4 @@
-package ipcreater
+package ipcreator
 
 type ipRange struct {
 	MinStr string `json:"min,omitempty"`
