@@ -14,8 +14,8 @@ import (
 var ipJson embed.FS
 
 type Service interface {
-	GetRandomIp() (string, error)
-	GetProvinceRandomIp(provinceName string) (string, error)
+	GetRandomIp() string
+	GetProvinceRandomIp(provinceName string) string
 }
 
 func newService(ctx context.Context) Service {
@@ -30,17 +30,19 @@ type serviceImpl struct {
 	allIpRanges []*ipRange
 }
 
-func (impl *serviceImpl) GetProvinceRandomIp(provinceName string) (string, error) {
+func (impl *serviceImpl) GetProvinceRandomIp(provinceName string) string {
 	list := impl.ips[provinceName]
 	ipRange := list[cryptos.GetRandInt(len(list)-1, 0)]
 	ip := cryptos.GetRandInt64()%(ipRange.Max-ipRange.Min) + ipRange.Min
-	return utils.Int64ToIp(ip)
+	ipStr, _ := utils.Int64ToIp(ip)
+	return ipStr
 }
 
-func (impl *serviceImpl) GetRandomIp() (string, error) {
+func (impl *serviceImpl) GetRandomIp() string {
 	ipRange := impl.allIpRanges[cryptos.GetRandInt(len(impl.allIpRanges)-1, 0)]
 	ip := cryptos.GetRandInt64()%(ipRange.Max-ipRange.Min) + ipRange.Min
-	return utils.Int64ToIp(ip)
+	ipStr, _ := utils.Int64ToIp(ip)
+	return ipStr
 }
 
 func (impl *serviceImpl) Start(ctx context.Context) error {

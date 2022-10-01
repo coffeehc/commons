@@ -2,7 +2,7 @@ package ipcreator_test
 
 import (
 	"context"
-	"go.uber.org/zap"
+	"github.com/coffeehc/commons/ipcreator"
 	"testing"
 	"time"
 
@@ -40,10 +40,6 @@ func (s *suite) SetUpSuite(c *check.C) {
 
 func (impl *suite) TestGetDir(c *check.C) {
 	service := ipcreator.GetService()
-	ip, err := service.GetProvinceRandomIp("上海")
-	if err != nil {
-		log.Error("错误", zap.Error(err))
-		return
-	}
+	ip := service.GetProvinceRandomIp("上海")
 	log.Debug(ip)
 }
