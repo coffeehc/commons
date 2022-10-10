@@ -2,6 +2,7 @@ package httpc
 
 import (
 	"context"
+	"github.com/coffeehc/base/log"
 	"net"
 	"net/http"
 	"time"
@@ -92,7 +93,9 @@ func DnsCacheDialContext(dialer *net.Dialer) func(context.Context, string, strin
 		if err != nil {
 			return nil, err
 		}
+
 		ips, _ := defaultResolver.Get(ctx, host) // 这里自己实现了一个带缓存的Resolver，但是这个Resolver没有识别unix socket的功能，如果host里有port也不能识别，所以host不能带port
+		log.Debug("解析域名", zap.String("address", address), zap.Strings("ips", ips))
 		for _, ip := range ips {
 			conn, err := dialer.DialContext(ctx, network, ip+":"+port) // 这里我们已经解析出来了ip和port，那么net.Dialer判断出来是个ip就不会再去解析了
 			if err == nil {

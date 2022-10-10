@@ -34,12 +34,12 @@ func (s *suite) SetUpSuite(c *check.C) {
 	configuration.InitConfiguration(context.TODO(), configuration.ServiceInfo{
 		ServiceName: "test",
 	})
-	ipcreator.EnablePlugin(s.ctx)
+	//ipcreator.EnablePlugin(s.ctx)
 	plugin.StartPlugins(s.ctx)
 }
 
 func (impl *suite) TestGetDir(c *check.C) {
-	service := ipcreator.GetService()
-	ip := service.GetProvinceRandomIp("上海")
+
+	ip := ipcreator.GetProvinceRandomIp("上海")
 	log.Debug(ip)
 }

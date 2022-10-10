@@ -1,34 +1,55 @@
 package ipcreator
 
 import (
-	"context"
-	"github.com/coffeehc/base/log"
-	"github.com/coffeehc/boot/plugin"
-	"go.uber.org/zap"
-	"sync"
+	"embed"
+	"github.com/coffeehc/commons/coder"
+	"github.com/coffeehc/commons/cryptos"
+	"github.com/coffeehc/commons/utils"
 )
 
-var service Service
-var mutex = new(sync.RWMutex)
-var name = "ipCreator"
-var scope = zap.String("scope", name)
+//go:embed ips.json
+var ipJson embed.FS
 
-func GetService() Service {
-	if service == nil {
-		log.Panic("Service没有初始化", scope)
+var ips map[string][]*ipRange = make(map[string][]*ipRange)
+var allIpRanges []*ipRange = make([]*ipRange, 0)
+
+func init() {
+	data, err := ipJson.ReadFile("ips.json")
+	if err != nil {
+		panic(err)
 	}
-	return service
+	err = coder.JsonCoder.Unmarshal(data, &ips)
+	if err != nil {
+		panic(err)
+	}
+	allIpRanges = make([]*ipRange, 0)
+	for _, vs := range ips {
+		for _, v := range vs {
+			v.Max, err = utils.IpToInt64(v.MaxStr)
+			if err != nil {
+				panic(err)
+			}
+			v.Min, err = utils.IpToInt64(v.MinStr)
+			if err != nil {
+				panic(err)
+			}
+		}
+		allIpRanges = append(allIpRanges, vs...)
+		//log.Debug("读取ip池", zap.String("province", k), zap.Int("count", len(vs)))
+	}
 }
 
-func EnablePlugin(ctx context.Context) {
-	if name == "" {
-		log.Panic("插件名称没有初始化")
-	}
-	mutex.Lock()
-	defer mutex.Unlock()
-	if service != nil {
-		return
-	}
-	service = newService(ctx)
-	plugin.RegisterPlugin(name, service)
+func GetProvinceRandomIp(provinceName string) string {
+	list := ips[provinceName]
+	ipRange := list[cryptos.GetRandInt(len(list)-1, 0)]
+	ip := cryptos.GetRandInt64()%(ipRange.Max-ipRange.Min) + ipRange.Min
+	ipStr, _ := utils.Int64ToIp(ip)
+	return ipStr
+}
+
+func GetRandomIp() string {
+	ipRange := allIpRanges[cryptos.GetRandInt(len(allIpRanges)-1, 0)]
+	ip := cryptos.GetRandInt64()%(ipRange.Max-ipRange.Min) + ipRange.Min
+	ipStr, _ := utils.Int64ToIp(ip)
+	return ipStr
 }
