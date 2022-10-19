@@ -6,9 +6,11 @@ import (
 	"github.com/cockroachdb/pebble"
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
+	"github.com/coffeehc/commons/coder"
 	"github.com/coffeehc/commons/sequences"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 const configKeyForDataDir = "localstorage.datadir"
@@ -28,6 +30,11 @@ type Service interface {
 	Del(key []byte) error
 	DelRange(start, end []byte) error
 	GetDB() *pebble.DB
+
+	SetPB(key []byte, body proto.Message) error
+	GetPB(key []byte, body proto.Message) (bool, error)
+	SetWithCoder(key []byte, body interface{}, coder2 coder.Coder) error
+	GetWithCoder(key []byte, body interface{}, coder2 coder.Coder) (bool, error)
 }
 
 func newService(ctx context.Context) Service {
@@ -58,6 +65,34 @@ func newService(ctx context.Context) Service {
 type serviceImpl struct {
 	storage         *pebble.DB
 	sequenceService sequences.SequenceService
+}
+
+func (impl *serviceImpl) SetPB(key []byte, body proto.Message) error {
+	return impl.SetWithCoder(key, body, coder.PBCoder)
+}
+
+func (impl *serviceImpl) GetPB(key []byte, body proto.Message) (bool, error) {
+	return impl.GetWithCoder(key, body, coder.PBCoder)
+}
+
+func (impl *serviceImpl) SetWithCoder(key []byte, body interface{}, coder2 coder.Coder) error {
+	data, err := coder2.Marshal(body)
+	if err != nil {
+		return err
+	}
+	return impl.Set(key, data)
+}
+
+func (impl *serviceImpl) GetWithCoder(key []byte, body interface{}, coder2 coder.Coder) (bool, error) {
+	data, ok, err := impl.Get(key)
+	if err != nil || !ok {
+		return ok, err
+	}
+	err = coder2.Unmarshal(data, body)
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
 }
 
 func (impl *serviceImpl) Range(startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error {
