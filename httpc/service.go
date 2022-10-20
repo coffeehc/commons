@@ -23,6 +23,7 @@ func NewClient(logger *zap.Logger) *resty.Client {
 		TLSHandshakeTimeout:   30 * time.Second,
 		ExpectContinueTimeout: 0,
 	})
+	httpClient.EnableTrace()
 	//httpClient.SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
 	//	DefaultLimiter.Take()
 	//	return nil
