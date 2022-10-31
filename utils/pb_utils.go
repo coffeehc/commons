@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"time"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 )
 
 func BuildError(message string) *models.Error {

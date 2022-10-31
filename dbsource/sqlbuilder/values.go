@@ -7,7 +7,7 @@ func NewValueWithStringArray(array []string) *Value {
 		return nil
 	}
 	return &Value{
-		ValueType:    ValueType_StringArray,
+		ValueType:    ValueTypeStringArray,
 		StringValues: array,
 	}
 }
@@ -17,7 +17,7 @@ func NewValueWithIntArray(array []int64) *Value {
 		return nil
 	}
 	return &Value{
-		ValueType: ValueType_IntArray,
+		ValueType: ValueTypeIntArray,
 		IntValues: array,
 	}
 }
@@ -27,7 +27,7 @@ func NewValueWithDoubleArray(array []float64) *Value {
 		return nil
 	}
 	return &Value{
-		ValueType:    ValueType_DoubleArray,
+		ValueType:    ValueTypeDoubleArray,
 		DoubleValues: array,
 	}
 }
@@ -41,7 +41,7 @@ func NewValueWithTimeArray(array []time.Time) *Value {
 		times = append(times, t.UnixNano())
 	}
 	return &Value{
-		ValueType: ValueType_TimeArray,
+		ValueType: ValueTypeTimeArray,
 		IntValues: times,
 	}
 }
@@ -51,7 +51,7 @@ func NewValueWithString(v string, skipEmpty bool) *Value {
 		return nil
 	}
 	return &Value{
-		ValueType:   ValueType_String,
+		ValueType:   ValueTypeString,
 		StringValue: v,
 	}
 }
@@ -61,7 +61,7 @@ func NewValueWithInt(v int64, skipEmpty bool) *Value {
 		return nil
 	}
 	return &Value{
-		ValueType: ValueType_Int,
+		ValueType: ValueTypeInt,
 		IntValue:  v,
 	}
 }
@@ -71,7 +71,7 @@ func NewValueWithDouble(v float64, skipEmpty bool) *Value {
 		return nil
 	}
 	return &Value{
-		ValueType:   ValueType_Doubel,
+		ValueType:   ValueTypeDoubel,
 		DoubleValue: v,
 	}
 }
@@ -81,14 +81,14 @@ func NewValueWithTime(v time.Time, skipEmpty bool) *Value {
 		return nil
 	}
 	return &Value{
-		ValueType: ValueType_Time,
+		ValueType: ValueTypeTime,
 		IntValue:  v.UnixNano(),
 	}
 }
 
 func NewValueWithBool(v bool) *Value {
 	return &Value{
-		ValueType: ValueType_Bool,
+		ValueType: ValueTypeBool,
 		BoolValue: v,
 	}
 }
@@ -98,7 +98,7 @@ func NewValueWithStatus(v int64, skipEmpty bool) *Value {
 		return nil
 	}
 	return &Value{
-		ValueType: ValueType_Status,
+		ValueType: ValueTypeStatus,
 		IntValue:  v,
 	}
 }
@@ -108,7 +108,7 @@ func NewValueWithStatuses(v []int64) *Value {
 		return nil
 	}
 	return &Value{
-		ValueType: ValueType_Statuses,
+		ValueType: ValueTypeStatuses,
 		IntValues: v,
 	}
 }

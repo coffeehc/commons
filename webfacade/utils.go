@@ -15,8 +15,8 @@ import (
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
 	"github.com/gin-gonic/gin"
+	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 )
 
 func SendPBSuccess(c *gin.Context, data proto.Message, code int64) {

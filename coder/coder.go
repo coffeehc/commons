@@ -4,8 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
-
-	"google.golang.org/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 )
 
 type Coder interface {

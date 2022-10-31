@@ -25,29 +25,29 @@ func getConditionFieldValue(condition *Condition) interface{} {
 		return nil
 	}
 	switch value.ValueType {
-	case ValueType_Int:
+	case ValueTypeInt:
 		return value.IntValue
-	case ValueType_Doubel:
+	case ValueTypeDoubel:
 		return value.DoubleValue
-	case ValueType_String:
+	case ValueTypeString:
 		if strings.ToLower(operator) == "like" {
 			return fmt.Sprintf("%%%s%%", value.StringValue)
 		}
 		return value.StringValue
-	case ValueType_Bool:
+	case ValueTypeBool:
 		return value.BoolValue
-	case ValueType_Time:
+	case ValueTypeTime:
 		if value.IntValue == 0 {
 			return nil
 		}
 		return time.Unix(0, value.IntValue)
-	case ValueType_IntArray:
+	case ValueTypeIntArray:
 		return value.IntValues
-	case ValueType_StringArray:
+	case ValueTypeStringArray:
 		return value.StringValues
-	case ValueType_DoubleArray:
+	case ValueTypeDoubleArray:
 		return value.DoubleValues
-	case ValueType_TimeArray:
+	case ValueTypeTimeArray:
 		ts := make([]time.Time, 0, len(value.IntValues))
 		for _, v := range value.IntValues {
 			if v != 0 {
@@ -55,18 +55,18 @@ func getConditionFieldValue(condition *Condition) interface{} {
 			}
 		}
 		return ts
-	case ValueType_Status:
+	case ValueTypeStatus:
 		if value.IntValue <= 0 {
 			return nil
 		}
 		return value.IntValue
-	case ValueType_Statuses:
+	case ValueTypeStatuses:
 		return value.IntValues
-	case ValueType_PgIntArray:
+	case ValueTypePgIntArray:
 		return pq.Array(value.IntValues)
-	case ValueType_PgFloatArray:
+	case ValueTypePgFloatArray:
 		return pq.Array(value.GetDoubleValues())
-	case ValueType_PgStringArray:
+	case ValueTypePgStringArray:
 		return pq.Array(value.GetStringValues())
 	default:
 		log.Error("未知的数据类型")

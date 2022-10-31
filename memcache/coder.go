@@ -6,7 +6,7 @@ import (
 
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
-	"google.golang.org/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 )
 
 var (

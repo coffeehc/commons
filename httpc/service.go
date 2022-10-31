@@ -11,11 +11,13 @@ import (
 	"go.uber.org/zap"
 )
 
+var EnableTrace = false
+
 func NewClient(logger *zap.Logger) *resty.Client {
 	httpClient := resty.New()
 	ClientInitSetting(httpClient, logger)
 	httpClient.SetTransport(&http.Transport{
-		Proxy: http.ProxyFromEnvironment,
+		//Proxy: http.ProxyFromEnvironment,
 		//DialContext:           DnsCacheDialContext(GetDialer()),
 		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          1000,
@@ -23,7 +25,9 @@ func NewClient(logger *zap.Logger) *resty.Client {
 		TLSHandshakeTimeout:   30 * time.Second,
 		ExpectContinueTimeout: 0,
 	})
-	httpClient.EnableTrace()
+	if EnableTrace {
+		httpClient.EnableTrace()
+	}
 	//httpClient.SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
 	//	DefaultLimiter.Take()
 	//	return nil
@@ -37,7 +41,7 @@ func ClientInitSetting(httpClient *resty.Client, logger *zap.Logger) {
 	httpClient.SetRetryCount(3)
 	httpClient.Header.Set("user-agent", "coffee's")
 	httpClient.SetTimeout(time.Second * 15)
-	httpClient.SetCloseConnection(true)
+	httpClient.SetCloseConnection(false)
 	httpClient.SetDisableWarn(true)
 	httpClient.SetRetryMaxWaitTime(time.Second)
 	httpClient.SetAllowGetMethodPayload(true)
@@ -46,6 +50,9 @@ func ClientInitSetting(httpClient *resty.Client, logger *zap.Logger) {
 
 func NewClientWithCookieJar(cookieJar http.CookieJar, logger *zap.Logger) *resty.Client {
 	httpClient := resty.NewWithClient(&http.Client{Jar: cookieJar})
+	if EnableTrace {
+		httpClient.EnableTrace()
+	}
 	ClientInitSetting(httpClient, logger)
 	httpClient.SetTransport(&http.Transport{
 		Proxy: http.ProxyFromEnvironment,

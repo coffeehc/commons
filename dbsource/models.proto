@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-package commons.dbsource;
-
-option go_package = "github.com/coffeehc/commons/dbsource;dbsource";

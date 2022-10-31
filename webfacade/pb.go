@@ -2,9 +2,8 @@ package webfacade
 
 import (
 	"github.com/coffeehc/commons/coder"
+	"github.com/gogo/protobuf/proto"
 	"net/http"
-
-	"google.golang.org/protobuf/proto"
 )
 
 var PBContentType = "application/x-protobuf"

@@ -8,9 +8,9 @@ import (
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/commons/coder"
 	"github.com/coffeehc/commons/sequences"
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 )
 
 const configKeyForDataDir = "localstorage.datadir"

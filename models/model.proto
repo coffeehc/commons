@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package commons.model;
 
-option go_package = "gituhb.com/coffeehc/commons/models;models";
+option go_package = "models";
 
 //错误定义
 message Error {
