@@ -55,23 +55,23 @@ func getUpdateFieldValue(value *Value) interface{} {
 		return nil
 	}
 	switch value.ValueType {
-	case ValueTypeInt:
+	case ValueType_Int:
 		return value.IntValue
-	case ValueTypeDoubel:
+	case ValueType_Doubel:
 		return value.DoubleValue
-	case ValueTypeString:
+	case ValueType_String:
 		if value.StringValue == "" {
 			return nil
 		}
 		return value.StringValue
-	case ValueTypeBool:
+	case ValueType_Bool:
 		return value.BoolValue
-	case ValueTypeTime:
+	case ValueType_Time:
 		if value.IntValue == 0 {
 			return nil
 		}
 		return time.Unix(0, value.IntValue)
-	case ValueTypeStatus:
+	case ValueType_Status:
 		if value.IntValue <= 0 {
 			return nil
 		}

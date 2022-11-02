@@ -119,14 +119,14 @@ func ParseCondition(c *gin.Context, fieldMap map[string]FieldDefined, initCondit
 		}
 		var err error = nil
 		switch defined.VType {
-		case sqlbuilder.ValueTypeInt:
+		case sqlbuilder.ValueType_Int:
 			param.IntValue, err = strconv.ParseInt(v, 10, 64)
 			if err != nil {
 				log.Error("Int64值解析失败", zap.String("value", v), zap.String("key", k))
 				return nil, errors.MessageError("参数错误")
 			}
 			break
-		case sqlbuilder.ValueTypeIntArray, sqlbuilder.ValueTypeStatuses:
+		case sqlbuilder.ValueType_IntArray, sqlbuilder.ValueType_Statuses:
 			vs := c.QueryArray(k)
 			ints := make([]int64, 0, len(vs))
 			for _, _v := range vs {
@@ -153,25 +153,25 @@ func ParseCondition(c *gin.Context, fieldMap map[string]FieldDefined, initCondit
 			}
 			param.IntValues = ints
 			break
-		case sqlbuilder.ValueTypeDoubel:
+		case sqlbuilder.ValueType_Doubel:
 			param.DoubleValue, err = strconv.ParseFloat(v, 64)
 			if err != nil {
 				log.Error("Float64值解析失败", zap.String("value", v), zap.String("key", k))
 				return nil, errors.MessageError("参数错误")
 			}
 			break
-		case sqlbuilder.ValueTypeBool:
+		case sqlbuilder.ValueType_Bool:
 			param.BoolValue = v == "true" || v == "1"
-		case sqlbuilder.ValueTypeTime:
+		case sqlbuilder.ValueType_Time:
 			t, err := time.Parse(utils.Format_TIME_YYYY_MM_DD_hh_mm_ss, v)
 			if err != nil {
 				log.Error("解析时间失败", zap.String("value", v), zap.String("key", k))
 				return nil, errors.MessageError("参数错误")
 			}
 			param.IntValue = t.UnixNano()
-		case sqlbuilder.ValueTypeString:
+		case sqlbuilder.ValueType_String:
 			param.StringValue = v
-		case sqlbuilder.ValueTypeStatus:
+		case sqlbuilder.ValueType_Status:
 			param.IntValue, err = strconv.ParseInt(v, 10, 64)
 			if err != nil {
 				log.Error("状态值解析失败", zap.String("value", v), zap.String("key", k))

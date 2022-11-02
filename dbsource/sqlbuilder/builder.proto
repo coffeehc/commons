@@ -11,20 +11,20 @@ message PageQuery {
 
 enum ValueType {
     ValueType_ = 0;
-    ValueTypeInt = 1;
-    ValueTypeDoubel = 2;
-    ValueTypeString = 3;
-    ValueTypeBool = 4;
-    ValueTypeTime = 5;
-    ValueTypeStringArray = 6;
-    ValueTypeIntArray = 7;
-    ValueTypeDoubleArray = 8;
-    ValueTypeTimeArray = 9;
-    ValueTypeStatus = 10;
-    ValueTypeStatuses = 11;
-    ValueTypePgIntArray = 12;
-    ValueTypePgStringArray = 13;
-    ValueTypePgFloatArray = 14;
+    Int = 1;
+    Doubel = 2;
+    String = 3;
+    Bool = 4;
+    Time = 5;
+    StringArray = 6;
+    IntArray = 7;
+    DoubleArray = 8;
+    TimeArray = 9;
+    Status = 10;
+    Statuses = 11;
+    PgIntArray = 12;
+    PgStringArray = 13;
+    PgFloatArray = 14;
 }
 
 message Value {
@@ -81,14 +81,14 @@ message UpdateResult {
 }
 
 enum RangeType {
-    RangeTypeALL = 0;
-    RangeTypeMinute = 1;
-    RangeTypeMinuteN = 2;
-    RangeTypeHour = 3;
-    RangeTypeDay = 4;
-    RangeTypeWeek = 5;
-    RangeTypeMonth = 6;
-    RangeTypeYear = 7;
+    ALL = 0;
+    Minute = 1;
+    MinuteN = 2;
+    Hour = 3;
+    Day = 4;
+    Week = 5;
+    Month = 6;
+    Year = 7;
 
 }
 
@@ -101,9 +101,9 @@ message StatisticsTimeRange {
 
 enum TaskStatus {
     TaskStatus_ = 0;
-    TaskStatusRunning = 1;
-    TaskStatusSuccess = 2;
-    TaskStatusError = 3;
+    Running = 1;
+    Success = 2;
+    Error = 3;
 }
 
 message StatisticsTask {
