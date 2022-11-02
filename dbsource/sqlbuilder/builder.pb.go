@@ -4,15 +4,9 @@
 package sqlbuilder
 
 import (
-	encoding_binary "encoding/binary"
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
-	io "io"
 	math "math"
-	math_bits "math/bits"
-	reflect "reflect"
-	strconv "strconv"
-	strings "strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -29,21 +23,21 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type ValueType int32
 
 const (
-	ValueType_             ValueType = 0
-	ValueTypeInt           ValueType = 1
-	ValueTypeDoubel        ValueType = 2
-	ValueTypeString        ValueType = 3
-	ValueTypeBool          ValueType = 4
-	ValueTypeTime          ValueType = 5
-	ValueTypeStringArray   ValueType = 6
-	ValueTypeIntArray      ValueType = 7
-	ValueTypeDoubleArray   ValueType = 8
-	ValueTypeTimeArray     ValueType = 9
-	ValueTypeStatus        ValueType = 10
-	ValueTypeStatuses      ValueType = 11
-	ValueTypePgIntArray    ValueType = 12
-	ValueTypePgStringArray ValueType = 13
-	ValueTypePgFloatArray  ValueType = 14
+	ValueType_ValueType_             ValueType = 0
+	ValueType_ValueTypeInt           ValueType = 1
+	ValueType_ValueTypeDoubel        ValueType = 2
+	ValueType_ValueTypeString        ValueType = 3
+	ValueType_ValueTypeBool          ValueType = 4
+	ValueType_ValueTypeTime          ValueType = 5
+	ValueType_ValueTypeStringArray   ValueType = 6
+	ValueType_ValueTypeIntArray      ValueType = 7
+	ValueType_ValueTypeDoubleArray   ValueType = 8
+	ValueType_ValueTypeTimeArray     ValueType = 9
+	ValueType_ValueTypeStatus        ValueType = 10
+	ValueType_ValueTypeStatuses      ValueType = 11
+	ValueType_ValueTypePgIntArray    ValueType = 12
+	ValueType_ValueTypePgStringArray ValueType = 13
+	ValueType_ValueTypePgFloatArray  ValueType = 14
 )
 
 var ValueType_name = map[int32]string{
@@ -82,6 +76,10 @@ var ValueType_value = map[string]int32{
 	"ValueTypePgFloatArray":  14,
 }
 
+func (x ValueType) String() string {
+	return proto.EnumName(ValueType_name, int32(x))
+}
+
 func (ValueType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{0}
 }
@@ -89,14 +87,14 @@ func (ValueType) EnumDescriptor() ([]byte, []int) {
 type RangeType int32
 
 const (
-	RangeTypeALL     RangeType = 0
-	RangeTypeMinute  RangeType = 1
-	RangeTypeMinuteN RangeType = 2
-	RangeTypeHour    RangeType = 3
-	RangeTypeDay     RangeType = 4
-	RangeTypeWeek    RangeType = 5
-	RangeTypeMonth   RangeType = 6
-	RangeTypeYear    RangeType = 7
+	RangeType_RangeTypeALL     RangeType = 0
+	RangeType_RangeTypeMinute  RangeType = 1
+	RangeType_RangeTypeMinuteN RangeType = 2
+	RangeType_RangeTypeHour    RangeType = 3
+	RangeType_RangeTypeDay     RangeType = 4
+	RangeType_RangeTypeWeek    RangeType = 5
+	RangeType_RangeTypeMonth   RangeType = 6
+	RangeType_RangeTypeYear    RangeType = 7
 )
 
 var RangeType_name = map[int32]string{
@@ -121,6 +119,10 @@ var RangeType_value = map[string]int32{
 	"RangeTypeYear":    7,
 }
 
+func (x RangeType) String() string {
+	return proto.EnumName(RangeType_name, int32(x))
+}
+
 func (RangeType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{1}
 }
@@ -128,10 +130,10 @@ func (RangeType) EnumDescriptor() ([]byte, []int) {
 type TaskStatus int32
 
 const (
-	TaskStatus_       TaskStatus = 0
-	TaskStatusRunning TaskStatus = 1
-	TaskStatusSuccess TaskStatus = 2
-	TaskStatusError   TaskStatus = 3
+	TaskStatus_TaskStatus_       TaskStatus = 0
+	TaskStatus_TaskStatusRunning TaskStatus = 1
+	TaskStatus_TaskStatusSuccess TaskStatus = 2
+	TaskStatus_TaskStatusError   TaskStatus = 3
 )
 
 var TaskStatus_name = map[int32]string{
@@ -148,40 +150,39 @@ var TaskStatus_value = map[string]int32{
 	"TaskStatusError":   3,
 }
 
+func (x TaskStatus) String() string {
+	return proto.EnumName(TaskStatus_name, int32(x))
+}
+
 func (TaskStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{2}
 }
 
 type PageQuery struct {
-	PageSize  int64 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	PageIndex int64 `protobuf:"varint,2,opt,name=page_index,json=pageIndex,proto3" json:"page_index,omitempty"`
+	PageSize             int64    `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageIndex            int64    `protobuf:"varint,2,opt,name=page_index,json=pageIndex,proto3" json:"page_index,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PageQuery) Reset()      { *m = PageQuery{} }
-func (*PageQuery) ProtoMessage() {}
+func (m *PageQuery) Reset()         { *m = PageQuery{} }
+func (m *PageQuery) String() string { return proto.CompactTextString(m) }
+func (*PageQuery) ProtoMessage()    {}
 func (*PageQuery) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{0}
 }
 func (m *PageQuery) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_PageQuery.Unmarshal(m, b)
 }
 func (m *PageQuery) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_PageQuery.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_PageQuery.Marshal(b, m, deterministic)
 }
 func (m *PageQuery) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_PageQuery.Merge(m, src)
 }
 func (m *PageQuery) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_PageQuery.Size(m)
 }
 func (m *PageQuery) XXX_DiscardUnknown() {
 	xxx_messageInfo_PageQuery.DiscardUnknown(m)
@@ -204,41 +205,36 @@ func (m *PageQuery) GetPageIndex() int64 {
 }
 
 type Value struct {
-	ValueType    ValueType `protobuf:"varint,1,opt,name=value_type,json=valueType,proto3,enum=commons.sqlbuilder.ValueType" json:"value_type,omitempty"`
-	IntValue     int64     `protobuf:"varint,2,opt,name=int_value,json=intValue,proto3" json:"int_value,omitempty"`
-	DoubleValue  float64   `protobuf:"fixed64,3,opt,name=double_value,json=doubleValue,proto3" json:"double_value,omitempty"`
-	StringValue  string    `protobuf:"bytes,4,opt,name=string_value,json=stringValue,proto3" json:"string_value,omitempty"`
-	BoolValue    bool      `protobuf:"varint,5,opt,name=bool_value,json=boolValue,proto3" json:"bool_value,omitempty"`
-	IntValues    []int64   `protobuf:"varint,6,rep,packed,name=int_values,json=intValues,proto3" json:"int_values,omitempty"`
-	StringValues []string  `protobuf:"bytes,8,rep,name=string_values,json=stringValues,proto3" json:"string_values,omitempty"`
-	DoubleValues []float64 `protobuf:"fixed64,9,rep,packed,name=double_values,json=doubleValues,proto3" json:"double_values,omitempty"`
+	ValueType            ValueType `protobuf:"varint,1,opt,name=value_type,json=valueType,proto3,enum=commons.sqlbuilder.ValueType" json:"value_type,omitempty"`
+	IntValue             int64     `protobuf:"varint,2,opt,name=int_value,json=intValue,proto3" json:"int_value,omitempty"`
+	DoubleValue          float64   `protobuf:"fixed64,3,opt,name=double_value,json=doubleValue,proto3" json:"double_value,omitempty"`
+	StringValue          string    `protobuf:"bytes,4,opt,name=string_value,json=stringValue,proto3" json:"string_value,omitempty"`
+	BoolValue            bool      `protobuf:"varint,5,opt,name=bool_value,json=boolValue,proto3" json:"bool_value,omitempty"`
+	IntValues            []int64   `protobuf:"varint,6,rep,packed,name=int_values,json=intValues,proto3" json:"int_values,omitempty"`
+	StringValues         []string  `protobuf:"bytes,8,rep,name=string_values,json=stringValues,proto3" json:"string_values,omitempty"`
+	DoubleValues         []float64 `protobuf:"fixed64,9,rep,packed,name=double_values,json=doubleValues,proto3" json:"double_values,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
 }
 
-func (m *Value) Reset()      { *m = Value{} }
-func (*Value) ProtoMessage() {}
+func (m *Value) Reset()         { *m = Value{} }
+func (m *Value) String() string { return proto.CompactTextString(m) }
+func (*Value) ProtoMessage()    {}
 func (*Value) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{1}
 }
 func (m *Value) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_Value.Unmarshal(m, b)
 }
 func (m *Value) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Value.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_Value.Marshal(b, m, deterministic)
 }
 func (m *Value) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Value.Merge(m, src)
 }
 func (m *Value) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_Value.Size(m)
 }
 func (m *Value) XXX_DiscardUnknown() {
 	xxx_messageInfo_Value.DiscardUnknown(m)
@@ -250,7 +246,7 @@ func (m *Value) GetValueType() ValueType {
 	if m != nil {
 		return m.ValueType
 	}
-	return ValueType_
+	return ValueType_ValueType_
 }
 
 func (m *Value) GetIntValue() int64 {
@@ -303,37 +299,32 @@ func (m *Value) GetDoubleValues() []float64 {
 }
 
 type JoinCondition struct {
-	TableName        string `protobuf:"bytes,1,opt,name=table_name,json=tableName,proto3" json:"table_name,omitempty"`
-	TableColName     string `protobuf:"bytes,2,opt,name=table_col_name,json=tableColName,proto3" json:"table_col_name,omitempty"`
-	JoinTableColName string `protobuf:"bytes,3,opt,name=join_table_col_name,json=joinTableColName,proto3" json:"join_table_col_name,omitempty"`
-	TableAlisa       string `protobuf:"bytes,4,opt,name=table_alisa,json=tableAlisa,proto3" json:"table_alisa,omitempty"`
+	TableName            string   `protobuf:"bytes,1,opt,name=table_name,json=tableName,proto3" json:"table_name,omitempty"`
+	TableColName         string   `protobuf:"bytes,2,opt,name=table_col_name,json=tableColName,proto3" json:"table_col_name,omitempty"`
+	JoinTableColName     string   `protobuf:"bytes,3,opt,name=join_table_col_name,json=joinTableColName,proto3" json:"join_table_col_name,omitempty"`
+	TableAlisa           string   `protobuf:"bytes,4,opt,name=table_alisa,json=tableAlisa,proto3" json:"table_alisa,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *JoinCondition) Reset()      { *m = JoinCondition{} }
-func (*JoinCondition) ProtoMessage() {}
+func (m *JoinCondition) Reset()         { *m = JoinCondition{} }
+func (m *JoinCondition) String() string { return proto.CompactTextString(m) }
+func (*JoinCondition) ProtoMessage()    {}
 func (*JoinCondition) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{2}
 }
 func (m *JoinCondition) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_JoinCondition.Unmarshal(m, b)
 }
 func (m *JoinCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_JoinCondition.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_JoinCondition.Marshal(b, m, deterministic)
 }
 func (m *JoinCondition) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_JoinCondition.Merge(m, src)
 }
 func (m *JoinCondition) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_JoinCondition.Size(m)
 }
 func (m *JoinCondition) XXX_DiscardUnknown() {
 	xxx_messageInfo_JoinCondition.DiscardUnknown(m)
@@ -370,36 +361,31 @@ func (m *JoinCondition) GetTableAlisa() string {
 }
 
 type Condition struct {
-	ColName  string `protobuf:"bytes,1,opt,name=col_name,json=colName,proto3" json:"col_name,omitempty"`
-	Operator string `protobuf:"bytes,2,opt,name=operator,proto3" json:"operator,omitempty"`
-	Value    *Value `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	ColName              string   `protobuf:"bytes,1,opt,name=col_name,json=colName,proto3" json:"col_name,omitempty"`
+	Operator             string   `protobuf:"bytes,2,opt,name=operator,proto3" json:"operator,omitempty"`
+	Value                *Value   `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Condition) Reset()      { *m = Condition{} }
-func (*Condition) ProtoMessage() {}
+func (m *Condition) Reset()         { *m = Condition{} }
+func (m *Condition) String() string { return proto.CompactTextString(m) }
+func (*Condition) ProtoMessage()    {}
 func (*Condition) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{3}
 }
 func (m *Condition) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_Condition.Unmarshal(m, b)
 }
 func (m *Condition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Condition.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_Condition.Marshal(b, m, deterministic)
 }
 func (m *Condition) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Condition.Merge(m, src)
 }
 func (m *Condition) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_Condition.Size(m)
 }
 func (m *Condition) XXX_DiscardUnknown() {
 	xxx_messageInfo_Condition.DiscardUnknown(m)
@@ -429,35 +415,30 @@ func (m *Condition) GetValue() *Value {
 }
 
 type OrderCondition struct {
-	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Order string `protobuf:"bytes,2,opt,name=order,proto3" json:"order,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Order                string   `protobuf:"bytes,2,opt,name=order,proto3" json:"order,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *OrderCondition) Reset()      { *m = OrderCondition{} }
-func (*OrderCondition) ProtoMessage() {}
+func (m *OrderCondition) Reset()         { *m = OrderCondition{} }
+func (m *OrderCondition) String() string { return proto.CompactTextString(m) }
+func (*OrderCondition) ProtoMessage()    {}
 func (*OrderCondition) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{4}
 }
 func (m *OrderCondition) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_OrderCondition.Unmarshal(m, b)
 }
 func (m *OrderCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_OrderCondition.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_OrderCondition.Marshal(b, m, deterministic)
 }
 func (m *OrderCondition) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_OrderCondition.Merge(m, src)
 }
 func (m *OrderCondition) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_OrderCondition.Size(m)
 }
 func (m *OrderCondition) XXX_DiscardUnknown() {
 	xxx_messageInfo_OrderCondition.DiscardUnknown(m)
@@ -480,39 +461,34 @@ func (m *OrderCondition) GetOrder() string {
 }
 
 type Query struct {
-	Conditions      []*Condition      `protobuf:"bytes,1,rep,name=conditions,proto3" json:"conditions,omitempty"`
-	OrderConditions []*OrderCondition `protobuf:"bytes,2,rep,name=order_conditions,json=orderConditions,proto3" json:"order_conditions,omitempty"`
-	Page            *PageQuery        `protobuf:"bytes,3,opt,name=page,proto3" json:"page,omitempty"`
-	ReturnTotal     bool              `protobuf:"varint,4,opt,name=return_total,json=returnTotal,proto3" json:"return_total,omitempty"`
-	ForcePage       bool              `protobuf:"varint,5,opt,name=force_page,json=forcePage,proto3" json:"force_page,omitempty"`
-	Join            *JoinCondition    `protobuf:"bytes,6,opt,name=join,proto3" json:"join,omitempty"`
+	Conditions           []*Condition      `protobuf:"bytes,1,rep,name=conditions,proto3" json:"conditions,omitempty"`
+	OrderConditions      []*OrderCondition `protobuf:"bytes,2,rep,name=order_conditions,json=orderConditions,proto3" json:"order_conditions,omitempty"`
+	Page                 *PageQuery        `protobuf:"bytes,3,opt,name=page,proto3" json:"page,omitempty"`
+	ReturnTotal          bool              `protobuf:"varint,4,opt,name=return_total,json=returnTotal,proto3" json:"return_total,omitempty"`
+	ForcePage            bool              `protobuf:"varint,5,opt,name=force_page,json=forcePage,proto3" json:"force_page,omitempty"`
+	Join                 *JoinCondition    `protobuf:"bytes,6,opt,name=join,proto3" json:"join,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
 }
 
-func (m *Query) Reset()      { *m = Query{} }
-func (*Query) ProtoMessage() {}
+func (m *Query) Reset()         { *m = Query{} }
+func (m *Query) String() string { return proto.CompactTextString(m) }
+func (*Query) ProtoMessage()    {}
 func (*Query) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{5}
 }
 func (m *Query) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_Query.Unmarshal(m, b)
 }
 func (m *Query) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Query.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_Query.Marshal(b, m, deterministic)
 }
 func (m *Query) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Query.Merge(m, src)
 }
 func (m *Query) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_Query.Size(m)
 }
 func (m *Query) XXX_DiscardUnknown() {
 	xxx_messageInfo_Query.DiscardUnknown(m)
@@ -563,36 +539,31 @@ func (m *Query) GetJoin() *JoinCondition {
 }
 
 type Update struct {
-	Id         int64        `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Fields     []*Field     `protobuf:"bytes,2,rep,name=fields,proto3" json:"fields,omitempty"`
-	Conditions []*Condition `protobuf:"bytes,3,rep,name=conditions,proto3" json:"conditions,omitempty"`
+	Id                   int64        `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Fields               []*Field     `protobuf:"bytes,2,rep,name=fields,proto3" json:"fields,omitempty"`
+	Conditions           []*Condition `protobuf:"bytes,3,rep,name=conditions,proto3" json:"conditions,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
-func (m *Update) Reset()      { *m = Update{} }
-func (*Update) ProtoMessage() {}
+func (m *Update) Reset()         { *m = Update{} }
+func (m *Update) String() string { return proto.CompactTextString(m) }
+func (*Update) ProtoMessage()    {}
 func (*Update) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{6}
 }
 func (m *Update) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_Update.Unmarshal(m, b)
 }
 func (m *Update) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Update.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_Update.Marshal(b, m, deterministic)
 }
 func (m *Update) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Update.Merge(m, src)
 }
 func (m *Update) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_Update.Size(m)
 }
 func (m *Update) XXX_DiscardUnknown() {
 	xxx_messageInfo_Update.DiscardUnknown(m)
@@ -622,35 +593,30 @@ func (m *Update) GetConditions() []*Condition {
 }
 
 type Field struct {
-	ColName    string `protobuf:"bytes,1,opt,name=col_name,json=colName,proto3" json:"col_name,omitempty"`
-	FieldValue *Value `protobuf:"bytes,2,opt,name=field_value,json=fieldValue,proto3" json:"field_value,omitempty"`
+	ColName              string   `protobuf:"bytes,1,opt,name=col_name,json=colName,proto3" json:"col_name,omitempty"`
+	FieldValue           *Value   `protobuf:"bytes,2,opt,name=field_value,json=fieldValue,proto3" json:"field_value,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Field) Reset()      { *m = Field{} }
-func (*Field) ProtoMessage() {}
+func (m *Field) Reset()         { *m = Field{} }
+func (m *Field) String() string { return proto.CompactTextString(m) }
+func (*Field) ProtoMessage()    {}
 func (*Field) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{7}
 }
 func (m *Field) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_Field.Unmarshal(m, b)
 }
 func (m *Field) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Field.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_Field.Marshal(b, m, deterministic)
 }
 func (m *Field) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Field.Merge(m, src)
 }
 func (m *Field) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_Field.Size(m)
 }
 func (m *Field) XXX_DiscardUnknown() {
 	xxx_messageInfo_Field.DiscardUnknown(m)
@@ -673,34 +639,29 @@ func (m *Field) GetFieldValue() *Value {
 }
 
 type UpdateResult struct {
-	Count int64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	Count                int64    `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *UpdateResult) Reset()      { *m = UpdateResult{} }
-func (*UpdateResult) ProtoMessage() {}
+func (m *UpdateResult) Reset()         { *m = UpdateResult{} }
+func (m *UpdateResult) String() string { return proto.CompactTextString(m) }
+func (*UpdateResult) ProtoMessage()    {}
 func (*UpdateResult) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{8}
 }
 func (m *UpdateResult) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_UpdateResult.Unmarshal(m, b)
 }
 func (m *UpdateResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_UpdateResult.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_UpdateResult.Marshal(b, m, deterministic)
 }
 func (m *UpdateResult) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_UpdateResult.Merge(m, src)
 }
 func (m *UpdateResult) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_UpdateResult.Size(m)
 }
 func (m *UpdateResult) XXX_DiscardUnknown() {
 	xxx_messageInfo_UpdateResult.DiscardUnknown(m)
@@ -716,37 +677,32 @@ func (m *UpdateResult) GetCount() int64 {
 }
 
 type StatisticsTimeRange struct {
-	Type     RangeType `protobuf:"varint,1,opt,name=type,proto3,enum=commons.sqlbuilder.RangeType" json:"type,omitempty"`
-	Interval int64     `protobuf:"varint,2,opt,name=interval,proto3" json:"interval,omitempty"`
-	Start    int64     `protobuf:"varint,3,opt,name=start,proto3" json:"start,omitempty"`
-	End      int64     `protobuf:"varint,4,opt,name=end,proto3" json:"end,omitempty"`
+	Type                 RangeType `protobuf:"varint,1,opt,name=type,proto3,enum=commons.sqlbuilder.RangeType" json:"type,omitempty"`
+	Interval             int64     `protobuf:"varint,2,opt,name=interval,proto3" json:"interval,omitempty"`
+	Start                int64     `protobuf:"varint,3,opt,name=start,proto3" json:"start,omitempty"`
+	End                  int64     `protobuf:"varint,4,opt,name=end,proto3" json:"end,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
 }
 
-func (m *StatisticsTimeRange) Reset()      { *m = StatisticsTimeRange{} }
-func (*StatisticsTimeRange) ProtoMessage() {}
+func (m *StatisticsTimeRange) Reset()         { *m = StatisticsTimeRange{} }
+func (m *StatisticsTimeRange) String() string { return proto.CompactTextString(m) }
+func (*StatisticsTimeRange) ProtoMessage()    {}
 func (*StatisticsTimeRange) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{9}
 }
 func (m *StatisticsTimeRange) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_StatisticsTimeRange.Unmarshal(m, b)
 }
 func (m *StatisticsTimeRange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_StatisticsTimeRange.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_StatisticsTimeRange.Marshal(b, m, deterministic)
 }
 func (m *StatisticsTimeRange) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_StatisticsTimeRange.Merge(m, src)
 }
 func (m *StatisticsTimeRange) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_StatisticsTimeRange.Size(m)
 }
 func (m *StatisticsTimeRange) XXX_DiscardUnknown() {
 	xxx_messageInfo_StatisticsTimeRange.DiscardUnknown(m)
@@ -758,7 +714,7 @@ func (m *StatisticsTimeRange) GetType() RangeType {
 	if m != nil {
 		return m.Type
 	}
-	return RangeTypeALL
+	return RangeType_RangeTypeALL
 }
 
 func (m *StatisticsTimeRange) GetInterval() int64 {
@@ -783,41 +739,36 @@ func (m *StatisticsTimeRange) GetEnd() int64 {
 }
 
 type StatisticsTask struct {
-	Id         int64      `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Task       int64      `protobuf:"varint,2,opt,name=task,proto3" json:"task,omitempty"`
-	Start      int64      `protobuf:"varint,3,opt,name=start,proto3" json:"start,omitempty"`
-	End        int64      `protobuf:"varint,4,opt,name=end,proto3" json:"end,omitempty"`
-	Status     TaskStatus `protobuf:"varint,5,opt,name=status,proto3,enum=commons.sqlbuilder.TaskStatus" json:"status,omitempty"`
-	Message    string     `protobuf:"bytes,6,opt,name=message,proto3" json:"message,omitempty"`
-	CreateTime int64      `protobuf:"varint,7,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	UpdateTime int64      `protobuf:"varint,8,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	Id                   int64      `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Task                 int64      `protobuf:"varint,2,opt,name=task,proto3" json:"task,omitempty"`
+	Start                int64      `protobuf:"varint,3,opt,name=start,proto3" json:"start,omitempty"`
+	End                  int64      `protobuf:"varint,4,opt,name=end,proto3" json:"end,omitempty"`
+	Status               TaskStatus `protobuf:"varint,5,opt,name=status,proto3,enum=commons.sqlbuilder.TaskStatus" json:"status,omitempty"`
+	Message              string     `protobuf:"bytes,6,opt,name=message,proto3" json:"message,omitempty"`
+	CreateTime           int64      `protobuf:"varint,7,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	UpdateTime           int64      `protobuf:"varint,8,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
 }
 
-func (m *StatisticsTask) Reset()      { *m = StatisticsTask{} }
-func (*StatisticsTask) ProtoMessage() {}
+func (m *StatisticsTask) Reset()         { *m = StatisticsTask{} }
+func (m *StatisticsTask) String() string { return proto.CompactTextString(m) }
+func (*StatisticsTask) ProtoMessage()    {}
 func (*StatisticsTask) Descriptor() ([]byte, []int) {
 	return fileDescriptor_68a5e6cb4f7c8dc9, []int{10}
 }
 func (m *StatisticsTask) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+	return xxx_messageInfo_StatisticsTask.Unmarshal(m, b)
 }
 func (m *StatisticsTask) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_StatisticsTask.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_StatisticsTask.Marshal(b, m, deterministic)
 }
 func (m *StatisticsTask) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_StatisticsTask.Merge(m, src)
 }
 func (m *StatisticsTask) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_StatisticsTask.Size(m)
 }
 func (m *StatisticsTask) XXX_DiscardUnknown() {
 	xxx_messageInfo_StatisticsTask.DiscardUnknown(m)
@@ -857,7 +808,7 @@ func (m *StatisticsTask) GetStatus() TaskStatus {
 	if m != nil {
 		return m.Status
 	}
-	return TaskStatus_
+	return TaskStatus_TaskStatus_
 }
 
 func (m *StatisticsTask) GetMessage() string {
@@ -901,3520 +852,69 @@ func init() {
 func init() { proto.RegisterFile("builder.proto", fileDescriptor_68a5e6cb4f7c8dc9) }
 
 var fileDescriptor_68a5e6cb4f7c8dc9 = []byte{
-	// 1081 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0xc1, 0x6f, 0x1b, 0xc5,
-	0x17, 0xf6, 0x78, 0x6d, 0xc7, 0xfb, 0xec, 0x38, 0x93, 0x49, 0xd2, 0x9f, 0xd3, 0x9f, 0xb2, 0xb8,
-	0x4b, 0x0f, 0x56, 0x24, 0x82, 0x1a, 0x04, 0x87, 0x0a, 0x24, 0xd2, 0x86, 0x42, 0x51, 0x5b, 0xca,
-	0x26, 0x80, 0xe0, 0x80, 0x99, 0xd8, 0xd3, 0x30, 0x64, 0xbd, 0x63, 0x66, 0x66, 0x23, 0xd2, 0x13,
-	0x67, 0xc4, 0x81, 0x3f, 0x02, 0x09, 0x8e, 0xfc, 0x0b, 0xdc, 0x38, 0xe6, 0xd8, 0x03, 0x07, 0xe2,
-	0x5c, 0x38, 0xe6, 0x4f, 0x40, 0x33, 0xb3, 0x59, 0xef, 0xa6, 0xa6, 0xc0, 0x6d, 0xde, 0xf7, 0xbe,
-	0x7d, 0xdf, 0xdb, 0xf7, 0xbe, 0x1d, 0x1b, 0x16, 0x0f, 0x52, 0x1e, 0x8f, 0x98, 0xdc, 0x9a, 0x48,
-	0xa1, 0x05, 0x21, 0x43, 0x31, 0x1e, 0x8b, 0x44, 0x6d, 0xa9, 0xaf, 0xe3, 0x2c, 0x13, 0xbe, 0x0b,
-	0xfe, 0x63, 0x7a, 0xc8, 0x3e, 0x4c, 0x99, 0x3c, 0x21, 0xff, 0x07, 0x7f, 0x42, 0x0f, 0xd9, 0x40,
-	0xf1, 0xa7, 0xac, 0x8b, 0x7a, 0xa8, 0xef, 0x45, 0x4d, 0x03, 0xec, 0xf1, 0xa7, 0x8c, 0x6c, 0x00,
-	0xd8, 0x24, 0x4f, 0x46, 0xec, 0x9b, 0x6e, 0xd5, 0x66, 0x2d, 0xfd, 0xbe, 0x01, 0xc2, 0x5f, 0xaa,
-	0x50, 0xff, 0x98, 0xc6, 0x29, 0x23, 0x6f, 0x02, 0x1c, 0x9b, 0xc3, 0x40, 0x9f, 0x4c, 0x5c, 0x99,
-	0xce, 0xf6, 0xc6, 0xd6, 0xf3, 0xda, 0x5b, 0x96, 0xbe, 0x7f, 0x32, 0x61, 0x91, 0x7f, 0x7c, 0x79,
-	0x34, 0x3d, 0xf0, 0x44, 0x0f, 0x2c, 0x90, 0xa9, 0x34, 0x79, 0xa2, 0x5d, 0xe9, 0x1b, 0xd0, 0x1e,
-	0x89, 0xf4, 0x20, 0x66, 0x59, 0xde, 0xeb, 0xa1, 0x3e, 0x8a, 0x5a, 0x0e, 0xcb, 0x29, 0x4a, 0x4b,
-	0x9e, 0x1c, 0x66, 0x94, 0x5a, 0x0f, 0xf5, 0xfd, 0xa8, 0xe5, 0x30, 0x47, 0xd9, 0x00, 0x38, 0x10,
-	0x22, 0xce, 0x08, 0xf5, 0x1e, 0xea, 0x37, 0x23, 0xdf, 0x20, 0x79, 0x3a, 0xef, 0x40, 0x75, 0x1b,
-	0x3d, 0xcf, 0xbc, 0xe8, 0x65, 0x0b, 0x8a, 0xbc, 0x0c, 0x8b, 0x45, 0x01, 0xd5, 0x6d, 0xf6, 0xbc,
-	0xbe, 0x1f, 0xb5, 0x0b, 0x0a, 0x96, 0x54, 0x6c, 0x54, 0x75, 0xfd, 0x9e, 0xd7, 0x47, 0x51, 0xbb,
-	0xd0, 0xa9, 0x0a, 0x7f, 0x44, 0xb0, 0xf8, 0xbe, 0xe0, 0xc9, 0x5d, 0x91, 0x8c, 0xb8, 0xe6, 0x22,
-	0x31, 0xd2, 0x9a, 0x9a, 0xa7, 0x12, 0x3a, 0x76, 0xa3, 0xf3, 0x23, 0xdf, 0x22, 0x8f, 0xe8, 0x98,
-	0x91, 0x9b, 0xd0, 0x71, 0xe9, 0xa1, 0x88, 0x1d, 0xa5, 0x6a, 0x29, 0x6d, 0x8b, 0xde, 0x15, 0xb1,
-	0x65, 0xbd, 0x02, 0x2b, 0x5f, 0x09, 0x9e, 0x0c, 0xae, 0x50, 0x3d, 0x4b, 0xc5, 0x26, 0xb5, 0x5f,
-	0xa4, 0xbf, 0x04, 0x2d, 0xc7, 0xa4, 0x31, 0x57, 0x34, 0x9b, 0x97, 0x6b, 0x63, 0xc7, 0x20, 0xa1,
-	0x02, 0x7f, 0xd6, 0xe1, 0x3a, 0x34, 0xf3, 0x8a, 0xae, 0xbf, 0x85, 0x61, 0x56, 0xe8, 0x3a, 0x34,
-	0xc5, 0x84, 0x49, 0xaa, 0x85, 0xcc, 0xfa, 0xca, 0x63, 0xf2, 0x2a, 0xd4, 0x67, 0x1b, 0x6b, 0x6d,
-	0xaf, 0xff, 0xad, 0x1d, 0x22, 0xc7, 0x0b, 0x6f, 0x43, 0xe7, 0x03, 0x39, 0x62, 0x72, 0xa6, 0x4c,
-	0xa0, 0x56, 0x50, 0xb5, 0x67, 0xb2, 0x0a, 0x75, 0x61, 0x58, 0x99, 0x9e, 0x0b, 0xc2, 0x5f, 0xab,
-	0x50, 0x77, 0x86, 0x7e, 0x0b, 0x60, 0x78, 0x59, 0x40, 0x75, 0x51, 0xcf, 0xeb, 0xb7, 0xe6, 0x5b,
-	0x31, 0x97, 0x89, 0x0a, 0x0f, 0x90, 0x87, 0x80, 0x6d, 0xc5, 0x41, 0xa1, 0x48, 0xd5, 0x16, 0x09,
-	0xe7, 0x15, 0x29, 0x37, 0x1c, 0x2d, 0x89, 0x52, 0xac, 0xc8, 0x2d, 0xa8, 0x99, 0xef, 0x25, 0x9b,
-	0xc1, 0xdc, 0x3e, 0xf2, 0x6f, 0x31, 0xb2, 0x54, 0xe3, 0x66, 0xc9, 0x74, 0x2a, 0x93, 0x81, 0x16,
-	0x9a, 0xc6, 0x76, 0x3b, 0xcd, 0xa8, 0xe5, 0xb0, 0x7d, 0x03, 0x19, 0xcf, 0x3c, 0x11, 0x72, 0xc8,
-	0x06, 0xb6, 0x76, 0xe6, 0x66, 0x8b, 0x98, 0x62, 0xe4, 0x75, 0xa8, 0x99, 0x95, 0x77, 0x1b, 0x56,
-	0xf4, 0xc6, 0x3c, 0xd1, 0x92, 0x07, 0x23, 0x4b, 0x0f, 0xbf, 0x43, 0xd0, 0xf8, 0x68, 0x32, 0xa2,
-	0x9a, 0x91, 0x0e, 0x54, 0xf9, 0x28, 0xbb, 0x0e, 0xaa, 0x7c, 0x44, 0x6e, 0x41, 0xe3, 0x09, 0x67,
-	0xf1, 0xe8, 0x72, 0x16, 0x73, 0x97, 0x79, 0xcf, 0x30, 0xa2, 0x8c, 0x78, 0x65, 0x0f, 0xde, 0x7f,
-	0xdc, 0x43, 0xf8, 0x39, 0xd4, 0x6d, 0xbd, 0x17, 0xb9, 0xef, 0x36, 0xb4, 0xac, 0x58, 0xe1, 0xe6,
-	0x78, 0xa1, 0xcf, 0xc0, 0xb2, 0xed, 0x39, 0xbc, 0x09, 0x6d, 0xf7, 0xae, 0x11, 0x53, 0x69, 0xac,
-	0x8d, 0xad, 0x86, 0x22, 0x4d, 0x74, 0xf6, 0xd2, 0x2e, 0x08, 0xbf, 0x47, 0xb0, 0xb2, 0xa7, 0xa9,
-	0xe6, 0x4a, 0xf3, 0xa1, 0xda, 0xe7, 0x63, 0x16, 0xd1, 0xe4, 0x90, 0x99, 0xb5, 0xfe, 0xd3, 0x4d,
-	0x67, 0x89, 0xf6, 0xa6, 0xb3, 0x54, 0xf3, 0xa9, 0xf0, 0x44, 0x33, 0x79, 0x4c, 0xe3, 0xc2, 0x1d,
-	0x67, 0x63, 0x23, 0xae, 0x34, 0x95, 0xda, 0xda, 0xc4, 0x8b, 0x5c, 0x40, 0x30, 0x78, 0x2c, 0x19,
-	0xd9, 0xfd, 0x7b, 0x91, 0x39, 0x86, 0x17, 0x08, 0x3a, 0x85, 0x76, 0xa8, 0x3a, 0x7a, 0x6e, 0x53,
-	0x04, 0x6a, 0x9a, 0xaa, 0xa3, 0x4c, 0xc2, 0x9e, 0xff, 0x6d, 0x79, 0xf2, 0x06, 0x34, 0x94, 0xa6,
-	0x3a, 0x55, 0xd6, 0x52, 0x9d, 0xed, 0x60, 0xde, 0x7b, 0x19, 0xd5, 0x3d, 0xcb, 0x8a, 0x32, 0x36,
-	0xe9, 0xc2, 0xc2, 0x98, 0x29, 0x65, 0xbc, 0xd8, 0x70, 0x1b, 0xca, 0x42, 0x73, 0xd1, 0x0c, 0x25,
-	0xa3, 0x9a, 0x0d, 0x34, 0x1f, 0xb3, 0xee, 0x82, 0xd5, 0x02, 0x07, 0x99, 0x69, 0x1a, 0x42, 0x6a,
-	0xd7, 0xe0, 0x08, 0x4d, 0x47, 0x70, 0x90, 0x21, 0x6c, 0xfe, 0x5e, 0x05, 0x3f, 0xff, 0xd1, 0x20,
-	0x1d, 0x80, 0x3c, 0x18, 0xe0, 0x0a, 0xc1, 0xd0, 0xce, 0xe3, 0xfb, 0x89, 0xc6, 0x88, 0xac, 0xc0,
-	0x52, 0x8e, 0xec, 0x8a, 0xf4, 0x80, 0xc5, 0xb8, 0x5a, 0x02, 0xf7, 0xec, 0x9d, 0x8d, 0x3d, 0xb2,
-	0x0c, 0x8b, 0x39, 0x78, 0x47, 0x88, 0x18, 0xd7, 0x4a, 0x90, 0x51, 0xc7, 0x75, 0xd2, 0x85, 0xd5,
-	0x2b, 0x8f, 0xee, 0x48, 0x49, 0x4f, 0x70, 0x83, 0xac, 0xc1, 0x72, 0x51, 0xdb, 0xc1, 0x0b, 0xa5,
-	0x07, 0x76, 0xed, 0xd5, 0xef, 0x32, 0x4d, 0x72, 0x0d, 0x48, 0xa9, 0xba, 0xc3, 0xfd, 0x2b, 0xdd,
-	0x99, 0x89, 0x62, 0x28, 0x55, 0x77, 0x20, 0x53, 0xb8, 0x45, 0xfe, 0x07, 0x2b, 0x39, 0xfc, 0xf8,
-	0x30, 0x97, 0x6d, 0x93, 0xeb, 0x70, 0xad, 0x90, 0x28, 0x76, 0xba, 0x48, 0xd6, 0x61, 0xad, 0x90,
-	0xbb, 0x17, 0x0b, 0x9a, 0x3d, 0xd6, 0xd9, 0xfc, 0x09, 0x81, 0x9f, 0x3b, 0xd5, 0x8c, 0x33, 0x0f,
-	0x76, 0x1e, 0x3c, 0xc0, 0x15, 0xd3, 0x5b, 0x8e, 0x3c, 0xe4, 0x49, 0xaa, 0x19, 0x46, 0x64, 0x15,
-	0xf0, 0x15, 0xf0, 0x11, 0xae, 0x9a, 0xe1, 0xe5, 0xe8, 0x7b, 0x22, 0x95, 0xd8, 0x2b, 0xd5, 0xdb,
-	0xa5, 0x27, 0x6e, 0xc2, 0x39, 0xf2, 0x09, 0x63, 0x47, 0xb8, 0x4e, 0x08, 0x74, 0x66, 0xd5, 0x44,
-	0xa2, 0xbf, 0xc4, 0x8d, 0x12, 0xed, 0x53, 0x46, 0x25, 0x5e, 0xd8, 0xfc, 0x02, 0x60, 0x66, 0x3d,
-	0xb2, 0x04, 0xad, 0x59, 0x64, 0x9c, 0xb0, 0x06, 0xcb, 0x05, 0x67, 0xa6, 0x49, 0x62, 0x96, 0x8c,
-	0xca, 0xf0, 0x5e, 0x3a, 0x1c, 0x32, 0xa5, 0x9c, 0x21, 0x66, 0xf0, 0x3b, 0x52, 0x0a, 0x89, 0xbd,
-	0x3b, 0x6f, 0x9f, 0x9e, 0x05, 0x95, 0x67, 0x67, 0x41, 0xe5, 0xe2, 0x2c, 0x40, 0xdf, 0x4e, 0x03,
-	0xf4, 0xf3, 0x34, 0x40, 0xbf, 0x4d, 0x03, 0x74, 0x3a, 0x0d, 0xd0, 0x1f, 0xd3, 0x00, 0xfd, 0x39,
-	0x0d, 0x2a, 0x17, 0xd3, 0x00, 0xfd, 0x70, 0x1e, 0x54, 0x4e, 0xcf, 0x83, 0xca, 0xb3, 0xf3, 0xa0,
-	0xf2, 0x19, 0xcc, 0xbe, 0x8d, 0x83, 0x86, 0xfd, 0xd3, 0xf5, 0xda, 0x5f, 0x01, 0x00, 0x00, 0xff,
-	0xff, 0xf0, 0x21, 0xe3, 0xb3, 0x85, 0x09, 0x00, 0x00,
+	// 1016 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0xd1, 0x72, 0x1b, 0x35,
+	0x14, 0xed, 0xee, 0xda, 0x8e, 0xf7, 0xda, 0x71, 0x14, 0x25, 0x29, 0x9b, 0x32, 0x01, 0x77, 0xe9,
+	0x83, 0x27, 0x33, 0x84, 0x69, 0x18, 0x78, 0xe8, 0xc0, 0x43, 0xda, 0x50, 0x28, 0xd3, 0x96, 0xa2,
+	0x04, 0x18, 0x78, 0xc0, 0x28, 0xbb, 0x6a, 0x10, 0x59, 0x4b, 0x46, 0xd2, 0x66, 0x48, 0x3f, 0x81,
+	0xe1, 0x33, 0x98, 0xe1, 0x95, 0x5f, 0xe0, 0x3f, 0xf8, 0x08, 0x3e, 0x81, 0x91, 0xb4, 0x59, 0xef,
+	0xba, 0xa6, 0xc0, 0x9b, 0xee, 0xb9, 0x47, 0xf7, 0xdc, 0xbd, 0xf7, 0x58, 0x09, 0xac, 0x9f, 0x95,
+	0xbc, 0xc8, 0x99, 0x3a, 0x98, 0x2b, 0x69, 0x24, 0xc6, 0x99, 0x9c, 0xcd, 0xa4, 0xd0, 0x07, 0xfa,
+	0xc7, 0xa2, 0xca, 0xa4, 0x1f, 0x43, 0xfc, 0x8c, 0x9e, 0xb3, 0xcf, 0x4b, 0xa6, 0xae, 0xf0, 0xeb,
+	0x10, 0xcf, 0xe9, 0x39, 0x9b, 0x6a, 0xfe, 0x82, 0x25, 0xc1, 0x38, 0x98, 0x44, 0xa4, 0x6f, 0x81,
+	0x13, 0xfe, 0x82, 0xe1, 0x3d, 0x00, 0x97, 0xe4, 0x22, 0x67, 0x3f, 0x25, 0xa1, 0xcb, 0x3a, 0xfa,
+	0x23, 0x0b, 0xa4, 0xbf, 0x87, 0xd0, 0xfd, 0x92, 0x16, 0x25, 0xc3, 0x1f, 0x00, 0x5c, 0xda, 0xc3,
+	0xd4, 0x5c, 0xcd, 0x7d, 0x99, 0xd1, 0xe1, 0xde, 0xc1, 0xcb, 0xda, 0x07, 0x8e, 0x7e, 0x7a, 0x35,
+	0x67, 0x24, 0xbe, 0xbc, 0x3e, 0xda, 0x1e, 0xb8, 0x30, 0x53, 0x07, 0x54, 0x2a, 0x7d, 0x2e, 0x8c,
+	0x2f, 0x7d, 0x1b, 0x86, 0xb9, 0x2c, 0xcf, 0x0a, 0x56, 0xe5, 0xa3, 0x71, 0x30, 0x09, 0xc8, 0xc0,
+	0x63, 0x35, 0x45, 0x1b, 0xc5, 0xc5, 0x79, 0x45, 0xe9, 0x8c, 0x83, 0x49, 0x4c, 0x06, 0x1e, 0xf3,
+	0x94, 0x3d, 0x80, 0x33, 0x29, 0x8b, 0x8a, 0xd0, 0x1d, 0x07, 0x93, 0x3e, 0x89, 0x2d, 0x52, 0xa7,
+	0xeb, 0x0e, 0x74, 0xd2, 0x1b, 0x47, 0xf6, 0x43, 0xaf, 0x5b, 0xd0, 0xf8, 0x2d, 0x58, 0x6f, 0x0a,
+	0xe8, 0xa4, 0x3f, 0x8e, 0x26, 0x31, 0x19, 0x36, 0x14, 0x1c, 0xa9, 0xd9, 0xa8, 0x4e, 0xe2, 0x71,
+	0x34, 0x09, 0xc8, 0xb0, 0xd1, 0xa9, 0x4e, 0x7f, 0x0d, 0x60, 0xfd, 0x53, 0xc9, 0xc5, 0x03, 0x29,
+	0x72, 0x6e, 0xb8, 0x14, 0x56, 0xda, 0x50, 0x7b, 0x4b, 0xd0, 0x99, 0x1f, 0x5d, 0x4c, 0x62, 0x87,
+	0x3c, 0xa5, 0x33, 0x86, 0xef, 0xc0, 0xc8, 0xa7, 0x33, 0x59, 0x78, 0x4a, 0xe8, 0x28, 0x43, 0x87,
+	0x3e, 0x90, 0x85, 0x63, 0xbd, 0x0d, 0x5b, 0x3f, 0x48, 0x2e, 0xa6, 0x4b, 0xd4, 0xc8, 0x51, 0x91,
+	0x4d, 0x9d, 0x36, 0xe9, 0x6f, 0xc2, 0xc0, 0x33, 0x69, 0xc1, 0x35, 0xad, 0xe6, 0xe5, 0xdb, 0x38,
+	0xb2, 0x48, 0xaa, 0x21, 0x5e, 0x74, 0xb8, 0x0b, 0xfd, 0xba, 0xa2, 0xef, 0x6f, 0x2d, 0xab, 0x0a,
+	0xdd, 0x82, 0xbe, 0x9c, 0x33, 0x45, 0x8d, 0x54, 0x55, 0x5f, 0x75, 0x8c, 0xdf, 0x81, 0xee, 0x62,
+	0x63, 0x83, 0xc3, 0xdd, 0x7f, 0xb4, 0x03, 0xf1, 0xbc, 0xf4, 0x1e, 0x8c, 0x3e, 0x53, 0x39, 0x53,
+	0x0b, 0x65, 0x0c, 0x9d, 0x86, 0xaa, 0x3b, 0xe3, 0x6d, 0xe8, 0x4a, 0xcb, 0xaa, 0xf4, 0x7c, 0x90,
+	0xfe, 0x11, 0x42, 0xd7, 0x1b, 0xfa, 0x43, 0x80, 0xec, 0xba, 0x80, 0x4e, 0x82, 0x71, 0x34, 0x19,
+	0xac, 0xb6, 0x62, 0x2d, 0x43, 0x1a, 0x17, 0xf0, 0x13, 0x40, 0xae, 0xe2, 0xb4, 0x51, 0x24, 0x74,
+	0x45, 0xd2, 0x55, 0x45, 0xda, 0x0d, 0x93, 0x0d, 0xd9, 0x8a, 0x35, 0xbe, 0x0b, 0x1d, 0xfb, 0x7b,
+	0xa9, 0x66, 0xb0, 0xb2, 0x8f, 0xfa, 0xb7, 0x48, 0x1c, 0xd5, 0xba, 0x59, 0x31, 0x53, 0x2a, 0x31,
+	0x35, 0xd2, 0xd0, 0xc2, 0x6d, 0xa7, 0x4f, 0x06, 0x1e, 0x3b, 0xb5, 0x90, 0xf5, 0xcc, 0x73, 0xa9,
+	0x32, 0x36, 0x75, 0xb5, 0x2b, 0x37, 0x3b, 0xc4, 0x16, 0xc3, 0xef, 0x41, 0xc7, 0xae, 0x3c, 0xe9,
+	0x39, 0xd1, 0xdb, 0xab, 0x44, 0x5b, 0x1e, 0x24, 0x8e, 0x9e, 0xfe, 0x1c, 0x40, 0xef, 0x8b, 0x79,
+	0x4e, 0x0d, 0xc3, 0x23, 0x08, 0x79, 0x5e, 0x3d, 0x07, 0x21, 0xcf, 0xf1, 0x5d, 0xe8, 0x3d, 0xe7,
+	0xac, 0xc8, 0xaf, 0x67, 0xb1, 0x72, 0x99, 0x0f, 0x2d, 0x83, 0x54, 0xc4, 0xa5, 0x3d, 0x44, 0xff,
+	0x73, 0x0f, 0xe9, 0xb7, 0xd0, 0x75, 0xf5, 0x5e, 0xe5, 0xbe, 0x7b, 0x30, 0x70, 0x62, 0x8d, 0x97,
+	0xe3, 0x95, 0x3e, 0x03, 0xc7, 0x76, 0xe7, 0xf4, 0x0e, 0x0c, 0xfd, 0xb7, 0x12, 0xa6, 0xcb, 0xc2,
+	0x58, 0x5b, 0x65, 0xb2, 0x14, 0xa6, 0xfa, 0x68, 0x1f, 0xa4, 0xbf, 0x04, 0xb0, 0x75, 0x62, 0xa8,
+	0xe1, 0xda, 0xf0, 0x4c, 0x9f, 0xf2, 0x19, 0x23, 0x54, 0x9c, 0x33, 0xbb, 0xd6, 0x7f, 0x7b, 0xe9,
+	0x1c, 0xd1, 0xbd, 0x74, 0x8e, 0x6a, 0x7f, 0x2a, 0x5c, 0x18, 0xa6, 0x2e, 0x69, 0xd1, 0x78, 0xe3,
+	0x5c, 0x6c, 0xc5, 0xb5, 0xa1, 0xca, 0x38, 0x9b, 0x44, 0xc4, 0x07, 0x18, 0x41, 0xc4, 0x44, 0xee,
+	0xf6, 0x1f, 0x11, 0x7b, 0x4c, 0xff, 0x0a, 0x60, 0xd4, 0x68, 0x87, 0xea, 0x8b, 0x97, 0x36, 0x85,
+	0xa1, 0x63, 0xa8, 0xbe, 0xa8, 0x24, 0xdc, 0xf9, 0xbf, 0x96, 0xc7, 0xef, 0x43, 0x4f, 0x1b, 0x6a,
+	0x4a, 0xed, 0x2c, 0x35, 0x3a, 0x7c, 0x63, 0xd5, 0x77, 0x59, 0xd5, 0x13, 0xc7, 0x22, 0x15, 0x1b,
+	0x27, 0xb0, 0x36, 0x63, 0x5a, 0x5b, 0x2f, 0xf6, 0xfc, 0x86, 0xaa, 0xd0, 0x3e, 0x34, 0x99, 0x62,
+	0xd4, 0xb0, 0xa9, 0xe1, 0x33, 0x96, 0xac, 0x39, 0x2d, 0xf0, 0x90, 0x9d, 0xa6, 0x25, 0x94, 0x6e,
+	0x0d, 0x9e, 0xd0, 0xf7, 0x04, 0x0f, 0x59, 0xc2, 0xfe, 0x9f, 0x21, 0xc4, 0xf5, 0x1f, 0x0d, 0x3c,
+	0x02, 0xa8, 0x83, 0x29, 0xba, 0x81, 0x11, 0x0c, 0xeb, 0xf8, 0x91, 0x30, 0x28, 0xc0, 0x5b, 0xb0,
+	0x51, 0x23, 0xc7, 0xb2, 0x3c, 0x63, 0x05, 0x0a, 0x5b, 0xe0, 0x89, 0x7b, 0xb3, 0x51, 0x84, 0x37,
+	0x61, 0xbd, 0x06, 0xef, 0x4b, 0x59, 0xa0, 0x4e, 0x0b, 0xb2, 0xea, 0xa8, 0x8b, 0x13, 0xd8, 0x5e,
+	0xba, 0x7a, 0xa4, 0x14, 0xbd, 0x42, 0x3d, 0xbc, 0x03, 0x9b, 0x4d, 0x6d, 0x0f, 0xaf, 0xb5, 0x2e,
+	0x1c, 0xbb, 0xa7, 0xdf, 0x67, 0xfa, 0xf8, 0x26, 0xe0, 0x56, 0x75, 0x8f, 0xc7, 0x4b, 0xdd, 0xd9,
+	0x89, 0x22, 0x68, 0x55, 0xf7, 0x20, 0xd3, 0x68, 0x80, 0x5f, 0x83, 0xad, 0x1a, 0x7e, 0x76, 0x5e,
+	0xcb, 0x0e, 0xf1, 0x2d, 0xb8, 0xd9, 0x48, 0x34, 0x3b, 0x5d, 0xc7, 0xbb, 0xb0, 0xd3, 0xc8, 0x3d,
+	0x2c, 0x24, 0xad, 0xae, 0x8d, 0xf6, 0x7f, 0x0b, 0x20, 0xae, 0x9d, 0x6a, 0xc7, 0x59, 0x07, 0x47,
+	0x8f, 0x1f, 0xa3, 0x1b, 0xb6, 0xb7, 0x1a, 0x79, 0xc2, 0x45, 0x69, 0x18, 0x0a, 0xf0, 0x36, 0xa0,
+	0x25, 0xf0, 0x29, 0x0a, 0xed, 0xf0, 0x6a, 0xf4, 0x13, 0x59, 0x2a, 0x14, 0xb5, 0xea, 0x1d, 0xd3,
+	0x2b, 0x3f, 0xe1, 0x1a, 0xf9, 0x8a, 0xb1, 0x0b, 0xd4, 0xc5, 0x18, 0x46, 0x8b, 0x6a, 0x52, 0x98,
+	0xef, 0x51, 0xaf, 0x45, 0xfb, 0x9a, 0x51, 0x85, 0xd6, 0xf6, 0xbf, 0x03, 0x58, 0x58, 0x0f, 0x6f,
+	0xc0, 0x60, 0x11, 0x59, 0x27, 0xec, 0xc0, 0x66, 0xc3, 0x99, 0xa5, 0x10, 0x76, 0xc9, 0x41, 0x1b,
+	0x3e, 0x29, 0xb3, 0x8c, 0x69, 0xed, 0x0d, 0xb1, 0x80, 0x3f, 0x52, 0x4a, 0x2a, 0x14, 0xdd, 0x1f,
+	0x7e, 0x03, 0x0b, 0x9f, 0x9f, 0xf5, 0xdc, 0x3f, 0x50, 0xef, 0xfe, 0x1d, 0x00, 0x00, 0xff, 0xff,
+	0x4d, 0xe2, 0x21, 0x30, 0x51, 0x09, 0x00, 0x00,
 }
-
-func (x ValueType) String() string {
-	s, ok := ValueType_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
-func (x RangeType) String() string {
-	s, ok := RangeType_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
-func (x TaskStatus) String() string {
-	s, ok := TaskStatus_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
-func (this *PageQuery) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*PageQuery)
-	if !ok {
-		that2, ok := that.(PageQuery)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.PageSize != that1.PageSize {
-		return false
-	}
-	if this.PageIndex != that1.PageIndex {
-		return false
-	}
-	return true
-}
-func (this *Value) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Value)
-	if !ok {
-		that2, ok := that.(Value)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.ValueType != that1.ValueType {
-		return false
-	}
-	if this.IntValue != that1.IntValue {
-		return false
-	}
-	if this.DoubleValue != that1.DoubleValue {
-		return false
-	}
-	if this.StringValue != that1.StringValue {
-		return false
-	}
-	if this.BoolValue != that1.BoolValue {
-		return false
-	}
-	if len(this.IntValues) != len(that1.IntValues) {
-		return false
-	}
-	for i := range this.IntValues {
-		if this.IntValues[i] != that1.IntValues[i] {
-			return false
-		}
-	}
-	if len(this.StringValues) != len(that1.StringValues) {
-		return false
-	}
-	for i := range this.StringValues {
-		if this.StringValues[i] != that1.StringValues[i] {
-			return false
-		}
-	}
-	if len(this.DoubleValues) != len(that1.DoubleValues) {
-		return false
-	}
-	for i := range this.DoubleValues {
-		if this.DoubleValues[i] != that1.DoubleValues[i] {
-			return false
-		}
-	}
-	return true
-}
-func (this *JoinCondition) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*JoinCondition)
-	if !ok {
-		that2, ok := that.(JoinCondition)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.TableName != that1.TableName {
-		return false
-	}
-	if this.TableColName != that1.TableColName {
-		return false
-	}
-	if this.JoinTableColName != that1.JoinTableColName {
-		return false
-	}
-	if this.TableAlisa != that1.TableAlisa {
-		return false
-	}
-	return true
-}
-func (this *Condition) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Condition)
-	if !ok {
-		that2, ok := that.(Condition)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.ColName != that1.ColName {
-		return false
-	}
-	if this.Operator != that1.Operator {
-		return false
-	}
-	if !this.Value.Equal(that1.Value) {
-		return false
-	}
-	return true
-}
-func (this *OrderCondition) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*OrderCondition)
-	if !ok {
-		that2, ok := that.(OrderCondition)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Name != that1.Name {
-		return false
-	}
-	if this.Order != that1.Order {
-		return false
-	}
-	return true
-}
-func (this *Query) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Query)
-	if !ok {
-		that2, ok := that.(Query)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if len(this.Conditions) != len(that1.Conditions) {
-		return false
-	}
-	for i := range this.Conditions {
-		if !this.Conditions[i].Equal(that1.Conditions[i]) {
-			return false
-		}
-	}
-	if len(this.OrderConditions) != len(that1.OrderConditions) {
-		return false
-	}
-	for i := range this.OrderConditions {
-		if !this.OrderConditions[i].Equal(that1.OrderConditions[i]) {
-			return false
-		}
-	}
-	if !this.Page.Equal(that1.Page) {
-		return false
-	}
-	if this.ReturnTotal != that1.ReturnTotal {
-		return false
-	}
-	if this.ForcePage != that1.ForcePage {
-		return false
-	}
-	if !this.Join.Equal(that1.Join) {
-		return false
-	}
-	return true
-}
-func (this *Update) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Update)
-	if !ok {
-		that2, ok := that.(Update)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Id != that1.Id {
-		return false
-	}
-	if len(this.Fields) != len(that1.Fields) {
-		return false
-	}
-	for i := range this.Fields {
-		if !this.Fields[i].Equal(that1.Fields[i]) {
-			return false
-		}
-	}
-	if len(this.Conditions) != len(that1.Conditions) {
-		return false
-	}
-	for i := range this.Conditions {
-		if !this.Conditions[i].Equal(that1.Conditions[i]) {
-			return false
-		}
-	}
-	return true
-}
-func (this *Field) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Field)
-	if !ok {
-		that2, ok := that.(Field)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.ColName != that1.ColName {
-		return false
-	}
-	if !this.FieldValue.Equal(that1.FieldValue) {
-		return false
-	}
-	return true
-}
-func (this *UpdateResult) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*UpdateResult)
-	if !ok {
-		that2, ok := that.(UpdateResult)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Count != that1.Count {
-		return false
-	}
-	return true
-}
-func (this *StatisticsTimeRange) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*StatisticsTimeRange)
-	if !ok {
-		that2, ok := that.(StatisticsTimeRange)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Type != that1.Type {
-		return false
-	}
-	if this.Interval != that1.Interval {
-		return false
-	}
-	if this.Start != that1.Start {
-		return false
-	}
-	if this.End != that1.End {
-		return false
-	}
-	return true
-}
-func (this *StatisticsTask) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*StatisticsTask)
-	if !ok {
-		that2, ok := that.(StatisticsTask)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Id != that1.Id {
-		return false
-	}
-	if this.Task != that1.Task {
-		return false
-	}
-	if this.Start != that1.Start {
-		return false
-	}
-	if this.End != that1.End {
-		return false
-	}
-	if this.Status != that1.Status {
-		return false
-	}
-	if this.Message != that1.Message {
-		return false
-	}
-	if this.CreateTime != that1.CreateTime {
-		return false
-	}
-	if this.UpdateTime != that1.UpdateTime {
-		return false
-	}
-	return true
-}
-func (this *PageQuery) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 6)
-	s = append(s, "&sqlbuilder.PageQuery{")
-	s = append(s, "PageSize: "+fmt.Sprintf("%#v", this.PageSize)+",\n")
-	s = append(s, "PageIndex: "+fmt.Sprintf("%#v", this.PageIndex)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *Value) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 12)
-	s = append(s, "&sqlbuilder.Value{")
-	s = append(s, "ValueType: "+fmt.Sprintf("%#v", this.ValueType)+",\n")
-	s = append(s, "IntValue: "+fmt.Sprintf("%#v", this.IntValue)+",\n")
-	s = append(s, "DoubleValue: "+fmt.Sprintf("%#v", this.DoubleValue)+",\n")
-	s = append(s, "StringValue: "+fmt.Sprintf("%#v", this.StringValue)+",\n")
-	s = append(s, "BoolValue: "+fmt.Sprintf("%#v", this.BoolValue)+",\n")
-	s = append(s, "IntValues: "+fmt.Sprintf("%#v", this.IntValues)+",\n")
-	s = append(s, "StringValues: "+fmt.Sprintf("%#v", this.StringValues)+",\n")
-	s = append(s, "DoubleValues: "+fmt.Sprintf("%#v", this.DoubleValues)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *JoinCondition) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 8)
-	s = append(s, "&sqlbuilder.JoinCondition{")
-	s = append(s, "TableName: "+fmt.Sprintf("%#v", this.TableName)+",\n")
-	s = append(s, "TableColName: "+fmt.Sprintf("%#v", this.TableColName)+",\n")
-	s = append(s, "JoinTableColName: "+fmt.Sprintf("%#v", this.JoinTableColName)+",\n")
-	s = append(s, "TableAlisa: "+fmt.Sprintf("%#v", this.TableAlisa)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *Condition) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 7)
-	s = append(s, "&sqlbuilder.Condition{")
-	s = append(s, "ColName: "+fmt.Sprintf("%#v", this.ColName)+",\n")
-	s = append(s, "Operator: "+fmt.Sprintf("%#v", this.Operator)+",\n")
-	if this.Value != nil {
-		s = append(s, "Value: "+fmt.Sprintf("%#v", this.Value)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *OrderCondition) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 6)
-	s = append(s, "&sqlbuilder.OrderCondition{")
-	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
-	s = append(s, "Order: "+fmt.Sprintf("%#v", this.Order)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *Query) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 10)
-	s = append(s, "&sqlbuilder.Query{")
-	if this.Conditions != nil {
-		s = append(s, "Conditions: "+fmt.Sprintf("%#v", this.Conditions)+",\n")
-	}
-	if this.OrderConditions != nil {
-		s = append(s, "OrderConditions: "+fmt.Sprintf("%#v", this.OrderConditions)+",\n")
-	}
-	if this.Page != nil {
-		s = append(s, "Page: "+fmt.Sprintf("%#v", this.Page)+",\n")
-	}
-	s = append(s, "ReturnTotal: "+fmt.Sprintf("%#v", this.ReturnTotal)+",\n")
-	s = append(s, "ForcePage: "+fmt.Sprintf("%#v", this.ForcePage)+",\n")
-	if this.Join != nil {
-		s = append(s, "Join: "+fmt.Sprintf("%#v", this.Join)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *Update) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 7)
-	s = append(s, "&sqlbuilder.Update{")
-	s = append(s, "Id: "+fmt.Sprintf("%#v", this.Id)+",\n")
-	if this.Fields != nil {
-		s = append(s, "Fields: "+fmt.Sprintf("%#v", this.Fields)+",\n")
-	}
-	if this.Conditions != nil {
-		s = append(s, "Conditions: "+fmt.Sprintf("%#v", this.Conditions)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *Field) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 6)
-	s = append(s, "&sqlbuilder.Field{")
-	s = append(s, "ColName: "+fmt.Sprintf("%#v", this.ColName)+",\n")
-	if this.FieldValue != nil {
-		s = append(s, "FieldValue: "+fmt.Sprintf("%#v", this.FieldValue)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *UpdateResult) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&sqlbuilder.UpdateResult{")
-	s = append(s, "Count: "+fmt.Sprintf("%#v", this.Count)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *StatisticsTimeRange) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 8)
-	s = append(s, "&sqlbuilder.StatisticsTimeRange{")
-	s = append(s, "Type: "+fmt.Sprintf("%#v", this.Type)+",\n")
-	s = append(s, "Interval: "+fmt.Sprintf("%#v", this.Interval)+",\n")
-	s = append(s, "Start: "+fmt.Sprintf("%#v", this.Start)+",\n")
-	s = append(s, "End: "+fmt.Sprintf("%#v", this.End)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *StatisticsTask) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 12)
-	s = append(s, "&sqlbuilder.StatisticsTask{")
-	s = append(s, "Id: "+fmt.Sprintf("%#v", this.Id)+",\n")
-	s = append(s, "Task: "+fmt.Sprintf("%#v", this.Task)+",\n")
-	s = append(s, "Start: "+fmt.Sprintf("%#v", this.Start)+",\n")
-	s = append(s, "End: "+fmt.Sprintf("%#v", this.End)+",\n")
-	s = append(s, "Status: "+fmt.Sprintf("%#v", this.Status)+",\n")
-	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
-	s = append(s, "CreateTime: "+fmt.Sprintf("%#v", this.CreateTime)+",\n")
-	s = append(s, "UpdateTime: "+fmt.Sprintf("%#v", this.UpdateTime)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func valueToGoStringBuilder(v interface{}, typ string) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
-}
-func (m *PageQuery) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PageQuery) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PageQuery) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.PageIndex != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.PageIndex))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.PageSize != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.PageSize))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Value) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Value) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Value) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.DoubleValues) > 0 {
-		for iNdEx := len(m.DoubleValues) - 1; iNdEx >= 0; iNdEx-- {
-			f1 := math.Float64bits(float64(m.DoubleValues[iNdEx]))
-			i -= 8
-			encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(f1))
-		}
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.DoubleValues)*8))
-		i--
-		dAtA[i] = 0x4a
-	}
-	if len(m.StringValues) > 0 {
-		for iNdEx := len(m.StringValues) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.StringValues[iNdEx])
-			copy(dAtA[i:], m.StringValues[iNdEx])
-			i = encodeVarintBuilder(dAtA, i, uint64(len(m.StringValues[iNdEx])))
-			i--
-			dAtA[i] = 0x42
-		}
-	}
-	if len(m.IntValues) > 0 {
-		dAtA3 := make([]byte, len(m.IntValues)*10)
-		var j2 int
-		for _, num1 := range m.IntValues {
-			num := uint64(num1)
-			for num >= 1<<7 {
-				dAtA3[j2] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j2++
-			}
-			dAtA3[j2] = uint8(num)
-			j2++
-		}
-		i -= j2
-		copy(dAtA[i:], dAtA3[:j2])
-		i = encodeVarintBuilder(dAtA, i, uint64(j2))
-		i--
-		dAtA[i] = 0x32
-	}
-	if m.BoolValue {
-		i--
-		if m.BoolValue {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x28
-	}
-	if len(m.StringValue) > 0 {
-		i -= len(m.StringValue)
-		copy(dAtA[i:], m.StringValue)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.StringValue)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if m.DoubleValue != 0 {
-		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.DoubleValue))))
-		i--
-		dAtA[i] = 0x19
-	}
-	if m.IntValue != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.IntValue))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.ValueType != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.ValueType))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *JoinCondition) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *JoinCondition) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *JoinCondition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.TableAlisa) > 0 {
-		i -= len(m.TableAlisa)
-		copy(dAtA[i:], m.TableAlisa)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.TableAlisa)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.JoinTableColName) > 0 {
-		i -= len(m.JoinTableColName)
-		copy(dAtA[i:], m.JoinTableColName)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.JoinTableColName)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.TableColName) > 0 {
-		i -= len(m.TableColName)
-		copy(dAtA[i:], m.TableColName)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.TableColName)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.TableName) > 0 {
-		i -= len(m.TableName)
-		copy(dAtA[i:], m.TableName)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.TableName)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Condition) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Condition) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Condition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Value != nil {
-		{
-			size, err := m.Value.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintBuilder(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Operator) > 0 {
-		i -= len(m.Operator)
-		copy(dAtA[i:], m.Operator)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.Operator)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.ColName) > 0 {
-		i -= len(m.ColName)
-		copy(dAtA[i:], m.ColName)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.ColName)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *OrderCondition) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *OrderCondition) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *OrderCondition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Order) > 0 {
-		i -= len(m.Order)
-		copy(dAtA[i:], m.Order)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.Order)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Query) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Query) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Query) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Join != nil {
-		{
-			size, err := m.Join.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintBuilder(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x32
-	}
-	if m.ForcePage {
-		i--
-		if m.ForcePage {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x28
-	}
-	if m.ReturnTotal {
-		i--
-		if m.ReturnTotal {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x20
-	}
-	if m.Page != nil {
-		{
-			size, err := m.Page.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintBuilder(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.OrderConditions) > 0 {
-		for iNdEx := len(m.OrderConditions) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.OrderConditions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintBuilder(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if len(m.Conditions) > 0 {
-		for iNdEx := len(m.Conditions) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Conditions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintBuilder(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Update) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Update) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Update) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Conditions) > 0 {
-		for iNdEx := len(m.Conditions) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Conditions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintBuilder(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	if len(m.Fields) > 0 {
-		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Fields[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintBuilder(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if m.Id != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.Id))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Field) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Field) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Field) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.FieldValue != nil {
-		{
-			size, err := m.FieldValue.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintBuilder(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.ColName) > 0 {
-		i -= len(m.ColName)
-		copy(dAtA[i:], m.ColName)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.ColName)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *UpdateResult) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *UpdateResult) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UpdateResult) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Count != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.Count))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *StatisticsTimeRange) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *StatisticsTimeRange) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *StatisticsTimeRange) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.End != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.End))
-		i--
-		dAtA[i] = 0x20
-	}
-	if m.Start != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.Start))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.Interval != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.Interval))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.Type != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.Type))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *StatisticsTask) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *StatisticsTask) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *StatisticsTask) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.UpdateTime != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.UpdateTime))
-		i--
-		dAtA[i] = 0x40
-	}
-	if m.CreateTime != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.CreateTime))
-		i--
-		dAtA[i] = 0x38
-	}
-	if len(m.Message) > 0 {
-		i -= len(m.Message)
-		copy(dAtA[i:], m.Message)
-		i = encodeVarintBuilder(dAtA, i, uint64(len(m.Message)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if m.Status != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.Status))
-		i--
-		dAtA[i] = 0x28
-	}
-	if m.End != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.End))
-		i--
-		dAtA[i] = 0x20
-	}
-	if m.Start != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.Start))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.Task != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.Task))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.Id != 0 {
-		i = encodeVarintBuilder(dAtA, i, uint64(m.Id))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func encodeVarintBuilder(dAtA []byte, offset int, v uint64) int {
-	offset -= sovBuilder(v)
-	base := offset
-	for v >= 1<<7 {
-		dAtA[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	dAtA[offset] = uint8(v)
-	return base
-}
-func (m *PageQuery) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.PageSize != 0 {
-		n += 1 + sovBuilder(uint64(m.PageSize))
-	}
-	if m.PageIndex != 0 {
-		n += 1 + sovBuilder(uint64(m.PageIndex))
-	}
-	return n
-}
-
-func (m *Value) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.ValueType != 0 {
-		n += 1 + sovBuilder(uint64(m.ValueType))
-	}
-	if m.IntValue != 0 {
-		n += 1 + sovBuilder(uint64(m.IntValue))
-	}
-	if m.DoubleValue != 0 {
-		n += 9
-	}
-	l = len(m.StringValue)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	if m.BoolValue {
-		n += 2
-	}
-	if len(m.IntValues) > 0 {
-		l = 0
-		for _, e := range m.IntValues {
-			l += sovBuilder(uint64(e))
-		}
-		n += 1 + sovBuilder(uint64(l)) + l
-	}
-	if len(m.StringValues) > 0 {
-		for _, s := range m.StringValues {
-			l = len(s)
-			n += 1 + l + sovBuilder(uint64(l))
-		}
-	}
-	if len(m.DoubleValues) > 0 {
-		n += 1 + sovBuilder(uint64(len(m.DoubleValues)*8)) + len(m.DoubleValues)*8
-	}
-	return n
-}
-
-func (m *JoinCondition) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.TableName)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	l = len(m.TableColName)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	l = len(m.JoinTableColName)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	l = len(m.TableAlisa)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	return n
-}
-
-func (m *Condition) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ColName)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	l = len(m.Operator)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	if m.Value != nil {
-		l = m.Value.Size()
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	return n
-}
-
-func (m *OrderCondition) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	l = len(m.Order)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	return n
-}
-
-func (m *Query) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Conditions) > 0 {
-		for _, e := range m.Conditions {
-			l = e.Size()
-			n += 1 + l + sovBuilder(uint64(l))
-		}
-	}
-	if len(m.OrderConditions) > 0 {
-		for _, e := range m.OrderConditions {
-			l = e.Size()
-			n += 1 + l + sovBuilder(uint64(l))
-		}
-	}
-	if m.Page != nil {
-		l = m.Page.Size()
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	if m.ReturnTotal {
-		n += 2
-	}
-	if m.ForcePage {
-		n += 2
-	}
-	if m.Join != nil {
-		l = m.Join.Size()
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	return n
-}
-
-func (m *Update) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Id != 0 {
-		n += 1 + sovBuilder(uint64(m.Id))
-	}
-	if len(m.Fields) > 0 {
-		for _, e := range m.Fields {
-			l = e.Size()
-			n += 1 + l + sovBuilder(uint64(l))
-		}
-	}
-	if len(m.Conditions) > 0 {
-		for _, e := range m.Conditions {
-			l = e.Size()
-			n += 1 + l + sovBuilder(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *Field) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ColName)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	if m.FieldValue != nil {
-		l = m.FieldValue.Size()
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	return n
-}
-
-func (m *UpdateResult) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Count != 0 {
-		n += 1 + sovBuilder(uint64(m.Count))
-	}
-	return n
-}
-
-func (m *StatisticsTimeRange) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Type != 0 {
-		n += 1 + sovBuilder(uint64(m.Type))
-	}
-	if m.Interval != 0 {
-		n += 1 + sovBuilder(uint64(m.Interval))
-	}
-	if m.Start != 0 {
-		n += 1 + sovBuilder(uint64(m.Start))
-	}
-	if m.End != 0 {
-		n += 1 + sovBuilder(uint64(m.End))
-	}
-	return n
-}
-
-func (m *StatisticsTask) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Id != 0 {
-		n += 1 + sovBuilder(uint64(m.Id))
-	}
-	if m.Task != 0 {
-		n += 1 + sovBuilder(uint64(m.Task))
-	}
-	if m.Start != 0 {
-		n += 1 + sovBuilder(uint64(m.Start))
-	}
-	if m.End != 0 {
-		n += 1 + sovBuilder(uint64(m.End))
-	}
-	if m.Status != 0 {
-		n += 1 + sovBuilder(uint64(m.Status))
-	}
-	l = len(m.Message)
-	if l > 0 {
-		n += 1 + l + sovBuilder(uint64(l))
-	}
-	if m.CreateTime != 0 {
-		n += 1 + sovBuilder(uint64(m.CreateTime))
-	}
-	if m.UpdateTime != 0 {
-		n += 1 + sovBuilder(uint64(m.UpdateTime))
-	}
-	return n
-}
-
-func sovBuilder(x uint64) (n int) {
-	return (math_bits.Len64(x|1) + 6) / 7
-}
-func sozBuilder(x uint64) (n int) {
-	return sovBuilder(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *PageQuery) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&PageQuery{`,
-		`PageSize:` + fmt.Sprintf("%v", this.PageSize) + `,`,
-		`PageIndex:` + fmt.Sprintf("%v", this.PageIndex) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Value) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Value{`,
-		`ValueType:` + fmt.Sprintf("%v", this.ValueType) + `,`,
-		`IntValue:` + fmt.Sprintf("%v", this.IntValue) + `,`,
-		`DoubleValue:` + fmt.Sprintf("%v", this.DoubleValue) + `,`,
-		`StringValue:` + fmt.Sprintf("%v", this.StringValue) + `,`,
-		`BoolValue:` + fmt.Sprintf("%v", this.BoolValue) + `,`,
-		`IntValues:` + fmt.Sprintf("%v", this.IntValues) + `,`,
-		`StringValues:` + fmt.Sprintf("%v", this.StringValues) + `,`,
-		`DoubleValues:` + fmt.Sprintf("%v", this.DoubleValues) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *JoinCondition) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&JoinCondition{`,
-		`TableName:` + fmt.Sprintf("%v", this.TableName) + `,`,
-		`TableColName:` + fmt.Sprintf("%v", this.TableColName) + `,`,
-		`JoinTableColName:` + fmt.Sprintf("%v", this.JoinTableColName) + `,`,
-		`TableAlisa:` + fmt.Sprintf("%v", this.TableAlisa) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Condition) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Condition{`,
-		`ColName:` + fmt.Sprintf("%v", this.ColName) + `,`,
-		`Operator:` + fmt.Sprintf("%v", this.Operator) + `,`,
-		`Value:` + strings.Replace(this.Value.String(), "Value", "Value", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *OrderCondition) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&OrderCondition{`,
-		`Name:` + fmt.Sprintf("%v", this.Name) + `,`,
-		`Order:` + fmt.Sprintf("%v", this.Order) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Query) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForConditions := "[]*Condition{"
-	for _, f := range this.Conditions {
-		repeatedStringForConditions += strings.Replace(f.String(), "Condition", "Condition", 1) + ","
-	}
-	repeatedStringForConditions += "}"
-	repeatedStringForOrderConditions := "[]*OrderCondition{"
-	for _, f := range this.OrderConditions {
-		repeatedStringForOrderConditions += strings.Replace(f.String(), "OrderCondition", "OrderCondition", 1) + ","
-	}
-	repeatedStringForOrderConditions += "}"
-	s := strings.Join([]string{`&Query{`,
-		`Conditions:` + repeatedStringForConditions + `,`,
-		`OrderConditions:` + repeatedStringForOrderConditions + `,`,
-		`Page:` + strings.Replace(this.Page.String(), "PageQuery", "PageQuery", 1) + `,`,
-		`ReturnTotal:` + fmt.Sprintf("%v", this.ReturnTotal) + `,`,
-		`ForcePage:` + fmt.Sprintf("%v", this.ForcePage) + `,`,
-		`Join:` + strings.Replace(this.Join.String(), "JoinCondition", "JoinCondition", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Update) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForFields := "[]*Field{"
-	for _, f := range this.Fields {
-		repeatedStringForFields += strings.Replace(f.String(), "Field", "Field", 1) + ","
-	}
-	repeatedStringForFields += "}"
-	repeatedStringForConditions := "[]*Condition{"
-	for _, f := range this.Conditions {
-		repeatedStringForConditions += strings.Replace(f.String(), "Condition", "Condition", 1) + ","
-	}
-	repeatedStringForConditions += "}"
-	s := strings.Join([]string{`&Update{`,
-		`Id:` + fmt.Sprintf("%v", this.Id) + `,`,
-		`Fields:` + repeatedStringForFields + `,`,
-		`Conditions:` + repeatedStringForConditions + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Field) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Field{`,
-		`ColName:` + fmt.Sprintf("%v", this.ColName) + `,`,
-		`FieldValue:` + strings.Replace(this.FieldValue.String(), "Value", "Value", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *UpdateResult) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&UpdateResult{`,
-		`Count:` + fmt.Sprintf("%v", this.Count) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *StatisticsTimeRange) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&StatisticsTimeRange{`,
-		`Type:` + fmt.Sprintf("%v", this.Type) + `,`,
-		`Interval:` + fmt.Sprintf("%v", this.Interval) + `,`,
-		`Start:` + fmt.Sprintf("%v", this.Start) + `,`,
-		`End:` + fmt.Sprintf("%v", this.End) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *StatisticsTask) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&StatisticsTask{`,
-		`Id:` + fmt.Sprintf("%v", this.Id) + `,`,
-		`Task:` + fmt.Sprintf("%v", this.Task) + `,`,
-		`Start:` + fmt.Sprintf("%v", this.Start) + `,`,
-		`End:` + fmt.Sprintf("%v", this.End) + `,`,
-		`Status:` + fmt.Sprintf("%v", this.Status) + `,`,
-		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
-		`CreateTime:` + fmt.Sprintf("%v", this.CreateTime) + `,`,
-		`UpdateTime:` + fmt.Sprintf("%v", this.UpdateTime) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func valueToStringBuilder(v interface{}) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("*%v", pv)
-}
-func (m *PageQuery) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PageQuery: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PageQuery: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PageSize", wireType)
-			}
-			m.PageSize = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PageSize |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PageIndex", wireType)
-			}
-			m.PageIndex = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PageIndex |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Value) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Value: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Value: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ValueType", wireType)
-			}
-			m.ValueType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ValueType |= ValueType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IntValue", wireType)
-			}
-			m.IntValue = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.IntValue |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DoubleValue", wireType)
-			}
-			var v uint64
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.DoubleValue = float64(math.Float64frombits(v))
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StringValue", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.StringValue = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BoolValue", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.BoolValue = bool(v != 0)
-		case 6:
-			if wireType == 0 {
-				var v int64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowBuilder
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= int64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.IntValues = append(m.IntValues, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowBuilder
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthBuilder
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthBuilder
-				}
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				var elementCount int
-				var count int
-				for _, integer := range dAtA[iNdEx:postIndex] {
-					if integer < 128 {
-						count++
-					}
-				}
-				elementCount = count
-				if elementCount != 0 && len(m.IntValues) == 0 {
-					m.IntValues = make([]int64, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v int64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBuilder
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= int64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.IntValues = append(m.IntValues, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field IntValues", wireType)
-			}
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StringValues", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.StringValues = append(m.StringValues, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 9:
-			if wireType == 1 {
-				var v uint64
-				if (iNdEx + 8) > l {
-					return io.ErrUnexpectedEOF
-				}
-				v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-				iNdEx += 8
-				v2 := float64(math.Float64frombits(v))
-				m.DoubleValues = append(m.DoubleValues, v2)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowBuilder
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthBuilder
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthBuilder
-				}
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				var elementCount int
-				elementCount = packedLen / 8
-				if elementCount != 0 && len(m.DoubleValues) == 0 {
-					m.DoubleValues = make([]float64, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v uint64
-					if (iNdEx + 8) > l {
-						return io.ErrUnexpectedEOF
-					}
-					v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-					iNdEx += 8
-					v2 := float64(math.Float64frombits(v))
-					m.DoubleValues = append(m.DoubleValues, v2)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field DoubleValues", wireType)
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *JoinCondition) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: JoinCondition: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: JoinCondition: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TableName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TableName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TableColName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TableColName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field JoinTableColName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.JoinTableColName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TableAlisa", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TableAlisa = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Condition) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Condition: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Condition: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ColName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ColName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Operator", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Operator = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Value == nil {
-				m.Value = &Value{}
-			}
-			if err := m.Value.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *OrderCondition) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: OrderCondition: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OrderCondition: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Order", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Order = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Query) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Query: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Query: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Conditions", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Conditions = append(m.Conditions, &Condition{})
-			if err := m.Conditions[len(m.Conditions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OrderConditions", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.OrderConditions = append(m.OrderConditions, &OrderCondition{})
-			if err := m.OrderConditions[len(m.OrderConditions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Page", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Page == nil {
-				m.Page = &PageQuery{}
-			}
-			if err := m.Page.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReturnTotal", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.ReturnTotal = bool(v != 0)
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ForcePage", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.ForcePage = bool(v != 0)
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Join", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Join == nil {
-				m.Join = &JoinCondition{}
-			}
-			if err := m.Join.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Update) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Update: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Update: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
-			}
-			m.Id = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Id |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Fields = append(m.Fields, &Field{})
-			if err := m.Fields[len(m.Fields)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Conditions", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Conditions = append(m.Conditions, &Condition{})
-			if err := m.Conditions[len(m.Conditions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Field) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Field: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Field: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ColName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ColName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FieldValue", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.FieldValue == nil {
-				m.FieldValue = &Value{}
-			}
-			if err := m.FieldValue.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *UpdateResult) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateResult: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateResult: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Count", wireType)
-			}
-			m.Count = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Count |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *StatisticsTimeRange) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: StatisticsTimeRange: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: StatisticsTimeRange: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
-			}
-			m.Type = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Type |= RangeType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
-			}
-			m.Interval = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Interval |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Start", wireType)
-			}
-			m.Start = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Start |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field End", wireType)
-			}
-			m.End = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.End |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *StatisticsTask) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: StatisticsTask: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: StatisticsTask: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
-			}
-			m.Id = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Id |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Task", wireType)
-			}
-			m.Task = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Task |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Start", wireType)
-			}
-			m.Start = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Start |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field End", wireType)
-			}
-			m.End = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.End |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			m.Status = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Status |= TaskStatus(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Message = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CreateTime", wireType)
-			}
-			m.CreateTime = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.CreateTime |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UpdateTime", wireType)
-			}
-			m.UpdateTime = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UpdateTime |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBuilder(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthBuilder
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func skipBuilder(dAtA []byte) (n int, err error) {
-	l := len(dAtA)
-	iNdEx := 0
-	depth := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return 0, ErrIntOverflowBuilder
-			}
-			if iNdEx >= l {
-				return 0, io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		wireType := int(wire & 0x7)
-		switch wireType {
-		case 0:
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				iNdEx++
-				if dAtA[iNdEx-1] < 0x80 {
-					break
-				}
-			}
-		case 1:
-			iNdEx += 8
-		case 2:
-			var length int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowBuilder
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				length |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if length < 0 {
-				return 0, ErrInvalidLengthBuilder
-			}
-			iNdEx += length
-		case 3:
-			depth++
-		case 4:
-			if depth == 0 {
-				return 0, ErrUnexpectedEndOfGroupBuilder
-			}
-			depth--
-		case 5:
-			iNdEx += 4
-		default:
-			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
-		}
-		if iNdEx < 0 {
-			return 0, ErrInvalidLengthBuilder
-		}
-		if depth == 0 {
-			return iNdEx, nil
-		}
-	}
-	return 0, io.ErrUnexpectedEOF
-}
-
-var (
-	ErrInvalidLengthBuilder        = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowBuilder          = fmt.Errorf("proto: integer overflow")
-	ErrUnexpectedEndOfGroupBuilder = fmt.Errorf("proto: unexpected end of group")
-)

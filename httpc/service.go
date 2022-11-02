@@ -19,19 +19,16 @@ func NewClient(logger *zap.Logger) *resty.Client {
 	httpClient.SetTransport(&http.Transport{
 		//Proxy: http.ProxyFromEnvironment,
 		//DialContext:           DnsCacheDialContext(GetDialer()),
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          1000,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   30 * time.Second,
-		ExpectContinueTimeout: 0,
+		ForceAttemptHTTP2:   true,
+		MaxIdleConns:        100,
+		IdleConnTimeout:     30 * time.Second,
+		TLSHandshakeTimeout: 30 * time.Second,
+		//ExpectContinueTimeout: 0,
+		ExpectContinueTimeout: 5 * time.Second,
 	})
 	if EnableTrace {
 		httpClient.EnableTrace()
 	}
-	//httpClient.SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
-	//	DefaultLimiter.Take()
-	//	return nil
-	//})
 	return httpClient
 }
 
