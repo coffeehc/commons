@@ -2,6 +2,7 @@ package httpc
 
 import (
 	"context"
+	"crypto/tls"
 	"github.com/coffeehc/base/log"
 	"net"
 	"net/http"
@@ -54,11 +55,16 @@ func NewClientWithCookieJar(cookieJar http.CookieJar, logger *zap.Logger) *resty
 	httpClient.SetTransport(&http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		//DialContext:           DnsCacheDialContext(GetDialer()),
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 0,
+		ForceAttemptHTTP2:   true,
+		MaxIdleConns:        100,
+		MaxConnsPerHost:     100,
+		MaxIdleConnsPerHost: 100,
+		IdleConnTimeout:     90 * time.Second,
+		TLSHandshakeTimeout: 10 * time.Second,
+		//ExpectContinueTimeout: 0,
+	})
+	httpClient.SetTLSClientConfig(&tls.Config{
+		InsecureSkipVerify: true,
 	})
 	//httpClient.SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
 	//	DefaultLimiter.Take()
