@@ -6,7 +6,8 @@ import (
 )
 
 func BuildStorageKey(prefix []byte, extends ...[]byte) []byte {
-	keys := make([][]byte, 0, len(extends)+2)
+	keys := make([][]byte, 0, len(extends)+len(Separator))
+	keys = append(keys, prefix)
 	keys = append(keys, extends...)
 	key := bytes.Join(keys, Separator)
 	return key
