@@ -69,15 +69,15 @@ func newDBSource(config *Config) *sqlx.DB {
 	} else {
 		db.SetConnMaxLifetime(time.Second * 60)
 	}
-	if config.MaxIdleConns > 3 {
+	if config.MaxIdleConns > 5 {
 		db.SetMaxIdleConns(config.MaxIdleConns)
 	} else {
-		db.SetMaxIdleConns(3)
+		db.SetMaxIdleConns(5)
 	}
-	if config.MaxOpenConns > 10 {
+	if config.MaxOpenConns > 15 {
 		db.SetMaxOpenConns(config.MaxOpenConns)
 	} else {
-		db.SetMaxOpenConns(10)
+		db.SetMaxOpenConns(15)
 	}
 
 	db.Mapper = reflectx.NewMapperFunc("json", strings.ToLower)

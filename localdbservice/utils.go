@@ -38,25 +38,24 @@ func KeyLowerBound(b []byte) []byte {
 	return nil // no upper-bound
 }
 
-func BuildIdKey(prefix []byte, id int64) []byte {
+func BuildIdKey(prefix []byte, id uint64) []byte {
 	key := append(prefix, Separator...)
 	key = append(key, DBInt64ToBytes(id)...)
 	return key
 }
 
-func ParasIdKey(prefix []byte, key []byte) int64 {
+func ParasIdKey(prefix []byte, key []byte) uint64 {
 	index := len(prefix) + len(Separator)
 	data := key[index:]
 	return DBBytesToInt64(data)
 }
 
-func DBInt64ToBytes(i int64) []byte {
+func DBInt64ToBytes(i uint64) []byte {
 	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, uint64(i))
+	binary.BigEndian.PutUint64(buf, i)
 	return buf
 }
 
-func DBBytesToInt64(buf []byte) int64 {
-	i := binary.BigEndian.Uint64(buf)
-	return int64(i)
+func DBBytesToInt64(buf []byte) uint64 {
+	return binary.BigEndian.Uint64(buf)
 }
