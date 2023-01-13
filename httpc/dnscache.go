@@ -36,7 +36,6 @@ func (r *Resolver) Get(ctx context.Context, host string) ([]string, error) {
 	if loaded {
 		return value.([]string), nil
 	}
-	log.Debug("dns失效", zap.String("host", host))
 	return r.Lookup(ctx, host)
 }
 
@@ -53,11 +52,14 @@ func (r *Resolver) Refresh() {
 }
 
 func (r *Resolver) Lookup(ctx context.Context, host string) ([]string, error) {
+	//log.Debug("查询dns", zap.String("host", host))
 	ips, err := net.DefaultResolver.LookupIPAddr(ctx, host) // 调用默认的resolver
 	if err != nil {
+		log.Error("错误", zap.Error(err))
 		return nil, err
 	}
 	if len(ips) == 0 {
+		log.Error("没有获取到任何对应的ip", zap.String("host", host))
 		return nil, nil
 	}
 	strIPs := make([]string, 0, len(ips))
