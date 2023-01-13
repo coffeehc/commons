@@ -18,7 +18,7 @@ func NewClient(logger *zap.Logger) *resty.Client {
 	ClientInitSetting(httpClient, logger)
 	httpClient.SetTransport(&http.Transport{
 		//Proxy: http.ProxyFromEnvironment,
-		//DialContext:           DnsCacheDialContext(GetDialer()),
+		DialContext:         DnsCacheDialContext(GetDialer()),
 		ForceAttemptHTTP2:   true,
 		MaxIdleConns:        100,
 		IdleConnTimeout:     30 * time.Second,
@@ -76,8 +76,8 @@ func NewClientWithCookieJar(cookieJar http.CookieJar, logger *zap.Logger) *resty
 
 func BuildDNSCacheTransport() http.RoundTripper {
 	roundTripper := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		//DialContext:           DnsCacheDialContext(GetDialer()),
+		//Proxy: http.ProxyFromEnvironment,
+		DialContext:           DnsCacheDialContext(GetDialer()),
 		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          100,
 		IdleConnTimeout:       90 * time.Second,
@@ -87,7 +87,7 @@ func BuildDNSCacheTransport() http.RoundTripper {
 	return roundTripper
 }
 
-var defaultResolver = NewResolver(time.Minute * 10)
+var defaultResolver = NewResolver(time.Minute*5, time.Minute*4)
 
 func GetDialer() *net.Dialer {
 	dialer := &net.Dialer{
@@ -107,6 +107,9 @@ func DnsCacheDialContext(dialer *net.Dialer) func(context.Context, string, strin
 		ips, _ := defaultResolver.Get(ctx, host) // 这里自己实现了一个带缓存的Resolver，但是这个Resolver没有识别unix socket的功能，如果host里有port也不能识别，所以host不能带port
 		//log.Debug("解析域名", zap.String("address", address), zap.Strings("ips", ips))
 		for _, ip := range ips {
+			if ip == "" {
+				continue
+			}
 			conn, err := dialer.DialContext(ctx, network, ip+":"+port) // 这里我们已经解析出来了ip和port，那么net.Dialer判断出来是个ip就不会再去解析了
 			if err == nil {
 				return conn, nil

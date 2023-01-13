@@ -2,6 +2,8 @@ package httpc
 
 import (
 	"context"
+	"github.com/coffeehc/base/log"
+	"go.uber.org/zap"
 	"net"
 	"sync"
 	"time"
@@ -10,11 +12,12 @@ import (
 type Resolver struct {
 	cache           sync.Map
 	ResolverTimeout time.Duration
+	lock            sync.Mutex
 }
 
-func NewResolver(refreshRate time.Duration) *Resolver {
+func NewResolver(cacheTimes, refreshRate time.Duration) *Resolver {
 	resolver := &Resolver{
-		ResolverTimeout: 30 * time.Second,
+		ResolverTimeout: cacheTimes,
 	}
 	if refreshRate > 0 {
 		go resolver.autoRefresh(refreshRate)
@@ -27,6 +30,13 @@ func (r *Resolver) Get(ctx context.Context, host string) ([]string, error) {
 	if loaded {
 		return value.([]string), nil
 	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	value, loaded = r.cache.Load(host)
+	if loaded {
+		return value.([]string), nil
+	}
+	log.Debug("dns失效", zap.String("host", host))
 	return r.Lookup(ctx, host)
 }
 
@@ -50,9 +60,9 @@ func (r *Resolver) Lookup(ctx context.Context, host string) ([]string, error) {
 	if len(ips) == 0 {
 		return nil, nil
 	}
-	strIPs := make([]string, len(ips))
-	for index, ip := range ips {
-		strIPs[index] = ip.String()
+	strIPs := make([]string, 0, len(ips))
+	for _, ip := range ips {
+		strIPs = append(strIPs, ip.String())
 	}
 	r.cache.Store(host, strIPs)
 	return strIPs, nil
