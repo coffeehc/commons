@@ -20,11 +20,11 @@ func NewQueue(name, queueDir string) diskqueue.Interface {
 
 		func(lvl diskqueue.LogLevel, f string, args ...interface{}) {
 			if lvl == diskqueue.INFO {
-				log.GetLogger().Sugar().Info(f, args)
+				log.GetLogger().Sugar().Infof(f, args)
 			} else if lvl == diskqueue.WARN {
-				log.GetLogger().Sugar().Warn(f, args)
+				log.GetLogger().Sugar().Warnf(f, args)
 			} else if lvl > diskqueue.WARN {
-				log.GetLogger().Sugar().Error(f, args)
+				log.GetLogger().Sugar().Errorf(f, args)
 			}
 		})
 }
