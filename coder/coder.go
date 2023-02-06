@@ -2,8 +2,8 @@ package coder
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"errors"
+	"github.com/bytedance/sonic"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -65,10 +65,12 @@ func (stringCoder) Unmarshal(data []byte, target interface{}) error {
 type jsonCoder struct{}
 
 func (jsonCoder) Marshal(obj interface{}) ([]byte, error) {
-	return json.Marshal(obj)
+	return sonic.Marshal(obj)
+	//return json.Marshal(obj)
 }
 func (jsonCoder) Unmarshal(data []byte, target interface{}) error {
-	return json.Unmarshal(data, target)
+	//return json.Unmarshal(data, target)
+	return sonic.Unmarshal(data, target)
 }
 
 type pbCoder struct{}

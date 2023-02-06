@@ -60,84 +60,8 @@ func SendPBError(c *gin.Context, message string, code int64, statusCode int) {
 	c.Abort()
 }
 
-func AcceptHeader(c *gin.Context, contentType string) bool {
-	accept := c.GetHeader("accept")
-	accepts := strings.Split(accept, ",")
-	for _, a := range accepts {
-		if strings.Trim(strings.ToLower(a), " ") == strings.ToLower(contentType) {
-			return true
-		}
-	}
-	return false
-}
-
-func SendSuccess(c *gin.Context, json interface{}, code int64) {
-	if AcceptHeader(c, "application/x-protobuf") {
-		SendPBSuccess(c, json.(proto.Message), code)
-		return
-	}
-	resp := &AjaxResponse{
-		Success:   true,
-		Payload:   json,
-		Code:      code,
-		RequestID: utils.Int64IdEncode(GetRequestId(c)),
-	}
-	c.Render(http.StatusOK, &JsonRender{
-		Data: resp,
-	})
-	c.Abort()
-}
-
-func SendErrors(c *gin.Context, err error, code int64, statusCode int) {
-	if AcceptHeader(c, "application/x-protobuf") {
-		SendPBErrors(c, err, code, statusCode)
-		return
-	}
-	SendErrorsWithRedirect(c, err, "", code, statusCode)
-}
-
-func SendErrorsWithRedirect(c *gin.Context, err error, redirect string, code int64, statusCode int) {
-	message := err.Error()
-	if errors.IsSystemError(err) {
-		log.Error("遭遇了系统错误", zap.Error(err))
-		message = "系统忙，请稍后再试"
-	}
-	SendErrorWithRedirect(c, message, redirect, code, statusCode)
-}
-
-func SendError(c *gin.Context, message string, code int64, statusCode int) {
-	if AcceptHeader(c, "application/x-protobuf") {
-		SendPBError(c, message, code, statusCode)
-		return
-	}
-	SendErrorWithRedirect(c, message, "", code, statusCode)
-}
-
-func SendErrorWithRedirect(c *gin.Context, message, redirect string, code int64, statusCode int) {
-	resp := &AjaxResponse{
-		Message:   message,
-		Code:      code,
-		RequestID: utils.Int64IdEncode(GetRequestId(c)),
-		Redirect:  redirect,
-	}
-	c.Render(statusCode, &JsonRender{
-		Data: resp,
-	})
-	c.Abort()
-}
-
 func GetRequestId(c *gin.Context) int64 {
 	return c.GetInt64(internal.ContextKey_RequestId)
-}
-
-func Bind(ginCtx *gin.Context, data interface{}) error {
-	err := ginCtx.MustBindWith(data, JsonBinding)
-	if err != nil {
-		log.Error("无法解析请求内容", zap.Error(err))
-		// panic(errors.MessageError("参数无法解析"))
-		return errors.MessageError("参数无法解析")
-	}
-	return nil
 }
 
 func FormatSequence(layout string, id int64) string {
@@ -176,17 +100,6 @@ func ReaderBodyByJsonFromBody(body io.ReadCloser, t interface{}) {
 	if err != nil {
 		panic(errors.MessageError("无法解析请求数据"))
 	}
-}
-
-func ReadResponse(resp BaseResponse, body []byte) error {
-	err := json.Unmarshal(body, resp)
-	if err != nil {
-		return errors.ConverError(err)
-	}
-	if resp.IsSuccess() {
-		return nil
-	}
-	return errors.MessageError(resp.GetMessage())
 }
 
 func GetRemortIp(c *gin.Context) string {

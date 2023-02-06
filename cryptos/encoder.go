@@ -29,11 +29,11 @@ func DataEncode(data []byte, mask DataMasker) (string, error) {
 	copy(tokenData[4+distLen:], key[4:12])
 	copy(tokenData[12+distLen:], dist[distLen:])
 	copy(tokenData[12+distLen*2:], key[12:])
-	return base64.RawURLEncoding.EncodeToString(sourceData), nil
+	return base64.RawStdEncoding.EncodeToString(sourceData), nil
 }
 
 func DataDecode(token string, mask DataMasker) ([]byte, error) {
-	sourceData, err := base64.RawURLEncoding.DecodeString(token)
+	sourceData, err := base64.RawStdEncoding.DecodeString(token)
 	if err != nil {
 		log.Warn("解析Token失败", zap.Error(err))
 		return nil, errors.MessageError("token非法")

@@ -3,7 +3,6 @@ package middlewares
 import (
 	"context"
 	"github.com/coffeehc/commons/webfacade"
-	"net/http"
 	"strings"
 	"time"
 
@@ -38,7 +37,8 @@ func RecoverMiddleware(timeout time.Duration) gin.HandlerFunc {
 						}
 					}
 				}
-				c.Redirect(http.StatusFound, "/")
+				//c.Redirect(http.StatusFound, "/")
+				c.Status(500)
 			}
 			cancelFunc()
 		}()
