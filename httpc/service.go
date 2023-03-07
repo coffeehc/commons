@@ -11,21 +11,43 @@ import (
 	"go.uber.org/zap"
 )
 
+var DefaultTransport = BuildTransport()
+
+func BuildTransport() http.RoundTripper {
+	return &http.Transport{
+		DialContext:           DnsCacheDialContext(GetDialer()),
+		DisableKeepAlives:     false,
+		MaxIdleConnsPerHost:   8000,
+		MaxConnsPerHost:       10000,
+		MaxIdleConns:          10000,
+		IdleConnTimeout:       30 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 0,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+		ForceAttemptHTTP2: true,
+	}
+}
+
 var EnableTrace = false
+
+func NewClientNorProxy(logger *zap.Logger) *resty.Client {
+	httpClient := resty.New()
+	ClientInitSetting(httpClient, logger)
+	httpClient.SetTransport(DefaultTransport)
+	httpClient.SetCloseConnection(false)
+	if EnableTrace {
+		httpClient.EnableTrace()
+	}
+	return httpClient
+}
 
 func NewClient(logger *zap.Logger) *resty.Client {
 	httpClient := resty.New()
 	ClientInitSetting(httpClient, logger)
-	httpClient.SetTransport(&http.Transport{
-		//Proxy: http.ProxyFromEnvironment,
-		DialContext:         DnsCacheDialContext(GetDialer()),
-		ForceAttemptHTTP2:   true,
-		MaxIdleConns:        100,
-		IdleConnTimeout:     30 * time.Second,
-		TLSHandshakeTimeout: 30 * time.Second,
-		//ExpectContinueTimeout: 0,
-		ExpectContinueTimeout: 5 * time.Second,
-	})
+	httpClient.SetTransport(BuildTransport())
+	httpClient.SetCloseConnection(false)
 	if EnableTrace {
 		httpClient.EnableTrace()
 	}
@@ -51,24 +73,8 @@ func NewClientWithCookieJar(cookieJar http.CookieJar, logger *zap.Logger) *resty
 		httpClient.EnableTrace()
 	}
 	ClientInitSetting(httpClient, logger)
-	httpClient.SetTransport(&http.Transport{
-		Proxy:               http.ProxyFromEnvironment,
-		DialContext:         DnsCacheDialContext(GetDialer()),
-		ForceAttemptHTTP2:   true,
-		MaxIdleConns:        100,
-		MaxConnsPerHost:     100,
-		MaxIdleConnsPerHost: 100,
-		IdleConnTimeout:     90 * time.Second,
-		TLSHandshakeTimeout: 10 * time.Second,
-		//ExpectContinueTimeout: 0,
-	})
-	httpClient.SetTLSClientConfig(&tls.Config{
-		InsecureSkipVerify: true,
-	})
-	//httpClient.SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
-	//	DefaultLimiter.Take()
-	//	return nil
-	//})
+	httpClient.SetTransport(BuildTransport())
+	httpClient.SetCloseConnection(false)
 	return httpClient
 }
 
@@ -76,13 +82,19 @@ func NewClientWithCookieJar(cookieJar http.CookieJar, logger *zap.Logger) *resty
 
 func BuildDNSCacheTransport() http.RoundTripper {
 	roundTripper := &http.Transport{
-		//Proxy: http.ProxyFromEnvironment,
-		DialContext:           DnsCacheDialContext(GetDialer()),
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
+		DisableKeepAlives:     false,
+		MaxIdleConnsPerHost:   1000,
+		MaxConnsPerHost:       2000,
+		MaxIdleConns:          2000,
+		IdleConnTimeout:       10 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 0,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+		ForceAttemptHTTP2: true,
+		//Proxy: http.ProxyFromEnvironment,
+		DialContext: DnsCacheDialContext(GetDialer()),
 	}
 	return roundTripper
 }
@@ -91,8 +103,9 @@ var defaultResolver = NewResolver(time.Minute*5, time.Minute*4)
 
 func GetDialer() *net.Dialer {
 	dialer := &net.Dialer{
-		Timeout:   60 * time.Second,
-		KeepAlive: 30 * time.Second,
+		Timeout:       60 * time.Second,
+		KeepAlive:     30 * time.Second,
+		FallbackDelay: 10 * time.Second,
 	}
 	return dialer
 }
@@ -117,8 +130,4 @@ func DnsCacheDialContext(dialer *net.Dialer) func(context.Context, string, strin
 		}
 		return dialer.DialContext(ctx, network, address) // //如果前面解析失败了就老老实实用原address去调用吧，可能address是个unix socket呢。这里是个兜底，前面都失败了那么我们还可以用原来的方式去做
 	}
-}
-
-func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {
-	return dialer.DialContext
 }
