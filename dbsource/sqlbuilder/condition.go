@@ -90,7 +90,7 @@ func buildCondition(sqlBuilder *strings.Builder, replace AlisaDefined, condition
 		sqlBuilder.WriteString(replace.handle(condition.GetColName()))
 		sqlBuilder.WriteString(" ")
 		sqlBuilder.WriteString(condition.GetOperator())
-		if condition.GetOperator() == "in" {
+		if condition.GetOperator() == "in" || condition.GetOperator() == "not in" {
 			sqlBuilder.WriteString(" ( ")
 			v := reflect.ValueOf(value)
 			for i := 0; i < v.Len(); i++ {
