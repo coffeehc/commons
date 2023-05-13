@@ -1,0 +1,37 @@
+`pebble.Options` 是 PebbleDB 中的主要配置结构体，包含了多种参数配置。以下是 PebbleDB 中 `pebble.Options` 的各个参数的说明：
+
+- `BytesPerSync`: 控制每次数据写入之后强制刷盘的时间间隔。如果该参数设置为 0，则不进行自动刷盘。默认为 2MB。
+- `Cache`: 指定缓存配置。可以通过 `cache.NewLRUCache` 创建一个 LRU 缓存对象，或者通过 `cache.NewRocksDBCache` 创建一个 RocksDB 缓存对象。如果该参数为 nil，则 PebbleDB 不会使用缓存。
+- `Comparer`: 指定 key 的比较函数。如果不指定，则使用字典序比较。
+- `DefaultComparer`: 指定默认的 key 比较函数。如果某个 key 没有指定比较函数，则会使用该值。
+- `DisableWAL`: 是否禁用 Write-Ahead Log。默认为 false，表示启用 WAL。
+- `FileSystem`: 指定文件系统。默认为本地文件系统。也可以指定 S3 文件系统等。
+- `FlushSplitBytes`: 内存中写入数据的大小阈值，超过该阈值会触发一次数据刷盘操作。默认为 64MB。
+- `LevelCompaction`: 控制是否开启层级合并（Level Compaction）。默认为 true。
+- `Levels`: 指定各个层级的参数配置。可以通过 `pebble.LevelOptions` 结构体设置不同层级的参数。
+- `Logger`: 日志记录器。可以通过 `logging.NewStdLogger` 创建一个标准输出日志记录器。
+- `MaxConcurrentCompactions`: 控制最大同时进行的合并操作数量。默认为 1。
+- `MaxManifestFileSize`: 控制 Manifest 文件的最大大小。默认为 64MB。
+- `MaxOpenFiles`: 控制最大同时打开的文件数量。默认为 1000。
+- `MaxTableSize`: 控制单个 SSTable 的最大大小。默认为 2GB。
+- `MemTable`: 指定内存表的配置。可以通过 `memtable.NewArena` 创建一个 ArenaMemTable 对象，或者通过 `memtable.NewSkipList` 创建一个 SkipListMemTable 对象。默认为 ArenaMemTable。
+- `Merger`: 合并函数，用于处理相同 key 的多个版本。默认使用 `pebble.MergeOperator`。
+- `SplitMerges`: 控制是否对 Merge 操作进行切分。默认为 true。
+- `TablePropertyCollectors`: 控制 SSTable 属性收集器。可以通过 `table.NewStatsPropertyCollector` 创建一个统计信息属性收集器。
+- `WalDir`: 指定 WAL 文件的保存目录。默认为数据库目录下的 `wal` 子目录。
+
+需要注意的是，`pebble.Options` 中的很多参数都是可选的，如果不指定，则会使用默认值。具体的配置可以根据实际情况进行调整。
+
+
+`LevelOptions` 是 PebbleDB 中管理不同层级的配置参数。其中包括：
+
+- `TargetFileSize`: 每个 SSTable 的目标大小，超过该大小会触发 SSTable 合并操作。
+- `LevelSizeMultiplier`: 每一层 SSTable 大小与下一层 SSTable 大小的比例，用于计算每一层 SSTable 的目标大小。默认值为 10。
+- `L0CompactionThreshold`: 控制何时触发 L0 层的合并操作。当 L0 中 SSTable 的数量达到该值时，会触发一次合并操作。默认值为 4。
+- `L0StopWritesThreshold`: 控制何时停止向 L0 中写入数据。当 L0 中 SSTable 的数量达到该值时，PebbleDB 会停止向 L0 中写入数据，以便触发 L0 层的合并操作。默认值为 12。
+- `LBaseMaxBytes`: 第 0 层（即最底层）的最大总大小。该参数决定了 PebbleDB 最多可以在硬盘上保留多少数据。默认值为 64MB。
+- `MaxBytesBase`: 第 0 层 SSTable 最大总大小，如果超过该值，会触发 SSTable 合并操作。默认值为 0（表示不限制）。
+- `MaxBytesLevelMultiplier`: 后续层级的 SSTable 最大总大小，由第 0 层 SSTable 的大小乘以 `LevelSizeMultiplier` 计算得出。如果超过该值，会触发 SSTable 合并操作。默认值为 0（表示不限制）。
+- `VerifyChecksums`: 是否在读取 SSTable 时验证校验和。默认为 true。
+
+需要注意的是，`LevelOptions` 中的很多参数都是动态计算的，会根据实际情况自动调整。PebbleDB 的自适应调整策略可以使其在不同的工作负载下自动优化性能。

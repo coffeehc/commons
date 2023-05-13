@@ -46,11 +46,24 @@ func newService(ctx context.Context) Service {
 	}
 	log.Debug("打开数据文件", zap.String("dataDir", dataDir))
 	options := &pebble.Options{
-		Comparer: comparer,
+		BytesPerSync:          512 << 10, // 512 KB
+		Comparer:              comparer,
+		MaxOpenFiles:          500,
+		LBaseMaxBytes:         64 << 20, //64 MB
+		L0CompactionThreshold: 50,
+		L0StopWritesThreshold: 200,
+		Levels: []pebble.LevelOptions{
+			{
+				TargetFileSize: 512 << 10,
+			},
+		},
 	}
-	options.Experimental.MinDeletionRate = 100
+	options.Experimental.MinDeletionRate = 1000
 	options.Experimental.L0CompactionConcurrency = 5
+	options.Experimental.CompactionDebtConcurrency = 10
 	options.Experimental.MaxWriterConcurrency = 10
+	//options.MemTableSize
+	//options.Experimental.LevelMultiplier
 	storage, err := pebble.Open(dataDir, options)
 	if err != nil {
 		log.Panic("打开dataDir文件错误", zap.Error(err))
