@@ -16,13 +16,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func ParseQuery(c *fiber.Ctx, fieldMap map[string]FieldDefined, initCondition []*sqlbuilder.Condition) (*sqlbuilder.Query, error) {
+func ParseQuery(c *fiber.Ctx, pageIndexOffset int64, fieldMap map[string]FieldDefined, initCondition []*sqlbuilder.Condition) (*sqlbuilder.Query, error) {
 	conditions, err := ParseCondition(c, fieldMap, initCondition)
 	if err != nil {
 		return nil, err
 	}
 	return &sqlbuilder.Query{
-		Page:            ParsePageQuert(c),
+		Page:            ParsePageQuery(c, pageIndexOffset),
 		ReturnTotal:     GetBoolFromContext(c, "return_total"),
 		Conditions:      conditions,
 		OrderConditions: ParseOrderConditions(c, fieldMap),
@@ -36,9 +36,14 @@ type FieldDefined struct {
 	Convert       func(c *fiber.Ctx, key string) (*sqlbuilder.Value, error)
 }
 
-func ParsePageQuert(c *fiber.Ctx) *sqlbuilder.PageQuery {
+func ParsePageQuery(c *fiber.Ctx, pageIndexOffset int64) *sqlbuilder.PageQuery {
+	pageIndex := GetInt64FromContext(c, "page_index")
+	pageIndex -= pageIndexOffset
+	if pageIndex < 0 {
+		pageIndex = 0
+	}
 	return &sqlbuilder.PageQuery{
-		PageIndex: GetInt64FromContext(c, "page_index"),
+		PageIndex: pageIndex,
 		PageSize:  GetInt64FromContext(c, "page_size"),
 	}
 }

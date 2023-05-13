@@ -48,7 +48,9 @@ func newService(ctx context.Context) Service {
 	options := &pebble.Options{
 		Comparer: comparer,
 	}
-	options.Experimental.MinDeletionRate = 20
+	options.Experimental.MinDeletionRate = 100
+	options.Experimental.L0CompactionConcurrency = 5
+	options.Experimental.MaxWriterConcurrency = 10
 	storage, err := pebble.Open(dataDir, options)
 	if err != nil {
 		log.Panic("打开dataDir文件错误", zap.Error(err))
