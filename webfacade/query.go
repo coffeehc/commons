@@ -173,6 +173,9 @@ func ParseCondition(c *fiber.Ctx, fieldMap map[string]FieldDefined, initConditio
 			}
 			break
 		case sqlbuilder.ValueType_Bool:
+			if v == "_all" {
+				continue
+			}
 			param.BoolValue = v == "true" || v == "1"
 		case sqlbuilder.ValueType_Time:
 			t, err := time.Parse(utils.Format_TIME_YYYY_MM_DD_hh_mm_ss, v)
@@ -182,6 +185,9 @@ func ParseCondition(c *fiber.Ctx, fieldMap map[string]FieldDefined, initConditio
 			}
 			param.IntValue = t.UnixNano()
 		case sqlbuilder.ValueType_String:
+			if v == "" {
+				continue
+			}
 			param.StringValue = v
 		case sqlbuilder.ValueType_Status:
 			param.IntValue, err = strconv.ParseInt(v, 10, 64)
