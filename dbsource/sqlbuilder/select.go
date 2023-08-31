@@ -81,8 +81,12 @@ func BuildQuery(colNames, tableName string, maxPageSize int64, query *Query, joi
 		Params: append(params, pageParams...),
 	}
 	if query.GetReturnTotal() {
+		pk := "id"
+		if query.Pk != "" {
+			pk = query.Pk
+		}
 		totalSqlContext = &SqlContext{
-			Sql:    fmt.Sprintf("select count(%s) as `count` from %s %s %s", replace.handle("id"), tableName, joinSql, conditionSql),
+			Sql:    fmt.Sprintf("select count(%s) as `count` from %s %s %s", replace.handle(pk), tableName, joinSql, conditionSql),
 			Params: params,
 		}
 	}

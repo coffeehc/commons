@@ -49,7 +49,6 @@ func (impl *taskLimiter) Size() int64 {
 
 func (impl *taskLimiter) SetSize(size int64) {
 	atomic.StoreInt64(&impl.size, size)
-	impl.cond.Signal()
 }
 
 func (impl *taskLimiter) Take() {

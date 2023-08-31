@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/cockroachdb/pebble"
+	"github.com/cockroachdb/pebble/bloom"
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/commons/coder"
@@ -42,11 +43,16 @@ func newService(ctx context.Context) Service {
 	dataDir := viper.GetString(configKeyForDataDir)
 	comparer := pebble.DefaultComparer
 	comparer.Split = func(a []byte) int {
-		return bytes.LastIndex(a, Separator)
+		index := bytes.LastIndex(a, Separator)
+		if index < 0 {
+			index = 0
+		}
+		return 0
 	}
 	log.Debug("打开数据文件", zap.String("dataDir", dataDir))
 	options := &pebble.Options{
-		BytesPerSync:          512 << 10, // 512 KB
+		Cache:                 pebble.NewCache(1024 * 1024 * 32),
+		BytesPerSync:          32 << 20, //128MB = 128 << 20, // 512 KB = 512 << 10
 		Comparer:              comparer,
 		MaxOpenFiles:          500,
 		LBaseMaxBytes:         64 << 20, //64 MB
@@ -54,10 +60,31 @@ func newService(ctx context.Context) Service {
 		L0StopWritesThreshold: 200,
 		Levels: []pebble.LevelOptions{
 			{
-				TargetFileSize: 512 << 10,
+				TargetFileSize: 4 << 30, //TargetFileSize：每个层级的目标文件大小。 1G
+				Compression:    pebble.NoCompression,
+				FilterPolicy:   bloom.FilterPolicy(10),
+				//BlockSize: 每个表块的目标未压缩大小，默认值为4096
+				//BlockSizeThreshold：当块大小超过目标块大小的指定百分比，并且添加下一个条目将导致块超过目标块大小时，结束块，默认值为90。
+				//FilterPolicy：减少Get操作的磁盘读取的过滤算法，默认值为nil，表示不使用过滤器。
+				//IndexBlockSize：每个索引块的目标未压缩大小，默认值为BlockSize的值。
+			},
+			{
+				TargetFileSize: 8 << 30,
+				Compression:    pebble.NoCompression,
+				FilterType:     pebble.TableFilter,
+				FilterPolicy:   bloom.FilterPolicy(5),
+			},
+			{
+				TargetFileSize: 16 << 30,
+				Compression:    pebble.SnappyCompression,
+				//FilterType:     pebble.TableFilter,
+				FilterType:   pebble.TableFilter,
+				FilterPolicy: bloom.FilterPolicy(1),
 			},
 		},
 	}
+	//options.MaxConcurrentCompactions =
+	// options.Experimental  这个是试验性功能
 	options.Experimental.MinDeletionRate = 1000
 	options.Experimental.L0CompactionConcurrency = 5
 	options.Experimental.CompactionDebtConcurrency = 10

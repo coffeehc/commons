@@ -63,6 +63,7 @@ message Query {
     bool return_total = 4;
     bool force_page = 5;
     JoinCondition join = 6;
+    string pk  = 7;
 }
 
 message Update {
@@ -115,4 +116,9 @@ message StatisticsTask {
     string message = 6;
     int64 create_time = 7;
     int64 update_time = 8;
+}
+
+
+message QueryById{
+    int64 id = 1;
 }
