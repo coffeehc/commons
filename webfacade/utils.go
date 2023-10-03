@@ -6,7 +6,7 @@ import (
 	"github.com/coffeehc/commons/coder"
 	"github.com/coffeehc/commons/sequences"
 	"github.com/coffeehc/commons/utils"
-	"github.com/coffeehc/commons/webfacade/internal"
+	"github.com/gofiber/fiber/v2"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,16 +14,14 @@ import (
 
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
-	"github.com/gin-gonic/gin"
 	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
 )
 
-func SendPBSuccess(c *gin.Context, data proto.Message, code int64) {
+func SendPBSuccess(c *fiber.Ctx, data proto.Message, code int64) error {
 	resp := &PBResponse{
-		RequestId: GetRequestId(c),
-		Success:   true,
-		Code:      code,
+		Success: true,
+		Code:    code,
 	}
 	payload, e := coder.PBCoder.Marshal(data)
 	if e != nil {
@@ -32,36 +30,33 @@ func SendPBSuccess(c *gin.Context, data proto.Message, code int64) {
 	} else {
 		resp.Payload = payload
 	}
-	c.Render(http.StatusOK, &ProtobufRender{
-		Data: resp,
-	})
-	c.Abort()
+	body, err := coder.PBCoder.Marshal(resp)
+	if err != nil {
+		return c.SendStatus(500)
+	}
+	return c.Send(body)
 }
 
-func SendPBErrors(c *gin.Context, err error, code int64, statusCode int) {
+func SendPBErrors(c *fiber.Ctx, err error, code int64, statusCode int) error {
 	message := err.Error()
 	if errors.IsSystemError(err) {
 		log.Error("遭遇了系统错误", zap.Error(err))
 		message = "系统忙，请稍后再试"
 	}
-	SendPBError(c, message, code, statusCode)
+	return SendPBError(c, message, code, statusCode)
 }
 
-func SendPBError(c *gin.Context, message string, code int64, statusCode int) {
+func SendPBError(c *fiber.Ctx, message string, code int64, statusCode int) error {
 	resp := &PBResponse{
-		RequestId: GetRequestId(c),
-		Success:   false,
-		Code:      code,
-		Message:   message,
+		Success: false,
+		Code:    code,
+		Message: message,
 	}
-	c.Render(statusCode, &ProtobufRender{
-		Data: resp,
-	})
-	c.Abort()
-}
-
-func GetRequestId(c *gin.Context) int64 {
-	return c.GetInt64(internal.ContextKey_RequestId)
+	body, err := coder.PBCoder.Marshal(resp)
+	if err != nil {
+		return c.SendStatus(500)
+	}
+	return c.Send(body)
 }
 
 func FormatSequence(layout string, id int64) string {
@@ -102,16 +97,16 @@ func ReaderBodyByJsonFromBody(body io.ReadCloser, t interface{}) {
 	}
 }
 
-func GetRemortIp(c *gin.Context) string {
-	ip := c.GetHeader("X-Forwarded-For")
+func GetRemortIp(c *fiber.Ctx) string {
+	ip := c.Get("X-Forwarded-For")
 	if ip != "" {
 		return strings.Split(ip, ",")[0]
 	}
-	ip = c.GetHeader("X-Real-Ip")
+	ip = c.Get("X-Real-Ip")
 	if ip != "" {
 		return strings.Split(ip, ",")[0]
 	}
-	return c.ClientIP()
+	return c.IP()
 }
 
 func WriteContentType(w http.ResponseWriter, value []string) {

@@ -3,13 +3,13 @@ package dbmonitor
 import (
 	"context"
 	"github.com/coffeehc/commons/dbsource"
-	"github.com/coffeehc/commons/webfacade"
-	"github.com/gin-gonic/gin"
+	"github.com/coffeehc/httpx/httpxcommons"
+	"github.com/gofiber/fiber/v2"
 	"time"
 )
 
 type SqlCountMonitor interface {
-	RegisterWebEndpoint(engine *gin.Engine)
+	RegisterWebEndpoint(app *fiber.App)
 	dbsource.HandleMonitor
 }
 
@@ -31,8 +31,8 @@ type countMonitor struct {
 	sqlChannel chan string
 }
 
-func (impl *countMonitor) RegisterWebEndpoint(engine *gin.Engine) {
-	engine.GET("/api/v1/db/monitor/count", impl.monitorCount())
+func (impl *countMonitor) RegisterWebEndpoint(app *fiber.App) {
+	app.Get("/api/v1/db/monitor/count", impl.monitorCount())
 }
 
 func (impl *countMonitor) Name() string {
@@ -43,8 +43,8 @@ func (impl *countMonitor) AddRecord(sql string, delay time.Duration, handleType 
 	impl.sqlChannel <- sql
 }
 
-func (impl *countMonitor) monitorCount() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		webfacade.SendSuccess(c, impl.sqlMap, 0)
+func (impl *countMonitor) monitorCount() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		return httpxcommons.SendSuccess(c, impl.sqlMap, 0)
 	}
 }

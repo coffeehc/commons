@@ -6,7 +6,7 @@ import (
 
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/boot/plugin"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )

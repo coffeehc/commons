@@ -15,14 +15,14 @@ var DefaultTransport = BuildTransport()
 
 func BuildTransport() http.RoundTripper {
 	return &http.Transport{
-		DialContext:           DnsCacheDialContext(GetDialer()),
-		DisableKeepAlives:     false,
-		MaxIdleConnsPerHost:   1000,
-		MaxConnsPerHost:       1000,
-		MaxIdleConns:          1000,
+		DialContext:         DnsCacheDialContext(GetDialer()),
+		DisableKeepAlives:   false,
+		MaxIdleConnsPerHost: 5000,
+		MaxConnsPerHost:     5000,
+		//MaxIdleConns:          1000,
 		IdleConnTimeout:       30 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 0,
+		ExpectContinueTimeout: time.Second,
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
@@ -59,7 +59,7 @@ func ClientInitSetting(httpClient *resty.Client, logger *zap.Logger) {
 	httpClient.SetLogger(logger.Sugar())
 	httpClient.SetRetryCount(3)
 	httpClient.Header.Set("user-agent", "coffee's")
-	httpClient.SetTimeout(time.Second * 15)
+	httpClient.SetTimeout(time.Second * 30)
 	httpClient.SetCloseConnection(false)
 	httpClient.SetDisableWarn(true)
 	httpClient.SetRetryMaxWaitTime(time.Second)
@@ -83,9 +83,8 @@ func NewClientWithCookieJar(cookieJar http.CookieJar, logger *zap.Logger) *resty
 func BuildDNSCacheTransport() http.RoundTripper {
 	roundTripper := &http.Transport{
 		DisableKeepAlives:     false,
-		MaxIdleConnsPerHost:   0,
-		MaxConnsPerHost:       2000,
-		MaxIdleConns:          2000,
+		MaxIdleConnsPerHost:   5000,
+		MaxConnsPerHost:       5000,
 		IdleConnTimeout:       10 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 0,
@@ -103,9 +102,10 @@ var defaultResolver = NewResolver(time.Minute*5, time.Minute*4)
 
 func GetDialer() *net.Dialer {
 	dialer := &net.Dialer{
-		Timeout:       60 * time.Second,
-		KeepAlive:     30 * time.Second,
-		FallbackDelay: 10 * time.Second,
+		Timeout:   60 * time.Second,
+		KeepAlive: 30 * time.Second,
+		//FallbackDelay: 10 * time.Second,
+		//DualStack: true,
 	}
 	return dialer
 }

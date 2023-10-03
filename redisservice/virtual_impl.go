@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 type virtualServiceImpl struct {
@@ -46,8 +46,8 @@ func (impl *virtualServiceImpl) HExists(ctx context.Context, key, field string) 
 func (impl *virtualServiceImpl) HGet(ctx context.Context, key, field string) *redis.StringCmd {
 	return &redis.StringCmd{}
 }
-func (impl *virtualServiceImpl) HGetAll(ctx context.Context, key string) *redis.StringStringMapCmd {
-	return &redis.StringStringMapCmd{}
+func (impl *virtualServiceImpl) HGetAll(ctx context.Context, key string) *redis.MapStringStringCmd {
+	return &redis.MapStringStringCmd{}
 }
 func (impl *virtualServiceImpl) HIncrBy(ctx context.Context, key, field string, incr int64) *redis.IntCmd {
 	return &redis.IntCmd{}

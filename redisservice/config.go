@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/coffeehc/base/errors"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 
 	"os"
@@ -30,10 +30,11 @@ type RedisOptions struct {
 	ReadTimeout  time.Duration `mapstructure:"read_timeout,omitempty" json:"read_timeout,omitempty"`
 	WriteTimeout time.Duration `mapstructure:"write_timeout,omitempty" json:"write_timeout,omitempty"`
 
-	PoolSize           int           `mapstructure:"pool_size,omitempty" json:"pool_size,omitempty"`
-	PoolTimeout        time.Duration `mapstructure:"pool_timeout,omitempty" json:"pool_timeout,omitempty"`
-	IdleTimeout        time.Duration `mapstructure:"idle_timeout,omitempty" json:"idle_timeout,omitempty"`
-	IdleCheckFrequency time.Duration `mapstructure:"idle_check_frequency,omitempty" json:"idle_check_frequency,omitempty"`
+	PoolSize        int           `mapstructure:"pool_size,omitempty" json:"pool_size,omitempty"`
+	PoolTimeout     time.Duration `mapstructure:"pool_timeout,omitempty" json:"pool_timeout,omitempty"`
+	ConnMaxIdleTime time.Duration `mapstructure:"conn_max_idle_time,omitempty" json:"conn_max_idle_time,omitempty"`
+	MinIdleConns    int           `mapstructure:"min_idle_conns,omitempty" json:"min_idle_conns,omitempty"`
+	MaxIdleConns    int           `mapstructure:"max_idle_conns,omitempty" json:"max_idle_conns,omitempty"`
 	// 单机版
 	DB int `mapstructure:"db,omitempty" json:"db,omitempty"`
 }
@@ -57,36 +58,37 @@ func (options *RedisOptions) check() error {
 
 func (options *RedisOptions) adapterClusterOptions() *redis.ClusterOptions {
 	return &redis.ClusterOptions{
-		Addrs:              options.Addrs,
-		MaxRedirects:       options.MaxRedirects,
-		ReadOnly:           options.ReadOnly,
-		RouteByLatency:     options.RouteByLatency,
-		Password:           options.Password,
-		DialTimeout:        options.DialTimeout,
-		ReadTimeout:        options.ReadTimeout,
-		WriteTimeout:       options.WriteTimeout,
-		PoolSize:           options.PoolSize,
-		PoolTimeout:        options.PoolTimeout,
-		IdleTimeout:        options.IdleTimeout,
-		IdleCheckFrequency: options.IdleCheckFrequency,
+		Addrs:           options.Addrs,
+		MaxRedirects:    options.MaxRedirects,
+		ReadOnly:        options.ReadOnly,
+		RouteByLatency:  options.RouteByLatency,
+		Password:        options.Password,
+		DialTimeout:     options.DialTimeout,
+		ReadTimeout:     options.ReadTimeout,
+		WriteTimeout:    options.WriteTimeout,
+		PoolSize:        options.PoolSize,
+		PoolTimeout:     options.PoolTimeout,
+		ConnMaxIdleTime: options.ConnMaxIdleTime,
+		MaxIdleConns:    options.MaxIdleConns,
+		MinIdleConns:    options.MinIdleConns,
 	}
 }
 
 func (options *RedisOptions) adapterOptions() *redis.Options {
 	return &redis.Options{
-		Network:            "tcp",
-		Addr:               options.Addrs[0],
-		Password:           options.Password,
-		DB:                 options.DB,
-		MaxRetries:         options.MaxRedirects,
-		DialTimeout:        options.DialTimeout * time.Millisecond,
-		ReadTimeout:        options.ReadTimeout * time.Millisecond,
-		WriteTimeout:       options.WriteTimeout * time.Millisecond,
-		PoolSize:           options.PoolSize,
-		PoolTimeout:        options.PoolTimeout * time.Millisecond,
-		IdleTimeout:        options.IdleTimeout * time.Millisecond,
-		IdleCheckFrequency: options.IdleCheckFrequency * time.Millisecond,
-		// ReadOnly:           options.ReadOnly,
+		Network:         "tcp",
+		Addr:            options.Addrs[0],
+		Password:        options.Password,
+		DB:              options.DB,
+		MaxRetries:      options.MaxRedirects,
+		DialTimeout:     options.DialTimeout * time.Millisecond,
+		ReadTimeout:     options.ReadTimeout * time.Millisecond,
+		WriteTimeout:    options.WriteTimeout * time.Millisecond,
+		PoolSize:        options.PoolSize,
+		PoolTimeout:     options.PoolTimeout * time.Millisecond,
+		ConnMaxIdleTime: options.ConnMaxIdleTime * time.Millisecond,
+		MaxIdleConns:    options.MaxIdleConns,
+		MinIdleConns:    options.MinIdleConns,
 	}
 }
 
