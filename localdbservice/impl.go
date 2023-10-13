@@ -85,7 +85,6 @@ func newService(ctx context.Context) Service {
 	}
 	//options.MaxConcurrentCompactions =
 	// options.Experimental  这个是试验性功能
-	options.Experimental.MinDeletionRate = 1000
 	options.Experimental.L0CompactionConcurrency = 5
 	options.Experimental.CompactionDebtConcurrency = 10
 	options.Experimental.MaxWriterConcurrency = 10
@@ -138,7 +137,10 @@ func (impl *serviceImpl) GetWithCoder(key []byte, body interface{}, coder2 coder
 }
 
 func (impl *serviceImpl) Range(startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error {
-	iter := impl.storage.NewIter(nil)
+	iter, err := impl.storage.NewIter(nil)
+	if err != nil {
+		return err
+	}
 	defer iter.Close()
 	iter.SetBounds(startKey, endKey)
 	next := iter.Next

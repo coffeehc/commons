@@ -59,6 +59,7 @@ func ClientInitSetting(httpClient *resty.Client, logger *zap.Logger) {
 	httpClient.SetLogger(logger.Sugar())
 	httpClient.SetRetryCount(3)
 	httpClient.Header.Set("user-agent", "coffee's")
+	httpClient.Header.Set("accept", "*/*")
 	httpClient.SetTimeout(time.Second * 30)
 	httpClient.SetCloseConnection(false)
 	httpClient.SetDisableWarn(true)

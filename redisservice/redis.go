@@ -2,6 +2,7 @@ package redisservice
 
 import (
 	"context"
+	"time"
 
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
@@ -15,15 +16,17 @@ var scope = zap.String("scope", "redis")
 func NewRedisService(config *RedisOptions) (Service, error) {
 	if config == nil {
 		config = &RedisOptions{
-			IsCluster:          false,
-			MaxRedirects:       3,
-			DialTimeout:        300,
-			ReadTimeout:        8,
-			WriteTimeout:       8,
-			PoolSize:           10,
-			PoolTimeout:        15,
-			DB:                 1,
-			IdleCheckFrequency: 10,
+			IsCluster:       false,
+			MaxRedirects:    3,
+			DialTimeout:     300,
+			ReadTimeout:     8,
+			WriteTimeout:    8,
+			PoolSize:        10,
+			PoolTimeout:     15,
+			DB:              1,
+			MinIdleConns:    10,
+			MaxIdleConns:    30,
+			ConnMaxIdleTime: time.Minute,
 		}
 	}
 	if config.Virtual {
