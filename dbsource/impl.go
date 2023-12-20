@@ -75,14 +75,18 @@ func (impl *serviceImpl) addMonitorRecord(sql string, delay time.Duration, handl
 func (impl *serviceImpl) DeleteById(ctx context.Context, tableName string, id int64) error {
 	sql := fmt.Sprintf("delete from %s where id=?", tableName)
 	_, err := impl.execContext(ctx, sql, id)
+	if err != nil {
+		log.DPanic("SQL错误", zap.Error(err))
+	}
 	return err
 }
 
 func (impl *serviceImpl) InsertContext(ctx context.Context, sql string, args ...interface{}) (int64, int64, error) {
 	ctx = impl.GetOrCreateContext(ctx)
-	result, _err := impl.execContext(ctx, sql, args...)
-	if _err != nil {
-		return 0, 0, _err
+	result, err := impl.execContext(ctx, sql, args...)
+	if err != nil {
+		log.DPanic("SQL错误", zap.Error(err))
+		return 0, 0, err
 	}
 	lastInsertId, _ := result.LastInsertId()
 	rowsAffected, _ := result.RowsAffected()
@@ -96,11 +100,12 @@ func (impl *serviceImpl) ExecContext(ctx context.Context, sql string, args ...in
 	ctx = impl.GetOrCreateContext(ctx)
 	result, _err := impl.execContext(ctx, sql, args...)
 	if _err != nil {
+		log.DPanic("SQL错误", zap.Error(_err))
 		return 0, _err
 	}
 	count, err := result.RowsAffected()
 	if err != nil {
-		log.Error("获取执行行数错误", zap.Error(err))
+		log.DPanic("获取执行行数错误", zap.Error(err))
 		return 0, errors.ConverError(err)
 	}
 	return count, nil
@@ -113,7 +118,7 @@ func (impl *serviceImpl) QueryContext(ctx context.Context, ts interface{}, query
 	ctx = impl.GetOrCreateContext(ctx)
 	tType := reflect.TypeOf(ts)
 	if tType.Kind() != reflect.Ptr {
-		log.Panic("需要填充的对象必须是指针地址")
+		log.DPanic("需要填充的对象必须是指针地址")
 		return errors.SystemError("需要填充的对象必须是指针地址")
 	}
 	handler := GetHandler(ctx)
@@ -121,9 +126,10 @@ func (impl *serviceImpl) QueryContext(ctx context.Context, ts interface{}, query
 	if config.EnableRebind {
 		xdb := GetXDB(ctx)
 		if xdb == nil {
-			log.Panic("上下文中没有Xdb对象")
+			log.DPanic("上下文中没有Xdb对象")
+		} else {
+			query = xdb.Rebind(query)
 		}
-		query = xdb.Rebind(query)
 	}
 	if EnableLog {
 		log.Debug("dbQuery", zap.String("sql", query), zap.Any("params", args))
@@ -131,7 +137,7 @@ func (impl *serviceImpl) QueryContext(ctx context.Context, ts interface{}, query
 	t := time.Now()
 	rows, err := handler.QueryxContext(ctx, query, args...)
 	if err != nil {
-		log.Error("执行sql错误", zap.Error(err), zap.String("sql", query))
+		log.DPanic("执行sql错误", zap.Error(err), zap.String("sql", query))
 		return errors.ConverError(err)
 	}
 	defer rows.Close()
@@ -146,7 +152,7 @@ func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, que
 	ctx = impl.GetOrCreateContext(ctx)
 	tType := reflect.TypeOf(t)
 	if tType.Kind() != reflect.Ptr {
-		log.Panic("需要填充的对象必须是指针地址")
+		log.DPanic("需要填充的对象必须是指针地址")
 		return false, errors.SystemError("需要填充的对象必须是指针地址")
 	}
 	handler := GetHandler(ctx)
@@ -154,9 +160,10 @@ func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, que
 	if config.EnableRebind {
 		xdb := GetXDB(ctx)
 		if xdb == nil {
-			log.Panic("上下文中没有Xdb对象")
+			log.DPanic("上下文中没有Xdb对象")
+		} else {
+			query = xdb.Rebind(query)
 		}
-		query = xdb.Rebind(query)
 	}
 	if EnableLog {
 		log.Debug("dbQueryRow", zap.String("sql", query), zap.Any("params", args))
@@ -189,7 +196,7 @@ func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, que
 		log.DPanic("上下文结束", zap.Error(err))
 		return false, nil
 	default:
-		log.Panic("数据处理异常", zap.Error(err))
+		log.DPanic("数据处理异常", zap.Error(err))
 		return false, errors.ConverError(err)
 	}
 }
@@ -210,12 +217,16 @@ func (impl *serviceImpl) HandleTx(ctx context.Context, txHanle func(ctx context.
 		}
 	}()
 	err = txHanle(ctx)
+	if err != nil {
+		log.DPanic("SQL错误", zap.Error(err))
+	}
 	return err
 }
 
 func (impl *serviceImpl) Update(ctx context.Context, tableName string, limitFields map[string]bool, update *sqlbuilder.Update) (*sqlbuilder.UpdateResult, error) {
 	sqlContext, err := sqlbuilder.BuildUpdate(tableName, update.GetId(), limitFields, update.GetFields(), update.GetConditions())
 	if err != nil {
+		log.DPanic("SQL错误", zap.Error(err))
 		return nil, err
 	}
 	if len(sqlContext.Params) == 1 {
@@ -223,6 +234,7 @@ func (impl *serviceImpl) Update(ctx context.Context, tableName string, limitFiel
 	}
 	count, err := impl.ExecContext(impl.GetOrCreateContext(ctx), sqlContext.Sql, sqlContext.Params...)
 	if err != nil {
+		log.DPanic("SQL错误", zap.Error(err))
 		return nil, err
 	}
 	return &sqlbuilder.UpdateResult{
@@ -235,6 +247,7 @@ func (impl *serviceImpl) Query(ctx context.Context, ts interface{}, colNames, ta
 	pageSqlContext, totalSqlContext := sqlbuilder.BuildQuery(colNames, tableName, maxPageSize, query, joinCondition, impl.config.DbType == POSTGRES)
 	err := impl.QueryContext(ctx, ts, pageSqlContext.Sql, pageSqlContext.Params...)
 	if err != nil {
+		log.DPanic("SQL错误", zap.Error(err))
 		return 0, err
 	}
 	count := int64(0)
@@ -242,6 +255,7 @@ func (impl *serviceImpl) Query(ctx context.Context, ts interface{}, colNames, ta
 		tc := &sqlbuilder.TableCount{}
 		_, err = impl.QueryRowContext(ctx, tc, totalSqlContext.Sql, totalSqlContext.Params...)
 		if err != nil {
+			log.DPanic("SQL错误", zap.Error(err))
 			return 0, err
 		}
 		count = tc.Count
