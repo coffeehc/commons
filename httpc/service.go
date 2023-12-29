@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var DefaultClient = NewClient(zap.NewNop())
+
 var DefaultTransport = BuildTransport()
 
 func BuildTransport() http.RoundTripper {
@@ -32,7 +34,7 @@ func BuildTransport() http.RoundTripper {
 
 var EnableTrace = false
 
-func NewClientNorProxy(logger *zap.Logger) *resty.Client {
+func NewClientNoProxy(logger *zap.Logger) *resty.Client {
 	httpClient := resty.New()
 	ClientInitSetting(httpClient, logger)
 	httpClient.SetTransport(DefaultTransport)
