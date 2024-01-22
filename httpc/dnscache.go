@@ -2,9 +2,11 @@ package httpc
 
 import (
 	"context"
+	"fmt"
 	"github.com/coffeehc/base/log"
 	"go.uber.org/zap"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
@@ -69,10 +71,11 @@ func (r *Resolver) Lookup(ctx context.Context, host string) ([]string, error) {
 		log.Error("没有获取到任何对应的ip", zap.String("host", host))
 		return nil, nil
 	}
-	//strIPs := make([]string, 0, len(ips))
-	//for _, ip := range ips {
-	//	strIPs = append(strIPs, ip.String())
-	//}
+	for i, ip := range ips {
+		if strings.Contains(ip, ":") {
+			ips[i] = fmt.Sprintf("[%s]", ip)
+		}
+	}
 	r.cache.Store(host, ips)
 	return ips, nil
 }

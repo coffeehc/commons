@@ -18,6 +18,7 @@ type Service interface {
 	AfterFunc(duration time.Duration, do func()) *timingwheel.Timer
 	Submit(do func())
 	ChangePoolSize(size int)
+	StartAsyncTaskPoolMonitor(interval time.Duration)
 }
 
 func NewService(_ context.Context, config *Config) Service {
@@ -64,6 +65,23 @@ func newService(ctx context.Context) Service {
 type serviceImpl struct {
 	timingWheel *timingwheel.TimingWheel
 	pool        *ants.Pool
+}
+
+func (impl *serviceImpl) StartAsyncTaskPoolMonitor(interval time.Duration) {
+	if interval == 0 {
+		interval = time.Second * 5
+	}
+	impl.pool.Release()
+	impl.Submit(func() {
+		for {
+			log.Debug("Pool统计信息",
+				zap.Int("cap", impl.pool.Cap()),
+				zap.Int("free", impl.pool.Free()),
+				zap.Int("running", impl.pool.Running()),
+				zap.Int("waiting", impl.pool.Waiting()))
+			time.Sleep(interval)
+		}
+	})
 }
 
 func (impl *serviceImpl) GetPool() *ants.Pool {

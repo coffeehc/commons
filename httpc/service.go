@@ -3,6 +3,7 @@ package httpc
 import (
 	"context"
 	"crypto/tls"
+	"github.com/coffeehc/base/log"
 	"net"
 	"net/http"
 	"time"
@@ -123,18 +124,20 @@ func DnsCacheDialContext(dialer *net.Dialer) func(context.Context, string, strin
 		//if len(ips) > 0 {
 		//	cryptos.GetRandInt(len(ips), 1)
 		//}
-		//log.Debug("获取缓存ip", zap.String("host", host), zap.Strings("ips", ips))
+		//log.Debug("获取缓存ip", zap.String("network", network), zap.String("host", host), zap.Strings("ips", ips))
 		for _, ip := range ips {
 			if ip == "" {
 				continue
 			}
-			//log.Debug("命中DNS缓存", zap.String("address", ip), zap.String("host", host))
+			//log.Debug("命中DNS缓存", zap.String("network", network), zap.String("address", ip), zap.String("host", host))
 			conn, err := dialer.DialContext(ctx, network, ip+":"+port) // 这里我们已经解析出来了ip和port，那么net.Dialer判断出来是个ip就不会再去解析了
 			if err == nil {
 				return conn, nil
+			} else {
+				log.Error("错误", zap.Error(err))
 			}
 		}
-		//log.Debug("没有命中DNS缓存", zap.String("address", address), zap.String("host", host))
+		//log.Debug("没有命中DNS缓存", zap.String("network", network), zap.String("address", address), zap.String("host", host))
 		return dialer.DialContext(ctx, network, address) //如果前面解析失败了就老老实实用原address去调用吧，可能address是个unix socket呢。这里是个兜底，前面都失败了那么我们还可以用原来的方式去做
 	}
 }

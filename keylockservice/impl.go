@@ -2,16 +2,20 @@ package keylockservice
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"sync"
 	"time"
 )
 
-var baseStruct = &struct{}{}
+type lockBody struct {
+	token string
+}
 
 type Service interface {
-	TryLock(key interface{}) bool
-	Lock(key interface{}, timeout time.Duration) error
-	UnLock(key interface{})
+	TryLock(key interface{}) (string, bool)
+	LockWithTimeout(ctx context.Context, key interface{}, lockTimeout time.Duration) (string, error)
+	Lock(ctx context.Context, key interface{}) (string, error)
+	UnLock(key interface{}, token string)
 }
 
 func newService(ctx context.Context) Service {
@@ -23,26 +27,45 @@ type serviceImpl struct {
 	locks sync.Map
 }
 
-func (impl *serviceImpl) Lock(key interface{}, timeout time.Duration) error {
-	ctx, cancelFunc := context.WithTimeout(context.TODO(), timeout)
+func (impl *serviceImpl) LockWithTimeout(ctx context.Context, key interface{}, lockTimeout time.Duration) (string, error) {
+	token, err := impl.Lock(ctx, key)
+	if err == nil {
+		go func() {
+			time.AfterFunc(lockTimeout, func() {
+				impl.UnLock(key, token)
+			})
+		}()
+	}
+	return token, err
+}
+
+func (impl *serviceImpl) Lock(ctx context.Context, key interface{}) (string, error) {
 	for {
 		if ctx.Err() != nil {
-			return ctx.Err()
+			return "", ctx.Err()
 		}
-		ok := impl.TryLock(key)
+		token, ok := impl.TryLock(key)
 		if ok {
-			cancelFunc()
-			return nil
+			return token, nil
 		}
 		time.Sleep(time.Millisecond * 50)
 	}
 }
 
-func (impl *serviceImpl) TryLock(key interface{}) bool {
-	_, loaded := impl.locks.LoadOrStore(key, baseStruct)
-	return !loaded
+func (impl *serviceImpl) TryLock(key interface{}) (string, bool) {
+	body := &lockBody{
+		token: uuid.New().String(),
+	}
+	_, loaded := impl.locks.LoadOrStore(key, body)
+	return body.token, !loaded
 }
 
-func (impl *serviceImpl) UnLock(key interface{}) {
-	impl.locks.Delete(key)
+func (impl *serviceImpl) UnLock(key interface{}, token string) {
+	value, loaded := impl.locks.Load(key)
+	if !loaded {
+		return
+	}
+	if value.(*lockBody).token == token {
+		impl.locks.Delete(key)
+	}
 }

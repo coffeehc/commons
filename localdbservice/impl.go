@@ -137,10 +137,7 @@ func (impl *serviceImpl) GetWithCoder(key []byte, body interface{}, coder2 coder
 }
 
 func (impl *serviceImpl) Range(startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error {
-	iter, err := impl.storage.NewIter(nil)
-	if err != nil {
-		return err
-	}
+	iter := impl.storage.NewIter(nil)
 	defer iter.Close()
 	iter.SetBounds(startKey, endKey)
 	next := iter.Next

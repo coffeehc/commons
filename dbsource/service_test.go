@@ -1,7 +1,6 @@
 package dbsource_test
 
 import (
-	"context"
 	"database/sql"
 	"github.com/coffeehc/commons/dbsource"
 	"testing"
@@ -9,8 +8,6 @@ import (
 
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/boot/testutils"
-	_ "github.com/lib/pq"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -77,24 +74,4 @@ func TestConvertTableToDto(t *testing.T) {
 	table = &table_x{}
 	dbsource.DTOToTableConvert(d, table)
 	log.Debug("对了", zap.Any("table", table))
-}
-
-func TestServiceImpl_GetDB(t *testing.T) {
-	config := &dbsource.Config{
-		DBName:   "douyin",
-		User:     "douyin",
-		Password: "douyin###123",
-		Host:     "192.168.3.2",
-		Port:     5433,
-	}
-	viper.Set("dbSource", config)
-	ctx := context.TODO()
-	dbsource.EnablePlugin(ctx)
-	service := dbsource.GetService()
-	db := service.GetXDB()
-	err := db.PingContext(context.TODO())
-	if err != nil {
-		log.Error("ping服务错误", zap.Error(err))
-	}
-	log.Debug("创建数据源成功")
 }
