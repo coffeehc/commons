@@ -15,7 +15,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var EnableLog = true
+var ContextKey_EnableLog = "__DB_EnableLog"
+
+var EnableLog = false
 
 type Handler interface {
 	sqlx.ExecerContext
@@ -131,7 +133,7 @@ func (impl *serviceImpl) QueryContext(ctx context.Context, ts interface{}, query
 			query = xdb.Rebind(query)
 		}
 	}
-	if EnableLog {
+	if EnableLog || ctx.Value(ContextKey_EnableLog) != nil {
 		log.Debug("dbQuery", zap.String("sql", query), zap.Any("params", args))
 	}
 	t := time.Now()
@@ -165,7 +167,7 @@ func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, que
 			query = xdb.Rebind(query)
 		}
 	}
-	if EnableLog {
+	if EnableLog || ctx.Value(ContextKey_EnableLog) != nil {
 		log.Debug("dbQueryRow", zap.String("sql", query), zap.Any("params", args))
 	}
 	ti := time.Now()
@@ -191,6 +193,9 @@ func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, que
 	}
 	switch {
 	case err == sql.ErrNoRows:
+		if ctx.Value("__DB_EnableLog") != nil {
+			log.Error("没有查到记录", zap.Error(err))
+		}
 		return false, nil
 	case err == ctx.Err():
 		log.DPanic("上下文结束", zap.Error(err))
@@ -313,7 +318,7 @@ func (impl *serviceImpl) execContext(ctx context.Context, sql string, args ...in
 		}
 		sql = xdb.Rebind(sql)
 	}
-	if EnableLog {
+	if EnableLog || ctx.Value(ContextKey_EnableLog) != nil {
 		log.Debug("dbExec", zap.String("sql", sql), zap.Any("params", args))
 	}
 	t := time.Now()
