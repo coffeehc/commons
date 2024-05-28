@@ -218,7 +218,6 @@ func scanAll(rows rowsi, dest interface{}, structOnly bool) error {
 			return errors.SystemError(fmt.Sprintf("missing destination name %s in %T", columns[f], dest))
 		}
 		values = make([]interface{}, len(columns))
-
 		for rows.Next() {
 			// create a new struct type (which returns PtrTo) and indirect it
 			vp = reflect.New(base)
@@ -228,13 +227,11 @@ func scanAll(rows rowsi, dest interface{}, structOnly bool) error {
 			if err != nil {
 				return errors.ConverError(err)
 			}
-
 			// scan into the struct field pointers and append to our results
 			err = rows.Scan(values...)
 			if err != nil {
 				return errors.ConverError(err)
 			}
-
 			if isPtr {
 				direct.Set(reflect.Append(direct, vp))
 			} else {

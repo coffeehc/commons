@@ -13,6 +13,7 @@ type TaskLimiter interface {
 	WaitGroupAdd(delta int)
 	WaitGroupDone()
 	WaitGroupWait()
+	Count() int64
 }
 
 func NewTaskLimiter(size int64) TaskLimiter {
@@ -31,6 +32,10 @@ type taskLimiter struct {
 	waitGroup sync.WaitGroup
 }
 
+func (impl *taskLimiter) Count() int64 {
+	return atomic.LoadInt64(&impl.count)
+}
+
 func (impl *taskLimiter) WaitGroupDone() {
 	impl.waitGroup.Done()
 }
@@ -44,7 +49,7 @@ func (impl *taskLimiter) WaitGroupAdd(delta int) {
 }
 
 func (impl *taskLimiter) Size() int64 {
-	return impl.size
+	return atomic.LoadInt64(&impl.size)
 }
 
 func (impl *taskLimiter) SetSize(size int64) {
@@ -52,7 +57,7 @@ func (impl *taskLimiter) SetSize(size int64) {
 }
 
 func (impl *taskLimiter) Take() {
-	for atomic.LoadInt64(&impl.count) >= atomic.LoadInt64(&impl.size) {
+	for impl.Count() >= impl.Size() {
 		impl.wait()
 	}
 	atomic.AddInt64(&impl.count, 1)
@@ -60,7 +65,7 @@ func (impl *taskLimiter) Take() {
 }
 
 func (impl *taskLimiter) Recycle() {
-	for atomic.LoadInt64(&impl.count) <= 0 {
+	for impl.Count() <= 0 {
 		impl.wait()
 	}
 	atomic.AddInt64(&impl.count, -1)

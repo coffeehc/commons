@@ -17,7 +17,7 @@ require (
 	github.com/gogo/protobuf v1.3.3-0.20221024144010-f67b8970b736
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.5.5
-	github.com/jmoiron/sqlx v1.3.5
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/json-iterator/go v1.1.12
 	github.com/lib/pq v1.10.9
 	github.com/nsqio/go-diskqueue v1.1.0

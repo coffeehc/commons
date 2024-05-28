@@ -223,7 +223,7 @@ func (impl *serviceImpl) HandleTx(ctx context.Context, txHanle func(ctx context.
 	}()
 	err = txHanle(ctx)
 	if err != nil {
-		log.DPanic("SQL错误", zap.Error(err))
+		log.Error("SQL错误", zap.Error(err))
 	}
 	return err
 }
