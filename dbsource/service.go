@@ -8,6 +8,7 @@ import (
 	"github.com/coffeehc/boot/plugin"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v5"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )

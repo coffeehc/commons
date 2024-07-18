@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package commons.sqlbuilder;
 
-option go_package = "sqlbuilder";
+option go_package = "github.com/coffeehc/commons/dbsource/sqlbuilder";
 
 message PageQuery {
     int64 page_size = 1;

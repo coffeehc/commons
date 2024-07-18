@@ -7,14 +7,15 @@ import (
 	"github.com/coffeehc/commons/sequences"
 	"github.com/coffeehc/commons/utils"
 	"github.com/gofiber/fiber/v2"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
-	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
 )
 
@@ -114,4 +115,15 @@ func WriteContentType(w http.ResponseWriter, value []string) {
 	if val := header["Content-Type"]; len(val) == 0 {
 		header["Content-Type"] = value
 	}
+}
+
+func ReadIds(ids []string) []int64 {
+	_ids := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		_id, _ := strconv.ParseInt(id, 10, 64)
+		if _id != 0 {
+			_ids = append(_ids, _id)
+		}
+	}
+	return _ids
 }

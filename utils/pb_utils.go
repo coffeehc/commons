@@ -3,10 +3,9 @@ package utils
 import (
 	"errors"
 	"github.com/coffeehc/commons/models"
+	"google.golang.org/protobuf/proto"
 	"reflect"
 	"time"
-
-	"github.com/gogo/protobuf/proto"
 )
 
 func BuildError(message string) *models.Error {

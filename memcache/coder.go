@@ -3,10 +3,10 @@ package memcache
 import (
 	"encoding/binary"
 	"encoding/json"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
-	"github.com/gogo/protobuf/proto"
 )
 
 var (

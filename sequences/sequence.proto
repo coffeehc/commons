@@ -2,8 +2,7 @@ syntax = "proto3";
 
 package commons.sequences;
 
-
-option go_package = "sequences";
+option go_package = "github.com/coffeehc/commons/sequences";
 
 message Sequence{
 	int64 id = 1;

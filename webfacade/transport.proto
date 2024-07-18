@@ -4,7 +4,7 @@ package coomons.webfacade;
 
 import "google/protobuf/any.proto";
 
-option go_package = "webfacade";
+option go_package = "github.com/coffeehc/commons/webfacade";
 
 //Http 头封装
 message Header {

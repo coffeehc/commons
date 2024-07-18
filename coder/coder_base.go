@@ -3,7 +3,7 @@ package coder
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type Coder interface {
