@@ -4,12 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx/reflectx"
 	"go.uber.org/zap"
@@ -48,18 +51,23 @@ func budilDataSourcwNameForSqlit(config *Config) string {
 }
 
 func newDBSource(config *Config) *sqlx.DB {
+	if config.getDBType() == POSTGRES {
+		return newDBSourceForPG(config)
+	}
 	var db *sqlx.DB
 	var err error
 	var dataSource = ""
+	driverName := string(config.getDBType())
 	switch config.getDBType() {
 	case MYSQL:
 		dataSource = buildDataSourceNameForMySql(config)
 	case POSTGRES:
 		dataSource = buildDataSourceNameForPostgresSQL(config)
+		driverName = "pgx"
 	case SQLITE:
 		dataSource = budilDataSourcwNameForSqlit(config)
 	}
-	db, err = sqlx.Open(string(config.getDBType()), dataSource)
+	db, err = sqlx.Open(driverName, dataSource)
 	if err != nil {
 		log.Panic("打开数据库失败", zap.Error(err))
 	}
@@ -79,13 +87,45 @@ func newDBSource(config *Config) *sqlx.DB {
 	} else {
 		db.SetMaxOpenConns(15)
 	}
-
 	db.Mapper = reflectx.NewMapperFunc("json", strings.ToLower)
 	err = db.Ping()
 	if err != nil {
 		log.Panic("db连接失败", zap.Error(err))
 	}
 	return db
+}
+
+func newDBSourceForPG(config *Config) *sqlx.DB {
+	databaseURL := buildDataSourceNameForPostgresSQL(config)
+	poolConfig, err := pgxpool.ParseConfig(databaseURL)
+	if err != nil {
+		log.Panic("无法解析数据库 URL", zap.Error(err))
+	}
+	db := stdlib.OpenDB(*poolConfig.ConnConfig)
+	if config.ConnMaxLifetimeSec > 60 {
+		db.SetConnMaxLifetime(time.Second * time.Duration(config.ConnMaxLifetimeSec))
+	} else {
+		db.SetConnMaxLifetime(time.Second * 60)
+	}
+	if config.MaxIdleConns > 5 {
+		db.SetMaxIdleConns(config.MaxIdleConns)
+	} else {
+		db.SetMaxIdleConns(5)
+	}
+	if config.MaxOpenConns > 15 {
+		db.SetMaxOpenConns(config.MaxOpenConns)
+	} else {
+		db.SetMaxOpenConns(15)
+	}
+	// 4. 使用 sqlx.NewDb 将标准的 *sql.DB 封装成 *sqlx.DB
+	// 第二个参数 "pgx" 是驱动名称，sqlx 内部会用到
+	sqlxDB := sqlx.NewDb(db, "pgx")
+	sqlxDB.Mapper = reflectx.NewMapperFunc("json", strings.ToLower)
+	// 5. 检查连接是否成功
+	if err := sqlxDB.Ping(); err != nil {
+		log.Panic("无法连接到数据库", zap.Error(err))
+	}
+	return sqlxDB
 }
 
 var ErrorCountDiff = errors.MessageError("变更数据量不符合预期")

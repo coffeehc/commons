@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/coffeehc/base/log"
-	"github.com/lib/pq"
 )
 
 func NewCondtion(colName string, operator string, value *Value) *Condition {
@@ -63,11 +62,15 @@ func getConditionFieldValue(condition *Condition) interface{} {
 	case ValueType_Statuses:
 		return value.IntValues
 	case ValueType_PgIntArray:
-		return pq.Array(value.IntValues)
+		return value.IntValues
+		//pgx.
+		//return pq.Array(value.IntValues)
 	case ValueType_PgFloatArray:
-		return pq.Array(value.GetDoubleValues())
+		return value.GetDoubleValues()
+		//return pq.Array(value.GetDoubleValues())
 	case ValueType_PgStringArray:
-		return pq.Array(value.GetStringValues())
+		return value.GetStringValues()
+		//return pq.Array(value.GetStringValues())
 	default:
 		log.Error("未知的数据类型")
 	}

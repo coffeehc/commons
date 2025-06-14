@@ -134,7 +134,7 @@ func DnsCacheDialContext(dialer *net.Dialer) func(context.Context, string, strin
 			if err == nil {
 				return conn, nil
 			} else {
-				log.Error("错误", zap.Error(err))
+				log.Error("错误", zap.Error(err), zap.String("address", address), zap.String("host", host), zap.String("port", port))
 			}
 		}
 		//log.Debug("没有命中DNS缓存", zap.String("network", network), zap.String("address", address), zap.String("host", host))
