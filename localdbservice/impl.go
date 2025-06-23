@@ -3,8 +3,8 @@ package localdbservice
 import (
 	"bytes"
 	"context"
-	"github.com/cockroachdb/pebble"
-	"github.com/cockroachdb/pebble/bloom"
+	"github.com/cockroachdb/pebble/v2"
+	"github.com/cockroachdb/pebble/v2/bloom"
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/commons/coder"
@@ -61,8 +61,10 @@ func newService(ctx context.Context) Service {
 		Levels: []pebble.LevelOptions{
 			{
 				TargetFileSize: 4 << 30, //TargetFileSize：每个层级的目标文件大小。 1G
-				Compression:    pebble.NoCompression,
-				FilterPolicy:   bloom.FilterPolicy(10),
+				Compression: func() pebble.Compression {
+					return pebble.NoCompression
+				},
+				FilterPolicy: bloom.FilterPolicy(10),
 				//BlockSize: 每个表块的目标未压缩大小，默认值为4096
 				//BlockSizeThreshold：当块大小超过目标块大小的指定百分比，并且添加下一个条目将导致块超过目标块大小时，结束块，默认值为90。
 				//FilterPolicy：减少Get操作的磁盘读取的过滤算法，默认值为nil，表示不使用过滤器。
@@ -70,13 +72,17 @@ func newService(ctx context.Context) Service {
 			},
 			{
 				TargetFileSize: 8 << 30,
-				Compression:    pebble.NoCompression,
-				FilterType:     pebble.TableFilter,
-				FilterPolicy:   bloom.FilterPolicy(5),
+				Compression: func() pebble.Compression {
+					return pebble.NoCompression
+				},
+				FilterType:   pebble.TableFilter,
+				FilterPolicy: bloom.FilterPolicy(5),
 			},
 			{
 				TargetFileSize: 16 << 30,
-				Compression:    pebble.SnappyCompression,
+				Compression: func() pebble.Compression {
+					return pebble.SnappyCompression
+				},
 				//FilterType:     pebble.TableFilter,
 				FilterType:   pebble.TableFilter,
 				FilterPolicy: bloom.FilterPolicy(1),
@@ -85,7 +91,7 @@ func newService(ctx context.Context) Service {
 	}
 	//options.MaxConcurrentCompactions =
 	// options.Experimental  这个是试验性功能
-	options.Experimental.L0CompactionConcurrency = 5
+	options.Experimental.L0CompactionConcurrency = 15
 	options.Experimental.CompactionDebtConcurrency = 10
 	options.Experimental.MaxWriterConcurrency = 10
 	//options.MemTableSize
@@ -95,6 +101,11 @@ func newService(ctx context.Context) Service {
 		log.Panic("打开dataDir文件错误", zap.Error(err))
 		return nil
 	}
+	//err = storage.RatchetFormatMajorVersion(pebble.FormatVirtualSSTables)
+	//if err != nil {
+	//	log.Panic("升级dataDir文件错误", zap.Error(err))
+	//	return nil
+	//}
 	sequences.EnablePlugin(ctx)
 	impl := &serviceImpl{
 		storage:         storage,
