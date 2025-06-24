@@ -26,6 +26,8 @@ type RangeHandler func(key []byte, value []byte) (bool, error)
 
 type Service interface {
 	Range(startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error
+	RangeWithContext(ctx context.Context, startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error
+
 	Set(key []byte, value []byte) error
 	Get(key []byte) ([]byte, bool, error)
 	Del(key []byte) error
@@ -101,7 +103,7 @@ func newService(ctx context.Context) Service {
 		log.Panic("打开dataDir文件错误", zap.Error(err))
 		return nil
 	}
-	//err = storage.RatchetFormatMajorVersion(pebble.FormatVirtualSSTables)
+	//err = storage.RatchetFormatMajorVersion(pebble.FormatFlushableIngest)
 	//if err != nil {
 	//	log.Panic("升级dataDir文件错误", zap.Error(err))
 	//	return nil
@@ -147,7 +149,7 @@ func (impl *serviceImpl) GetWithCoder(key []byte, body interface{}, coder2 coder
 	return ok, nil
 }
 
-func (impl *serviceImpl) Range(startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error {
+func (impl *serviceImpl) RangeWithContext(ctx context.Context, startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error {
 	iter, err := impl.storage.NewIter(nil)
 	if err != nil {
 		return err
@@ -161,7 +163,7 @@ func (impl *serviceImpl) Range(startKey, endKey []byte, reverse bool, maxCount i
 		first = iter.Last
 	}
 	count := 0
-	for ok := first(); ok && count < maxCount; ok = next() {
+	for ok := first(); ok && count < maxCount && ctx.Err() == nil; ok = next() {
 		ok, err := handler(iter.Key(), iter.Value())
 		if err != nil {
 			return err
@@ -172,6 +174,10 @@ func (impl *serviceImpl) Range(startKey, endKey []byte, reverse bool, maxCount i
 		count++
 	}
 	return nil
+}
+
+func (impl *serviceImpl) Range(startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error {
+	return impl.RangeWithContext(context.TODO(), startKey, endKey, reverse, maxCount, handler)
 }
 
 func (impl *serviceImpl) Set(key []byte, value []byte) error {

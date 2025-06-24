@@ -23,6 +23,8 @@ type Handler interface {
 	sqlx.ExecerContext
 	sqlx.PreparerContext
 	sqlx.QueryerContext
+	Get(dest interface{}, query string, args ...interface{}) error
+	SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
 }
 
 type Service interface {
@@ -125,8 +127,9 @@ func (impl *serviceImpl) QueryContext(ctx context.Context, ts interface{}, query
 	}
 	handler := GetHandler(ctx)
 	config := GetConfig(ctx)
+	xdb := GetXDB(ctx)
 	if config.EnableRebind {
-		xdb := GetXDB(ctx)
+
 		if xdb == nil {
 			log.DPanic("上下文中没有Xdb对象")
 		} else {
@@ -137,14 +140,15 @@ func (impl *serviceImpl) QueryContext(ctx context.Context, ts interface{}, query
 		log.Debug("dbQuery", zap.String("sql", query), zap.Any("params", args))
 	}
 	t := time.Now()
-	rows, err := handler.QueryxContext(ctx, query, args...)
+	err := handler.SelectContext(ctx, ts, query, args...)
+	//rows, err := handler.QueryxContext(ctx, query, args...)
 	if err != nil {
 		log.DPanic("执行sql错误", zap.Error(err), zap.String("sql", query))
 		return errors.ConverError(err)
 	}
-	defer rows.Close()
+	//defer rows.Close()
 	go impl.addMonitorRecord(query, time.Now().Sub(t), HandleTypeExec)
-	return scanAll(rows, ts, false)
+	return err
 }
 
 func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, query string, args ...interface{}) (bool, error) {
@@ -171,23 +175,24 @@ func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, que
 		log.Debug("dbQueryRow", zap.String("sql", query), zap.Any("params", args))
 	}
 	ti := time.Now()
-	row := handler.QueryRowxContext(ctx, query, args...)
+	err := handler.Get(t, query, args...)
+	//row := handler.QueryRowxContext(ctx, query, args...)
 	go impl.addMonitorRecord(query, time.Now().Sub(ti), HandleTypeExec)
-	var err error
-	switch tType.Elem().Kind() {
-	case reflect.Struct:
-		err = row.StructScan(t)
-		break
-	case reflect.Map:
-		tmap, ok := t.(map[string]interface{})
-		if !ok {
-			return false, errors.SystemError("需要填充的目标参数不是map[string]interface{}")
-		}
-		err = row.MapScan(tmap)
-		break
-	default:
-		err = row.Scan(t)
-	}
+	//var err error
+	//switch tType.Elem().Kind() {
+	//case reflect.Struct:
+	//	err = row.StructScan(t)
+	//	break
+	//case reflect.Map:
+	//	tmap, ok := t.(map[string]interface{})
+	//	if !ok {
+	//		return false, errors.SystemError("需要填充的目标参数不是map[string]interface{}")
+	//	}
+	//	err = row.MapScan(tmap)
+	//	break
+	//default:
+	//	err = row.Scan(t)
+	//}
 	if err == nil {
 		return true, nil
 	}
