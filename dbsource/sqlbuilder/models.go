@@ -5,7 +5,7 @@ type TableCount struct {
 }
 
 type TableId struct {
-	Id int64 `json:"id,omitempty"`
+	Id int64 `json:"id,omitempty" db:"id"`
 }
 
 type SqlContext struct {

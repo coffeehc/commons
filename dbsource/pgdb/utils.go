@@ -2,6 +2,7 @@ package pgdb
 
 import (
 	"context"
+	"fmt"
 	"github.com/coffeehc/base/log"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
@@ -11,12 +12,17 @@ import (
 )
 
 func newPool(config *Config) (*pgxpool.Pool, error) {
-	poolConfig := new(pgxpool.Config)
-	poolConfig.ConnConfig.Database = config.DBName
-	poolConfig.ConnConfig.User = config.User
-	poolConfig.ConnConfig.Password = config.Password
-	poolConfig.ConnConfig.Host = config.Host
-	poolConfig.ConnConfig.Port = uint16(config.Port)
+	params := make([]string, 0)
+	params = append(params, fmt.Sprintf("dbname='%s'", config.DBName))
+	params = append(params, fmt.Sprintf("user='%s'", config.User))
+	params = append(params, fmt.Sprintf("password='%s'", config.Password))
+	params = append(params, fmt.Sprintf("host='%s'", config.Host))
+	params = append(params, fmt.Sprintf("port='%d'", config.Port))
+	params = append(params, "sslmode=disable")
+	poolConfig, err := pgxpool.ParseConfig(strings.Join(params, " "))
+	if err != nil {
+		return nil, err
+	}
 	poolConfig.HealthCheckPeriod = 2 * time.Minute
 	poolConfig.ConnConfig.ConnectTimeout = 5 * time.Second
 	if config.ConnMaxLifetimeSec > 60 {

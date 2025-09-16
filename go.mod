@@ -2,9 +2,8 @@ module github.com/coffeehc/commons
 
 go 1.24.1
 
-replace (
-	github.com/coffeehc/boot => ../boot
-)
+replace github.com/coffeehc/boot => ../boot
+
 require (
 	github.com/RussellLuo/timingwheel v0.0.0-20220218152713-54845bda3108
 	github.com/cockroachdb/pebble/v2 v2.0.5
@@ -12,6 +11,7 @@ require (
 	github.com/coffeehc/boot v0.0.0-20250624084845-397947ceb4c3
 	github.com/coffeehc/httpx v0.0.0-20240825061759-6b0659a5ce3c
 	github.com/coocood/freecache v1.2.4
+	github.com/georgysavva/scany/v2 v2.1.4
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/gofiber/fiber/v2 v2.52.8
@@ -57,7 +57,6 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -77,7 +76,6 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.62.0 // indirect
-	github.com/valyala/tcplisten v1.0.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
