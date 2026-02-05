@@ -3,13 +3,28 @@ package pgdb
 import (
 	"context"
 	"fmt"
-	"github.com/coffeehc/base/log"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"go.uber.org/zap"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/coffeehc/base/log"
+	"github.com/georgysavva/scany/v2/dbscan"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
+
+func MultiTagMapper(field reflect.StructField) string {
+	// 1. db tag
+	if tag := field.Tag.Get("db"); tag != "" && tag != "-" {
+		return tag
+	}
+	// 2. json tag
+	if tag := field.Tag.Get("json"); tag != "" && tag != "-" {
+		return strings.Split(tag, ",")[0]
+	}
+	return dbscan.SnakeCaseMapper(field.Name)
+}
 
 func newPool(config *Config) (*pgxpool.Pool, error) {
 	params := make([]string, 0)

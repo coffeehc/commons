@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jackc/pgx/v5/stdlib"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
@@ -71,7 +72,7 @@ func newDBSource(config *Config) *sqlx.DB {
 	if err != nil {
 		log.Panic("打开数据库失败", zap.Error(err))
 	}
-	//log.Debug("打开数据库", zap.String("dataSource", dataSource))
+	// log.Debug("打开数据库", zap.String("dataSource", dataSource))
 	if config.ConnMaxLifetimeSec > 60 {
 		db.SetConnMaxLifetime(time.Second * time.Duration(config.ConnMaxLifetimeSec))
 	} else {

@@ -5,18 +5,17 @@ import (
 	"database/sql"
 	_errors "errors"
 	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/commons/dbsource/sqlbuilder"
-	"github.com/georgysavva/scany/v2/dbscan"
-	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
-	"reflect"
-	"strings"
-	"time"
 )
 
 type Handler interface {
@@ -46,19 +45,6 @@ type Service interface {
 }
 
 func NewService(config *Config) Service {
-	dbScanAPI, err := pgxscan.NewDBScanAPI(
-		dbscan.WithStructTagKey("json"),
-		dbscan.WithAllowUnknownColumns(true),
-	)
-	if err != nil {
-		log.Error("初始化dbScanAPI失败", zap.Error(err))
-		return nil
-	}
-	pgscanAPI, err := pgxscan.NewAPI(dbScanAPI)
-	if err != nil {
-		log.Error("初始化pgscanAPI失败", zap.Error(err))
-		return nil
-	}
 	pool, err := newPool(config)
 	if err != nil {
 		log.Error("初始化连接池失败", zap.Error(err))
@@ -67,7 +53,7 @@ func NewService(config *Config) Service {
 	impl := &serviceImpl{
 		pool:      pool,
 		monitors:  make([]HandleMonitor, 0),
-		pgscanAPI: pgscanAPI,
+		pgscanAPI: &ScanAPI{},
 	}
 	return impl
 }
@@ -75,7 +61,7 @@ func NewService(config *Config) Service {
 type serviceImpl struct {
 	pool      *pgxpool.Pool
 	monitors  []HandleMonitor
-	pgscanAPI *pgxscan.API
+	pgscanAPI *ScanAPI
 }
 
 func (impl *serviceImpl) GetPool() *pgxpool.Pool {
@@ -183,7 +169,7 @@ func (impl *serviceImpl) InsertContext(ctx context.Context, sql string, args ...
 		log.DPanic("SQL错误", zap.Error(err))
 		return 0, 0, err
 	}
-	//lastInsertId, _ := result.LastInsertId()
+	// lastInsertId, _ := result.LastInsertId()
 	rowsAffected := result.RowsAffected()
 	return 0, rowsAffected, nil
 }
@@ -218,16 +204,16 @@ func (impl *serviceImpl) QueryContext(ctx context.Context, ts interface{}, query
 	}
 	t := time.Now()
 	rows, err := handler.Query(ctx, query, args...)
-	//rows, err := handler.QueryxContext(ctx, query, args...)
+	// rows, err := handler.QueryxContext(ctx, query, args...)
 	if err != nil {
 		log.DPanic("执行sql错误", zap.Error(err), zap.String("sql", query))
 		return errors.ConverError(err)
 	}
-	//defer rows.Close()
+	// defer rows.Close()
 	go impl.addMonitorRecord(query, time.Now().Sub(t), HandleTypeExec)
 	defer rows.Close()
 	return impl.pgscanAPI.ScanAll(ts, rows)
-	//return rows.Scan(ts)
+	// return rows.Scan(ts)
 }
 
 func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, query string, args ...interface{}) (bool, error) {
@@ -251,7 +237,7 @@ func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, que
 	if err != nil {
 		return false, err
 	}
-	//row := handler.QueryRowxContext(ctx, query, args...)
+	// row := handler.QueryRowxContext(ctx, query, args...)
 	go impl.addMonitorRecord(query, time.Now().Sub(ti), HandleTypeExec)
 	err = impl.pgscanAPI.ScanOne(t, row)
 	if err != nil {

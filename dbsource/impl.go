@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/coffeehc/commons/dbsource/sqlbuilder"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/coffeehc/commons/dbsource/sqlbuilder"
 
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
@@ -141,12 +142,12 @@ func (impl *serviceImpl) QueryContext(ctx context.Context, ts interface{}, query
 	}
 	t := time.Now()
 	err := handler.SelectContext(ctx, ts, query, args...)
-	//rows, err := handler.QueryxContext(ctx, query, args...)
+	// rows, err := handler.QueryxContext(ctx, query, args...)
 	if err != nil {
 		log.DPanic("执行sql错误", zap.Error(err), zap.String("sql", query))
 		return errors.ConverError(err)
 	}
-	//defer rows.Close()
+	// defer rows.Close()
 	go impl.addMonitorRecord(query, time.Now().Sub(t), HandleTypeExec)
 	return err
 }
@@ -176,23 +177,23 @@ func (impl *serviceImpl) QueryRowContext(ctx context.Context, t interface{}, que
 	}
 	ti := time.Now()
 	err := handler.Get(t, query, args...)
-	//row := handler.QueryRowxContext(ctx, query, args...)
+	// row := handler.QueryRowxContext(ctx, query, args...)
 	go impl.addMonitorRecord(query, time.Now().Sub(ti), HandleTypeExec)
-	//var err error
-	//switch tType.Elem().Kind() {
-	//case reflect.Struct:
+	// var err error
+	// switch tType.Elem().Kind() {
+	// case reflect.Struct:
 	//	err = row.StructScan(t)
 	//	break
-	//case reflect.Map:
+	// case reflect.Map:
 	//	tmap, ok := t.(map[string]interface{})
 	//	if !ok {
 	//		return false, errors.SystemError("需要填充的目标参数不是map[string]interface{}")
 	//	}
 	//	err = row.MapScan(tmap)
 	//	break
-	//default:
+	// default:
 	//	err = row.Scan(t)
-	//}
+	// }
 	if err == nil {
 		return true, nil
 	}
