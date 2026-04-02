@@ -1,6 +1,7 @@
 package pgdb
 
 import (
+	"database/sql"
 	"errors"
 	"reflect"
 	"strings"
@@ -96,11 +97,11 @@ func (p *ScanAPI) ScanOne(t interface{}, rows pgx.Rows) error {
 
 	cols := rows.FieldDescriptions()
 	if len(cols) == 0 {
-		return errors.New("ScanOne: no columns in rows")
+		return sql.ErrNoRows
 	}
 
 	if !rows.Next() {
-		return errors.New("ScanOne: no rows to scan")
+		return sql.ErrNoRows
 	}
 
 	colNames := make([]string, len(cols))

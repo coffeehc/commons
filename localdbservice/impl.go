@@ -54,23 +54,23 @@ func newService(ctx context.Context) Service {
 	log.Debug("打开数据文件", zap.String("dataDir", dataDir))
 	options := &pebble.Options{
 		Cache:                 pebble.NewCache(1024 * 1024 * 32),
-		BytesPerSync:          32 << 20, //128MB = 128 << 20, // 512 KB = 512 << 10
+		BytesPerSync:          32 << 20, // 128MB = 128 << 20, // 512 KB = 512 << 10
 		Comparer:              comparer,
 		MaxOpenFiles:          500,
-		LBaseMaxBytes:         64 << 20, //64 MB
+		LBaseMaxBytes:         64 << 20, // 64 MB
 		L0CompactionThreshold: 50,
 		L0StopWritesThreshold: 200,
 		Levels: []pebble.LevelOptions{
 			{
-				TargetFileSize: 4 << 30, //TargetFileSize：每个层级的目标文件大小。 1G
+				TargetFileSize: 4 << 30, // TargetFileSize：每个层级的目标文件大小。 1G
 				Compression: func() pebble.Compression {
 					return pebble.NoCompression
 				},
 				FilterPolicy: bloom.FilterPolicy(10),
-				//BlockSize: 每个表块的目标未压缩大小，默认值为4096
-				//BlockSizeThreshold：当块大小超过目标块大小的指定百分比，并且添加下一个条目将导致块超过目标块大小时，结束块，默认值为90。
-				//FilterPolicy：减少Get操作的磁盘读取的过滤算法，默认值为nil，表示不使用过滤器。
-				//IndexBlockSize：每个索引块的目标未压缩大小，默认值为BlockSize的值。
+				// BlockSize: 每个表块的目标未压缩大小，默认值为4096
+				// BlockSizeThreshold：当块大小超过目标块大小的指定百分比，并且添加下一个条目将导致块超过目标块大小时，结束块，默认值为90。
+				// FilterPolicy：减少Get操作的磁盘读取的过滤算法，默认值为nil，表示不使用过滤器。
+				// IndexBlockSize：每个索引块的目标未压缩大小，默认值为BlockSize的值。
 			},
 			{
 				TargetFileSize: 8 << 30,
@@ -85,29 +85,29 @@ func newService(ctx context.Context) Service {
 				Compression: func() pebble.Compression {
 					return pebble.SnappyCompression
 				},
-				//FilterType:     pebble.TableFilter,
+				// FilterType:     pebble.TableFilter,
 				FilterType:   pebble.TableFilter,
 				FilterPolicy: bloom.FilterPolicy(1),
 			},
 		},
 	}
-	//options.MaxConcurrentCompactions =
+	// options.MaxConcurrentCompactions =
 	// options.Experimental  这个是试验性功能
 	options.Experimental.L0CompactionConcurrency = 15
 	options.Experimental.CompactionDebtConcurrency = 10
 	options.Experimental.MaxWriterConcurrency = 10
-	//options.MemTableSize
-	//options.Experimental.LevelMultiplier
+	// options.MemTableSize
+	// options.Experimental.LevelMultiplier
 	storage, err := pebble.Open(dataDir, options)
 	if err != nil {
 		log.Panic("打开dataDir文件错误", zap.Error(err))
 		return nil
 	}
-	//err = storage.RatchetFormatMajorVersion(pebble.FormatFlushableIngest)
-	//if err != nil {
+	// err = storage.RatchetFormatMajorVersion(pebble.FormatFlushableIngest)
+	// if err != nil {
 	//	log.Panic("升级dataDir文件错误", zap.Error(err))
 	//	return nil
-	//}
+	// }
 	sequences.EnablePlugin(ctx)
 	impl := &serviceImpl{
 		storage:         storage,

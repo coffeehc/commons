@@ -19,6 +19,13 @@ import (
 	"go.uber.org/zap"
 )
 
+func NewMapperFunc(tag string) *reflectx.Mapper {
+	return reflectx.NewMapperFunc(tag, strings.ToLower)
+}
+
+var JSONMapperFunc = NewMapperFunc("json")
+var DBMapperFunc = NewMapperFunc("db")
+
 type DbType string
 
 const (
@@ -88,7 +95,10 @@ func newDBSource(config *Config) *sqlx.DB {
 	} else {
 		db.SetMaxOpenConns(15)
 	}
-	db.Mapper = reflectx.NewMapperFunc("json", strings.ToLower)
+	db.Mapper = config.Mapper
+	if db.Mapper == nil {
+		db.Mapper = JSONMapperFunc
+	}
 	err = db.Ping()
 	if err != nil {
 		log.Panic("db连接失败", zap.Error(err))
@@ -121,7 +131,10 @@ func newDBSourceForPG(config *Config) *sqlx.DB {
 	// 4. 使用 sqlx.NewDb 将标准的 *sql.DB 封装成 *sqlx.DB
 	// 第二个参数 "pgx" 是驱动名称，sqlx 内部会用到
 	sqlxDB := sqlx.NewDb(db, "pgx")
-	sqlxDB.Mapper = reflectx.NewMapperFunc("json", strings.ToLower)
+	sqlxDB.Mapper = config.Mapper
+	if sqlxDB.Mapper == nil {
+		sqlxDB.Mapper = JSONMapperFunc
+	}
 	// 5. 检查连接是否成功
 	if err := sqlxDB.Ping(); err != nil {
 		log.Panic("无法连接到数据库", zap.Error(err))

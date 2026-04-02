@@ -5,7 +5,7 @@ import (
 	"github.com/coffeehc/commons/dbsource/sqlbuilder"
 	"github.com/coffeehc/commons/sequences"
 	"github.com/coffeehc/commons/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"math"
 	"strconv"
 	"strings"
@@ -16,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func ParseQuery(c *fiber.Ctx, pageIndexOffset int64, fieldMap map[string]FieldDefined, initCondition []*sqlbuilder.Condition) (*sqlbuilder.Query, error) {
+func ParseQuery(c fiber.Ctx, pageIndexOffset int64, fieldMap map[string]FieldDefined, initCondition []*sqlbuilder.Condition) (*sqlbuilder.Query, error) {
 	conditions, err := ParseCondition(c, fieldMap, initCondition)
 	if err != nil {
 		return nil, err
@@ -33,10 +33,10 @@ type FieldDefined struct {
 	VType         sqlbuilder.ValueType
 	RealFieldName string
 	Operator      string
-	Convert       func(c *fiber.Ctx, key string) (*sqlbuilder.Value, error)
+	Convert       func(c fiber.Ctx, key string) (*sqlbuilder.Value, error)
 }
 
-func ParsePageQuery(c *fiber.Ctx, pageIndexOffset int64) *sqlbuilder.PageQuery {
+func ParsePageQuery(c fiber.Ctx, pageIndexOffset int64) *sqlbuilder.PageQuery {
 	pageIndex := GetInt64FromContext(c, "page_index")
 	pageIndex -= pageIndexOffset
 	if pageIndex < 0 {
@@ -48,12 +48,12 @@ func ParsePageQuery(c *fiber.Ctx, pageIndexOffset int64) *sqlbuilder.PageQuery {
 	}
 }
 
-//type queryParams struct {
+// type queryParams struct {
 //	Sort []string `query:"sort"`
-//}
+// }
 
-func ParseOrderConditions(c *fiber.Ctx, fieldMap map[string]FieldDefined) []*sqlbuilder.OrderCondition {
-	//keys := c.QueryArray("sort")
+func ParseOrderConditions(c fiber.Ctx, fieldMap map[string]FieldDefined) []*sqlbuilder.OrderCondition {
+	// keys := c.QueryArray("sort")
 	keys := strings.Split(c.Query("sort"), ",")
 	conditions := make([]*sqlbuilder.OrderCondition, 0, len(keys)+1)
 	startId := GetInt64FromContext(c, "start_id")
@@ -94,8 +94,8 @@ func ParseOrderConditions(c *fiber.Ctx, fieldMap map[string]FieldDefined) []*sql
 	return conditions
 }
 
-func ParseCondition(c *fiber.Ctx, fieldMap map[string]FieldDefined, initCondition []*sqlbuilder.Condition) ([]*sqlbuilder.Condition, error) {
-	//keys := c.QueryArray("field")
+func ParseCondition(c fiber.Ctx, fieldMap map[string]FieldDefined, initCondition []*sqlbuilder.Condition) ([]*sqlbuilder.Condition, error) {
+	// keys := c.QueryArray("field")
 	keys := strings.Split(c.Query("field"), ",")
 	if initCondition == nil {
 		initCondition = []*sqlbuilder.Condition{}
@@ -139,7 +139,7 @@ func ParseCondition(c *fiber.Ctx, fieldMap map[string]FieldDefined, initConditio
 			break
 		case sqlbuilder.ValueType_IntArray, sqlbuilder.ValueType_Statuses:
 			vs := strings.Split(c.Query(k), ",")
-			//vs := c.QueryArray(k)
+			// vs := c.QueryArray(k)
 			ints := make([]int64, 0, len(vs))
 			for _, _v := range vs {
 				// if defined.Convert != nil {
@@ -210,17 +210,17 @@ func ParseCondition(c *fiber.Ctx, fieldMap map[string]FieldDefined, initConditio
 	return conditions, nil
 }
 
-func GetInt64FromContext(c *fiber.Ctx, key string) int64 {
+func GetInt64FromContext(c fiber.Ctx, key string) int64 {
 	i, _ := strconv.ParseInt(c.Query(key), 10, 64)
 	return i
 }
 
-func GetBoolFromContext(c *fiber.Ctx, key string) bool {
+func GetBoolFromContext(c fiber.Ctx, key string) bool {
 	v := c.Query(key)
 	return v == "true" || v == "1"
 }
 
-func GetTimeFormQuery(c *fiber.Ctx, key, layout string) (bool, time.Time, error) {
+func GetTimeFormQuery(c fiber.Ctx, key, layout string) (bool, time.Time, error) {
 	timeStr := c.Query(key)
 	if timeStr == "" {
 		return false, time.Time{}, nil

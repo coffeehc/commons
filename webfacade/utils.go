@@ -6,7 +6,7 @@ import (
 	"github.com/coffeehc/commons/coder"
 	"github.com/coffeehc/commons/sequences"
 	"github.com/coffeehc/commons/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"google.golang.org/protobuf/proto"
 	"io"
 	"io/ioutil"
@@ -19,7 +19,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func SendPBSuccess(c *fiber.Ctx, data proto.Message, code int64) error {
+func SendPBSuccess(c fiber.Ctx, data proto.Message, code int64) error {
 	resp := &PBResponse{
 		Success: true,
 		Code:    code,
@@ -38,7 +38,7 @@ func SendPBSuccess(c *fiber.Ctx, data proto.Message, code int64) error {
 	return c.Send(body)
 }
 
-func SendPBErrors(c *fiber.Ctx, err error, code int64, statusCode int) error {
+func SendPBErrors(c fiber.Ctx, err error, code int64, statusCode int) error {
 	message := err.Error()
 	if errors.IsSystemError(err) {
 		log.Error("遭遇了系统错误", zap.Error(err))
@@ -47,7 +47,7 @@ func SendPBErrors(c *fiber.Ctx, err error, code int64, statusCode int) error {
 	return SendPBError(c, message, code, statusCode)
 }
 
-func SendPBError(c *fiber.Ctx, message string, code int64, statusCode int) error {
+func SendPBError(c fiber.Ctx, message string, code int64, statusCode int) error {
 	resp := &PBResponse{
 		Success: false,
 		Code:    code,
@@ -98,7 +98,7 @@ func ReaderBodyByJsonFromBody(body io.ReadCloser, t interface{}) {
 	}
 }
 
-func GetRemortIp(c *fiber.Ctx) string {
+func GetRemortIp(c fiber.Ctx) string {
 	ip := c.Get("X-Forwarded-For")
 	if ip != "" {
 		return strings.Split(ip, ",")[0]
