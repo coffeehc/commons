@@ -31,7 +31,7 @@ type DbType string
 const (
 	MYSQL    DbType = "mysql"
 	POSTGRES DbType = "postgres"
-	SQLITE   DbType = "sqlite3"
+	SQLITE   DbType = "sqlite"
 )
 
 func buildDataSourceNameForMySql(config *Config) string {
