@@ -176,6 +176,55 @@ func TestPreparedStatementAndStreamingRowsUseUnifiedInterfaces(t *testing.T) {
 	}
 }
 
+func TestExplicitTransactionUsesUnifiedInterface(t *testing.T) {
+	service := newSQLiteTestService(t)
+	createTestRecordsTable(t, service)
+
+	transaction, err := service.BeginTx(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("BeginTx() error = %v", err)
+	}
+	if _, err = transaction.ExecContext(context.Background(), `INSERT INTO test_records (id, name) VALUES (?, ?)`, 1, "one"); err != nil {
+		t.Fatalf("Transaction.ExecContext() error = %v", err)
+	}
+	if err = transaction.Rollback(context.Background()); err != nil {
+		t.Fatalf("Transaction.Rollback() error = %v", err)
+	}
+	if count := testRecordCount(t, service); count != 0 {
+		t.Fatalf("record count after rollback = %d, want 0", count)
+	}
+}
+
+func TestAcquiredConnectionKeepsConnectionLocalState(t *testing.T) {
+	service := newSQLiteTestService(t)
+	connection, err := service.AcquireConnection(context.Background())
+	if err != nil {
+		t.Fatalf("AcquireConnection() error = %v", err)
+	}
+	defer connection.Close(context.Background())
+	if _, err = connection.ExecContext(context.Background(), `CREATE TEMP TABLE connection_records (id INTEGER PRIMARY KEY)`); err != nil {
+		t.Fatalf("Connection.ExecContext() error = %v", err)
+	}
+	transaction, err := connection.BeginTx(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("Connection.BeginTx() error = %v", err)
+	}
+	if _, err = transaction.ExecContext(context.Background(), `INSERT INTO connection_records (id) VALUES (?)`, 1); err != nil {
+		t.Fatalf("Transaction.ExecContext() error = %v", err)
+	}
+	if err = transaction.Commit(context.Background()); err != nil {
+		t.Fatalf("Transaction.Commit() error = %v", err)
+	}
+	var count int
+	found, err := connection.QueryRowContext(context.Background(), &count, `SELECT COUNT(*) FROM connection_records`)
+	if err != nil {
+		t.Fatalf("Connection.QueryRowContext() error = %v", err)
+	}
+	if !found || count != 1 {
+		t.Fatalf("connection count = %d, found = %v, want 1 and true", count, found)
+	}
+}
+
 func TestDatabaseTypeUsesDefaultPostgreSQL(t *testing.T) {
 	service := &serviceImpl{databaseType: (&Config{}).getDBType()}
 	if service.DatabaseType() != POSTGRES {

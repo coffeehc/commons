@@ -57,15 +57,8 @@ type Statement interface {
 	Close(ctx context.Context) error
 }
 
-// Dialect owns database execution, SQL rewriting, transaction propagation, and pool lifecycle.
-// Implementations must be safe for concurrent use. Methods return backend errors without logging.
-type Dialect interface {
-	// Name returns the configured database type name.
-	Name() string
-	// Rewrite converts canonical SQL into backend syntax, including placeholders and identifier quotes.
-	Rewrite(query string) string
-	// QuoteIdentifier safely quotes one possibly qualified SQL identifier.
-	QuoteIdentifier(identifier string) string
+// Executor provides the driver-neutral SQL operations shared by pools, connections, and transactions.
+type Executor interface {
 	// Exec executes a write statement and returns its stable result.
 	Exec(ctx context.Context, query string, args ...any) (Result, error)
 	// Query opens a streaming result. The caller must close the returned Rows.
@@ -75,8 +68,46 @@ type Dialect interface {
 	// Get scans the first returned row into a non-nil destination pointer.
 	// It returns found=false and a nil error when no row matches.
 	Get(ctx context.Context, dest any, query string, args ...any) (found bool, err error)
-	// Prepare creates an executable statement bound to the active transaction when present.
+	// Prepare creates an executable statement.
 	Prepare(ctx context.Context, query string) (Statement, error)
+}
+
+// Transaction is an explicitly controlled driver-neutral database transaction.
+// Callers must finish each transaction with Commit or Rollback.
+type Transaction interface {
+	Executor
+	// Commit makes the transaction changes durable.
+	Commit(ctx context.Context) error
+	// Rollback discards the transaction changes.
+	Rollback(ctx context.Context) error
+}
+
+// Connection is one acquired physical database connection.
+// Callers must close the connection to return it to its owning pool.
+type Connection interface {
+	Executor
+	// BeginTx starts a transaction on this connection.
+	BeginTx(ctx context.Context, options *sql.TxOptions) (Transaction, error)
+	// Ping verifies that this connection remains usable.
+	Ping(ctx context.Context) error
+	// Close returns this connection to its owning pool.
+	Close(ctx context.Context) error
+}
+
+// Dialect owns database execution, SQL rewriting, transaction propagation, and pool lifecycle.
+// Implementations must be safe for concurrent use. Methods return backend errors without logging.
+type Dialect interface {
+	Executor
+	// Name returns the configured database type name.
+	Name() string
+	// Rewrite converts canonical SQL into backend syntax, including placeholders and identifier quotes.
+	Rewrite(query string) string
+	// QuoteIdentifier safely quotes one possibly qualified SQL identifier.
+	QuoteIdentifier(identifier string) string
+	// BeginTx starts an explicitly controlled transaction owned by the active pool.
+	BeginTx(ctx context.Context, options *sql.TxOptions) (Transaction, error)
+	// Acquire obtains one physical connection from the active pool.
+	Acquire(ctx context.Context) (Connection, error)
 	// HandleTx executes handle in one transaction and propagates the transaction through its context.
 	// Nested calls reuse the current transaction. Callback, commit, and rollback errors are returned.
 	HandleTx(ctx context.Context, options *sql.TxOptions, handle func(context.Context) error) error

@@ -98,7 +98,9 @@ type serviceImpl struct {
 }
 
 var _ Service = (*serviceImpl)(nil)
+var _ Connection = (*connectionImpl)(nil)
 var _ Statement = (*statementImpl)(nil)
+var _ Transaction = (*transactionImpl)(nil)
 
 func (impl *serviceImpl) RegisterHandleMonitor(monitor HandleMonitor) {
 	if monitor == nil {
@@ -143,10 +145,14 @@ func (impl *serviceImpl) InsertContext(ctx context.Context, query string, args .
 }
 
 func (impl *serviceImpl) ExecContext(ctx context.Context, query string, args ...any) (int64, error) {
+	return impl.execContextWith(ctx, impl.dialect, query, args...)
+}
+
+func (impl *serviceImpl) execContextWith(ctx context.Context, executor dialect.Executor, query string, args ...any) (int64, error) {
 	rewrittenQuery := impl.dialect.Rewrite(query)
 	impl.logSQL(ctx, "dbExec", rewrittenQuery, args)
 	startedAt := time.Now()
-	result, err := impl.dialect.Exec(ctx, query, args...)
+	result, err := executor.Exec(ctx, query, args...)
 	impl.addMonitorRecord(rewrittenQuery, time.Since(startedAt), HandleTypeExec)
 	if err != nil {
 		log.DPanic("执行 SQL 失败", zap.String("sql", rewrittenQuery), zap.Error(err))
@@ -156,13 +162,17 @@ func (impl *serviceImpl) ExecContext(ctx context.Context, query string, args ...
 }
 
 func (impl *serviceImpl) QueryContext(ctx context.Context, dest any, query string, args ...any) error {
+	return impl.queryContextWith(ctx, impl.dialect, dest, query, args...)
+}
+
+func (impl *serviceImpl) queryContextWith(ctx context.Context, executor dialect.Executor, dest any, query string, args ...any) error {
 	if err := validateDestination(dest); err != nil {
 		return err
 	}
 	rewrittenQuery := impl.dialect.Rewrite(query)
 	impl.logSQL(ctx, "dbQuery", rewrittenQuery, args)
 	startedAt := time.Now()
-	err := impl.dialect.Select(ctx, dest, query, args...)
+	err := executor.Select(ctx, dest, query, args...)
 	impl.addMonitorRecord(rewrittenQuery, time.Since(startedAt), HandleTypeQuery)
 	if err != nil {
 		log.DPanic("执行查询失败", zap.String("sql", rewrittenQuery), zap.Error(err))
@@ -172,13 +182,17 @@ func (impl *serviceImpl) QueryContext(ctx context.Context, dest any, query strin
 }
 
 func (impl *serviceImpl) QueryRowContext(ctx context.Context, dest any, query string, args ...any) (bool, error) {
+	return impl.queryRowContextWith(ctx, impl.dialect, dest, query, args...)
+}
+
+func (impl *serviceImpl) queryRowContextWith(ctx context.Context, executor dialect.Executor, dest any, query string, args ...any) (bool, error) {
 	if err := validateDestination(dest); err != nil {
 		return false, err
 	}
 	rewrittenQuery := impl.dialect.Rewrite(query)
 	impl.logSQL(ctx, "dbQueryRow", rewrittenQuery, args)
 	startedAt := time.Now()
-	found, err := impl.dialect.Get(ctx, dest, query, args...)
+	found, err := executor.Get(ctx, dest, query, args...)
 	impl.addMonitorRecord(rewrittenQuery, time.Since(startedAt), HandleTypeQueryRow)
 	if err != nil {
 		log.DPanic("执行单行查询失败", zap.String("sql", rewrittenQuery), zap.Error(err))
@@ -188,10 +202,14 @@ func (impl *serviceImpl) QueryRowContext(ctx context.Context, dest any, query st
 }
 
 func (impl *serviceImpl) QueryRowsContext(ctx context.Context, query string, args ...any) (Rows, error) {
+	return impl.queryRowsContextWith(ctx, impl.dialect, query, args...)
+}
+
+func (impl *serviceImpl) queryRowsContextWith(ctx context.Context, executor dialect.Executor, query string, args ...any) (Rows, error) {
 	rewrittenQuery := impl.dialect.Rewrite(query)
 	impl.logSQL(ctx, "dbQueryRows", rewrittenQuery, args)
 	startedAt := time.Now()
-	rows, err := impl.dialect.Query(ctx, query, args...)
+	rows, err := executor.Query(ctx, query, args...)
 	impl.addMonitorRecord(rewrittenQuery, time.Since(startedAt), HandleTypeQuery)
 	if err != nil {
 		log.DPanic("打开查询结果失败", zap.String("sql", rewrittenQuery), zap.Error(err))
@@ -201,13 +219,39 @@ func (impl *serviceImpl) QueryRowsContext(ctx context.Context, query string, arg
 }
 
 func (impl *serviceImpl) PrepareContext(ctx context.Context, query string) (Statement, error) {
+	return impl.prepareContextWith(ctx, impl.dialect, query)
+}
+
+func (impl *serviceImpl) prepareContextWith(ctx context.Context, executor dialect.Executor, query string) (Statement, error) {
 	rewrittenQuery := impl.dialect.Rewrite(query)
-	statement, err := impl.dialect.Prepare(ctx, query)
+	statement, err := executor.Prepare(ctx, query)
 	if err != nil {
 		log.DPanic("准备 SQL 失败", zap.String("sql", rewrittenQuery), zap.Error(err))
 		return nil, errors.ConverError(err)
 	}
 	return &statementImpl{service: impl, statement: statement, query: rewrittenQuery}, nil
+}
+
+func (impl *serviceImpl) BeginTx(ctx context.Context, options *sql.TxOptions) (Transaction, error) {
+	transaction, err := impl.dialect.BeginTx(ctx, options)
+	if err != nil {
+		return nil, errors.ConverError(err)
+	}
+	return &transactionImpl{
+		executorImpl: executorImpl{service: impl, executor: transaction},
+		transaction:  transaction,
+	}, nil
+}
+
+func (impl *serviceImpl) AcquireConnection(ctx context.Context) (Connection, error) {
+	connection, err := impl.dialect.Acquire(ctx)
+	if err != nil {
+		return nil, errors.ConverError(err)
+	}
+	return &connectionImpl{
+		executorImpl: executorImpl{service: impl, executor: connection},
+		connection:   connection,
+	}, nil
 }
 
 func (impl *serviceImpl) HandleTx(ctx context.Context, handle func(context.Context) error) error {
@@ -286,6 +330,80 @@ func validateDestination(dest any) error {
 	value := reflect.ValueOf(dest)
 	if value.Kind() != reflect.Ptr || value.IsNil() {
 		return errors.SystemError("查询目标必须是非空指针")
+	}
+	return nil
+}
+
+type executorImpl struct {
+	service  *serviceImpl
+	executor dialect.Executor
+}
+
+func (impl *executorImpl) ExecContext(ctx context.Context, query string, args ...any) (int64, error) {
+	return impl.service.execContextWith(ctx, impl.executor, query, args...)
+}
+
+func (impl *executorImpl) QueryContext(ctx context.Context, dest any, query string, args ...any) error {
+	return impl.service.queryContextWith(ctx, impl.executor, dest, query, args...)
+}
+
+func (impl *executorImpl) QueryRowContext(ctx context.Context, dest any, query string, args ...any) (bool, error) {
+	return impl.service.queryRowContextWith(ctx, impl.executor, dest, query, args...)
+}
+
+func (impl *executorImpl) QueryRowsContext(ctx context.Context, query string, args ...any) (Rows, error) {
+	return impl.service.queryRowsContextWith(ctx, impl.executor, query, args...)
+}
+
+func (impl *executorImpl) PrepareContext(ctx context.Context, query string) (Statement, error) {
+	return impl.service.prepareContextWith(ctx, impl.executor, query)
+}
+
+type transactionImpl struct {
+	executorImpl
+	transaction dialect.Transaction
+}
+
+func (impl *transactionImpl) Commit(ctx context.Context) error {
+	if err := impl.transaction.Commit(ctx); err != nil {
+		return errors.ConverError(err)
+	}
+	return nil
+}
+
+func (impl *transactionImpl) Rollback(ctx context.Context) error {
+	if err := impl.transaction.Rollback(ctx); err != nil {
+		return errors.ConverError(err)
+	}
+	return nil
+}
+
+type connectionImpl struct {
+	executorImpl
+	connection dialect.Connection
+}
+
+func (impl *connectionImpl) BeginTx(ctx context.Context, options *sql.TxOptions) (Transaction, error) {
+	transaction, err := impl.connection.BeginTx(ctx, options)
+	if err != nil {
+		return nil, errors.ConverError(err)
+	}
+	return &transactionImpl{
+		executorImpl: executorImpl{service: impl.service, executor: transaction},
+		transaction:  transaction,
+	}, nil
+}
+
+func (impl *connectionImpl) Ping(ctx context.Context) error {
+	if err := impl.connection.Ping(ctx); err != nil {
+		return errors.ConverError(err)
+	}
+	return nil
+}
+
+func (impl *connectionImpl) Close(ctx context.Context) error {
+	if err := impl.connection.Close(ctx); err != nil {
+		return errors.ConverError(err)
 	}
 	return nil
 }

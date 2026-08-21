@@ -45,13 +45,16 @@ type serviceImpl struct {
 }
 
 var _ dialect.Dialect = (*serviceImpl)(nil)
+var _ dialect.Connection = (*connectionImpl)(nil)
 var _ dialect.Rows = (*rowsImpl)(nil)
 var _ dialect.Statement = (*statementImpl)(nil)
+var _ dialect.Transaction = (*transactionImpl)(nil)
 
 type transactionContextKey struct{}
 
 type handler interface {
-	sqlx.ExtContext
+	sqlx.QueryerContext
+	sqlx.ExecerContext
 	PreparexContext(ctx context.Context, query string) (*sqlx.Stmt, error)
 }
 
@@ -118,8 +121,12 @@ func (impl *serviceImpl) QuoteIdentifier(identifier string) string {
 }
 
 func (impl *serviceImpl) Exec(ctx context.Context, query string, args ...any) (dialect.Result, error) {
+	return impl.execWith(ctx, impl.handler(ctx), query, args...)
+}
+
+func (impl *serviceImpl) execWith(ctx context.Context, executor handler, query string, args ...any) (dialect.Result, error) {
 	query = impl.Rewrite(query)
-	result, err := impl.handler(ctx).ExecContext(ctx, query, args...)
+	result, err := executor.ExecContext(ctx, query, args...)
 	if err != nil {
 		return dialect.Result{}, err
 	}
@@ -132,8 +139,12 @@ func (impl *serviceImpl) Exec(ctx context.Context, query string, args ...any) (d
 }
 
 func (impl *serviceImpl) Query(ctx context.Context, query string, args ...any) (dialect.Rows, error) {
+	return impl.queryWith(ctx, impl.handler(ctx), query, args...)
+}
+
+func (impl *serviceImpl) queryWith(ctx context.Context, executor handler, query string, args ...any) (dialect.Rows, error) {
 	query = impl.Rewrite(query)
-	rows, err := impl.handler(ctx).QueryxContext(ctx, query, args...)
+	rows, err := executor.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,13 +152,21 @@ func (impl *serviceImpl) Query(ctx context.Context, query string, args ...any) (
 }
 
 func (impl *serviceImpl) Select(ctx context.Context, dest any, query string, args ...any) error {
+	return impl.selectWith(ctx, impl.handler(ctx), dest, query, args...)
+}
+
+func (impl *serviceImpl) selectWith(ctx context.Context, executor handler, dest any, query string, args ...any) error {
 	query = impl.Rewrite(query)
-	return sqlx.SelectContext(ctx, impl.handler(ctx), dest, query, args...)
+	return sqlx.SelectContext(ctx, executor, dest, query, args...)
 }
 
 func (impl *serviceImpl) Get(ctx context.Context, dest any, query string, args ...any) (bool, error) {
+	return impl.getWith(ctx, impl.handler(ctx), dest, query, args...)
+}
+
+func (impl *serviceImpl) getWith(ctx context.Context, executor handler, dest any, query string, args ...any) (bool, error) {
 	query = impl.Rewrite(query)
-	err := sqlx.GetContext(ctx, impl.handler(ctx), dest, query, args...)
+	err := sqlx.GetContext(ctx, executor, dest, query, args...)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
@@ -155,12 +174,32 @@ func (impl *serviceImpl) Get(ctx context.Context, dest any, query string, args .
 }
 
 func (impl *serviceImpl) Prepare(ctx context.Context, query string) (dialect.Statement, error) {
+	return impl.prepareWith(ctx, impl.handler(ctx), query)
+}
+
+func (impl *serviceImpl) prepareWith(ctx context.Context, executor handler, query string) (dialect.Statement, error) {
 	query = impl.Rewrite(query)
-	statement, err := impl.handler(ctx).PreparexContext(ctx, query)
+	statement, err := executor.PreparexContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	return &statementImpl{statement: statement}, nil
+}
+
+func (impl *serviceImpl) BeginTx(ctx context.Context, options *sql.TxOptions) (dialect.Transaction, error) {
+	transaction, err := impl.db.BeginTxx(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+	return &transactionImpl{service: impl, transaction: transaction}, nil
+}
+
+func (impl *serviceImpl) Acquire(ctx context.Context) (dialect.Connection, error) {
+	connection, err := impl.db.Connx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &connectionImpl{service: impl, connection: connection}, nil
 }
 
 func (impl *serviceImpl) HandleTx(ctx context.Context, options *sql.TxOptions, handle func(context.Context) error) (err error) {
@@ -235,6 +274,80 @@ func (impl *serviceImpl) handler(ctx context.Context) handler {
 		return transaction
 	}
 	return impl.db
+}
+
+type transactionImpl struct {
+	service     *serviceImpl
+	transaction *sqlx.Tx
+}
+
+func (impl *transactionImpl) Exec(ctx context.Context, query string, args ...any) (dialect.Result, error) {
+	return impl.service.execWith(ctx, impl.transaction, query, args...)
+}
+
+func (impl *transactionImpl) Query(ctx context.Context, query string, args ...any) (dialect.Rows, error) {
+	return impl.service.queryWith(ctx, impl.transaction, query, args...)
+}
+
+func (impl *transactionImpl) Select(ctx context.Context, dest any, query string, args ...any) error {
+	return impl.service.selectWith(ctx, impl.transaction, dest, query, args...)
+}
+
+func (impl *transactionImpl) Get(ctx context.Context, dest any, query string, args ...any) (bool, error) {
+	return impl.service.getWith(ctx, impl.transaction, dest, query, args...)
+}
+
+func (impl *transactionImpl) Prepare(ctx context.Context, query string) (dialect.Statement, error) {
+	return impl.service.prepareWith(ctx, impl.transaction, query)
+}
+
+func (impl *transactionImpl) Commit(context.Context) error {
+	return impl.transaction.Commit()
+}
+
+func (impl *transactionImpl) Rollback(context.Context) error {
+	return impl.transaction.Rollback()
+}
+
+type connectionImpl struct {
+	service    *serviceImpl
+	connection *sqlx.Conn
+}
+
+func (impl *connectionImpl) Exec(ctx context.Context, query string, args ...any) (dialect.Result, error) {
+	return impl.service.execWith(ctx, impl.connection, query, args...)
+}
+
+func (impl *connectionImpl) Query(ctx context.Context, query string, args ...any) (dialect.Rows, error) {
+	return impl.service.queryWith(ctx, impl.connection, query, args...)
+}
+
+func (impl *connectionImpl) Select(ctx context.Context, dest any, query string, args ...any) error {
+	return impl.service.selectWith(ctx, impl.connection, dest, query, args...)
+}
+
+func (impl *connectionImpl) Get(ctx context.Context, dest any, query string, args ...any) (bool, error) {
+	return impl.service.getWith(ctx, impl.connection, dest, query, args...)
+}
+
+func (impl *connectionImpl) Prepare(ctx context.Context, query string) (dialect.Statement, error) {
+	return impl.service.prepareWith(ctx, impl.connection, query)
+}
+
+func (impl *connectionImpl) BeginTx(ctx context.Context, options *sql.TxOptions) (dialect.Transaction, error) {
+	transaction, err := impl.connection.BeginTxx(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+	return &transactionImpl{service: impl.service, transaction: transaction}, nil
+}
+
+func (impl *connectionImpl) Ping(ctx context.Context) error {
+	return impl.connection.PingContext(ctx)
+}
+
+func (impl *connectionImpl) Close(context.Context) error {
+	return impl.connection.Close()
 }
 
 type rowsImpl struct {

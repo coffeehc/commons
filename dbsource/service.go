@@ -30,6 +30,48 @@ type Statement interface {
 	dialect.Statement
 }
 
+// Transaction is an explicitly controlled driver-neutral database transaction.
+// Callers must finish each transaction with Commit or Rollback.
+type Transaction interface {
+	// ExecContext executes a write statement and returns affected rows.
+	ExecContext(ctx context.Context, query string, args ...any) (int64, error)
+	// QueryContext scans all rows into a non-nil pointer to a slice.
+	QueryContext(ctx context.Context, dest any, query string, args ...any) error
+	// QueryRowContext scans the first row into a non-nil pointer.
+	// It returns found=false and nil when no row matches.
+	QueryRowContext(ctx context.Context, dest any, query string, args ...any) (bool, error)
+	// QueryRowsContext opens a driver-neutral streaming result. The caller must close it.
+	QueryRowsContext(ctx context.Context, query string, args ...any) (Rows, error)
+	// PrepareContext creates an executable statement bound to this transaction.
+	PrepareContext(ctx context.Context, query string) (Statement, error)
+	// Commit makes the transaction changes durable.
+	Commit(ctx context.Context) error
+	// Rollback discards the transaction changes.
+	Rollback(ctx context.Context) error
+}
+
+// Connection is one acquired physical database connection.
+// Callers must close the connection to return it to its owning pool.
+type Connection interface {
+	// ExecContext executes a write statement and returns affected rows.
+	ExecContext(ctx context.Context, query string, args ...any) (int64, error)
+	// QueryContext scans all rows into a non-nil pointer to a slice.
+	QueryContext(ctx context.Context, dest any, query string, args ...any) error
+	// QueryRowContext scans the first row into a non-nil pointer.
+	// It returns found=false and nil when no row matches.
+	QueryRowContext(ctx context.Context, dest any, query string, args ...any) (bool, error)
+	// QueryRowsContext opens a driver-neutral streaming result. The caller must close it.
+	QueryRowsContext(ctx context.Context, query string, args ...any) (Rows, error)
+	// PrepareContext creates an executable statement bound to this connection.
+	PrepareContext(ctx context.Context, query string) (Statement, error)
+	// BeginTx starts a transaction on this connection.
+	BeginTx(ctx context.Context, options *sql.TxOptions) (Transaction, error)
+	// Ping verifies that this connection remains usable.
+	Ping(ctx context.Context) error
+	// Close returns this connection to its owning pool.
+	Close(ctx context.Context) error
+}
+
 // Service owns database access, transaction propagation, monitoring, and backend lifecycle.
 // Implementations are safe for concurrent use, convert backend errors, and preserve transaction callback errors.
 type Service interface {
@@ -53,6 +95,10 @@ type Service interface {
 	QueryRowsContext(ctx context.Context, query string, args ...any) (Rows, error)
 	// PrepareContext creates an executable statement bound to the current transaction when present.
 	PrepareContext(ctx context.Context, query string) (Statement, error)
+	// BeginTx starts an explicitly controlled transaction owned by the active pool.
+	BeginTx(ctx context.Context, options *sql.TxOptions) (Transaction, error)
+	// AcquireConnection obtains one physical connection from the active pool.
+	AcquireConnection(ctx context.Context) (Connection, error)
 	// HandleTx executes handle in one transaction using backend defaults.
 	HandleTx(ctx context.Context, handle func(context.Context) error) error
 	// HandleTxWithOptions executes handle in one transaction with portable transaction options.
