@@ -51,7 +51,7 @@ type Config struct {
 	MaxIdleConns int `mapstructure:"max_idle_conns,omitempty" json:"max_idle_conns,omitempty"`
 	// ConnMaxLifetimeSec is the maximum connection lifetime in seconds; zero keeps backend defaults.
 	ConnMaxLifetimeSec int `mapstructure:"conn_max_lifetime_sec,omitempty" json:"conn_max_lifetime_sec,omitempty"`
-	// Mapper controls struct field mapping. Nil uses dbsource.JSONMapperFunc.
+	// Mapper controls struct field mapping. Nil uses dbsource.DBMapperFunc.
 	Mapper *reflectx.Mapper `mapstructure:"-" json:"-"`
 }
 

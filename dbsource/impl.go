@@ -40,7 +40,7 @@ func Open(ctx context.Context, config *Config) (Service, error) {
 	}
 	mapper := config.Mapper
 	if mapper == nil {
-		mapper = JSONMapperFunc
+		mapper = DBMapperFunc
 	}
 	databaseDialect, err := newDialect(ctx, config, mapper)
 	if err != nil {

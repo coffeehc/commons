@@ -77,6 +77,55 @@ func TestDeleteByIDAcceptsRawContext(t *testing.T) {
 	}
 }
 
+func TestDefaultMapperUsesDBTags(t *testing.T) {
+	service := NewService(&Config{
+		DbType:      SQLITE,
+		LocalDbPath: "file:default_mapper_uses_db_tags?mode=memory&cache=shared",
+	}).(*serviceImpl)
+	t.Cleanup(func() { _ = service.Stop(context.Background()) })
+	if _, err := service.ExecContext(context.Background(), `CREATE TABLE mapper_records (record_name TEXT NOT NULL)`); err != nil {
+		t.Fatalf("create mapper table: %v", err)
+	}
+	if _, err := service.ExecContext(context.Background(), `INSERT INTO mapper_records(record_name) VALUES (?)`, "db-value"); err != nil {
+		t.Fatalf("insert mapper record: %v", err)
+	}
+	record := struct {
+		Name string `json:"json_name" db:"record_name"`
+	}{}
+	found, err := service.QueryRowContext(context.Background(), &record, `SELECT record_name FROM mapper_records`)
+	if err != nil {
+		t.Fatalf("QueryRowContext() error = %v", err)
+	}
+	if !found || record.Name != "db-value" {
+		t.Fatalf("record = %+v, found = %v", record, found)
+	}
+}
+
+func TestExplicitJSONMapperRemainsSupported(t *testing.T) {
+	service := NewService(&Config{
+		DbType:      SQLITE,
+		LocalDbPath: "file:explicit_json_mapper?mode=memory&cache=shared",
+		Mapper:      JSONMapperFunc,
+	}).(*serviceImpl)
+	t.Cleanup(func() { _ = service.Stop(context.Background()) })
+	if _, err := service.ExecContext(context.Background(), `CREATE TABLE mapper_records (record_name TEXT NOT NULL)`); err != nil {
+		t.Fatalf("create mapper table: %v", err)
+	}
+	if _, err := service.ExecContext(context.Background(), `INSERT INTO mapper_records(record_name) VALUES (?)`, "json-value"); err != nil {
+		t.Fatalf("insert mapper record: %v", err)
+	}
+	record := struct {
+		Name string `json:"record_name" db:"db_name"`
+	}{}
+	found, err := service.QueryRowContext(context.Background(), &record, `SELECT record_name FROM mapper_records`)
+	if err != nil {
+		t.Fatalf("QueryRowContext() error = %v", err)
+	}
+	if !found || record.Name != "json-value" {
+		t.Fatalf("record = %+v, found = %v", record, found)
+	}
+}
+
 func TestHandleTxStartsTransactionWithInitializedContext(t *testing.T) {
 	service := newSQLiteTestService(t)
 	createTestRecordsTable(t, service)
