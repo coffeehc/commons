@@ -77,8 +77,9 @@ func getConditionFieldValue(condition *Condition) interface{} {
 	return nil
 }
 
-func buildCondition(sqlBuilder *strings.Builder, replace AlisaDefined, conditions []*Condition) []interface{} {
+func buildCondition(sqlBuilder *strings.Builder, replace aliasDefinition, conditions []*Condition) []interface{} {
 	params := make([]interface{}, 0)
+	conditionCount := 0
 	for _, condition := range conditions {
 		if condition == nil || condition.ColName == "" || condition.Value == nil || condition.Operator == "" {
 			continue
@@ -87,13 +88,20 @@ func buildCondition(sqlBuilder *strings.Builder, replace AlisaDefined, condition
 		if value == nil {
 			continue
 		}
-		if len(params) > 0 {
+		operator := strings.ToLower(condition.GetOperator())
+		if operator == "in" || operator == "not in" {
+			values := reflect.ValueOf(value)
+			if values.Kind() != reflect.Array && values.Kind() != reflect.Slice || values.Len() == 0 {
+				continue
+			}
+		}
+		if conditionCount > 0 {
 			sqlBuilder.WriteString(" and ")
 		}
 		sqlBuilder.WriteString(replace.handle(condition.GetColName()))
 		sqlBuilder.WriteString(" ")
-		sqlBuilder.WriteString(condition.GetOperator())
-		if condition.GetOperator() == "in" || condition.GetOperator() == "not in" {
+		sqlBuilder.WriteString(operator)
+		if operator == "in" || operator == "not in" {
 			sqlBuilder.WriteString(" ( ")
 			v := reflect.ValueOf(value)
 			for i := 0; i < v.Len(); i++ {
@@ -108,7 +116,7 @@ func buildCondition(sqlBuilder *strings.Builder, replace AlisaDefined, condition
 			sqlBuilder.WriteString(" ? ")
 			params = append(params, value)
 		}
-
+		conditionCount++
 	}
 	return params
 }

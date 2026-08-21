@@ -34,7 +34,8 @@ func TestConvertTableToDto(t *testing.T) {
 	log.InitLogger(true)
 	table := &table_x{
 		A: sql.NullString{
-			"haha", true,
+			String: "haha",
+			Valid:  true,
 		},
 		B: sql.NullBool{
 			Valid: true,

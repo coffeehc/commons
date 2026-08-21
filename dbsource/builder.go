@@ -101,20 +101,25 @@ func resolveTagName(tag string) string {
 	return tag[:idx]
 }
 
+// SegmentType identifies one canonical write-fragment shape.
 type SegmentType string
 
 const (
-	SegmentTypeInstall            SegmentType = "install"
-	SegmentTypeUpdate             SegmentType = "update"
+	// SegmentTypeInstall builds a canonical INSERT fragment.
+	SegmentTypeInstall SegmentType = "install"
+	// SegmentTypeUpdate builds a canonical UPDATE fragment.
+	SegmentTypeUpdate SegmentType = "update"
+	// SegmentTypeInstallOnDuplicate builds the legacy MySQL upsert fragment.
 	SegmentTypeInstallOnDuplicate SegmentType = "installOnDuplicate"
 )
 
-func BuildSqlSegment(params map[string]interface{}, tablename string, segmentType SegmentType, pgFormat bool) (string, []interface{}, error) {
+// BuildSqlSegment builds canonical SQL whose quotes and placeholders are rewritten by the active dialect.
+func BuildSqlSegment(params map[string]interface{}, tablename string, segmentType SegmentType) (string, []interface{}, error) {
 	switch segmentType {
 	case SegmentTypeInstall:
 		return buildInstallSegment(params, tablename)
 	case SegmentTypeUpdate:
-		return buildUpdateSegment(params, tablename, pgFormat)
+		return buildUpdateSegment(params, tablename)
 	case SegmentTypeInstallOnDuplicate:
 		return buildInstallOnDuplicateSegment(params, tablename)
 	}
@@ -165,7 +170,7 @@ func buildInstallSegment(params map[string]interface{}, tableName string) (strin
 	return sql, args, nil
 }
 
-func buildUpdateSegment(params map[string]interface{}, tableName string, pgFormat bool) (string, []interface{}, error) {
+func buildUpdateSegment(params map[string]interface{}, tableName string) (string, []interface{}, error) {
 	count := len(params)
 	keys := make([]string, 0, count)
 	args := make([]interface{}, 0, count)
@@ -175,11 +180,7 @@ func buildUpdateSegment(params map[string]interface{}, tableName string, pgForma
 	}
 	sort.Strings(sortKeys)
 	for _, k := range sortKeys {
-		if pgFormat {
-			keys = append(keys, fmt.Sprintf("%s=?", k))
-		} else {
-			keys = append(keys, fmt.Sprintf("`%s`=?", k))
-		}
+		keys = append(keys, fmt.Sprintf("`%s`=?", k))
 		args = append(args, params[k])
 	}
 	sql := strings.Join(keys, ",")

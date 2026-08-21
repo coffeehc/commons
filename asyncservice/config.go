@@ -1,10 +1,8 @@
 package asyncservice
 
-import "time"
-
+// Config defines asynchronous task execution limits.
 type Config struct {
-	PoolSize         int           `mapstructure:"pool_size,omitempty" json:"pool_size,omitempty"`
-	ExpiryDuration   time.Duration `mapstructure:"expiry_duration,omitempty" json:"expiry_duration,omitempty"`
-	MaxBlockingTasks int           `mapstructure:"max_blocking_tasks,omitempty" json:"max_blocking_tasks,omitempty"`
-	WheelSize        int64         `mapstructure:"wheel_size,omitempty" json:"wheel_size,omitempty"`
+	// PoolSize is the maximum number of concurrently running tasks. Values less
+	// than one use the service default and do not preallocate goroutines.
+	PoolSize int `mapstructure:"pool_size,omitempty" json:"pool_size,omitempty"`
 }

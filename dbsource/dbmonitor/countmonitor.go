@@ -1,34 +1,29 @@
 package dbmonitor
 
 import (
-	"context"
+	"sync"
+	"time"
+
 	"github.com/coffeehc/commons/dbsource"
 	"github.com/coffeehc/httpx/httpxcommons"
 	"github.com/gofiber/fiber/v3"
-	"time"
 )
 
+// SqlCountMonitor tracks SQL execution counts and exposes the current snapshot over HTTP.
 type SqlCountMonitor interface {
+	// RegisterWebEndpoint registers the count snapshot endpoint.
 	RegisterWebEndpoint(app *fiber.App)
 	dbsource.HandleMonitor
 }
 
-func NewSqlCountMonitor(ctx context.Context) SqlCountMonitor {
-	impl := &countMonitor{
-		sqlMap:     make(map[string]int64, 200),
-		sqlChannel: make(chan string, 5000),
-	}
-	go func() {
-		for sql := range impl.sqlChannel {
-			impl.sqlMap[sql] += 1
-		}
-	}()
-	return impl
+// NewSqlCountMonitor creates an in-memory synchronous SQL counter.
+func NewSqlCountMonitor() SqlCountMonitor {
+	return &countMonitor{sqlMap: make(map[string]int64, 200)}
 }
 
 type countMonitor struct {
-	sqlMap     map[string]int64
-	sqlChannel chan string
+	sqlMap map[string]int64
+	mutex  sync.RWMutex
 }
 
 func (impl *countMonitor) RegisterWebEndpoint(app *fiber.App) {
@@ -40,11 +35,19 @@ func (impl *countMonitor) Name() string {
 }
 
 func (impl *countMonitor) AddRecord(sql string, delay time.Duration, handleType dbsource.HandleType) {
-	impl.sqlChannel <- sql
+	impl.mutex.Lock()
+	impl.sqlMap[sql]++
+	impl.mutex.Unlock()
 }
 
 func (impl *countMonitor) monitorCount() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		return httpxcommons.SendSuccess(c, impl.sqlMap, 0)
+	return func(c fiber.Ctx) error {
+		impl.mutex.RLock()
+		counts := make(map[string]int64, len(impl.sqlMap))
+		for sql, count := range impl.sqlMap {
+			counts[sql] = count
+		}
+		impl.mutex.RUnlock()
+		return httpxcommons.SendSuccess(c, counts, 0)
 	}
 }

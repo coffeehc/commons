@@ -4,125 +4,95 @@ import (
 	"context"
 	"time"
 
-	"github.com/RussellLuo/timingwheel"
 	"github.com/coffeehc/base/log"
-	"github.com/panjf2000/ants/v2"
+	"github.com/coffeehc/boot/plugin"
+	"github.com/coffeehc/commons/timingwheel"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
+const defaultPoolSize = 100000
+
+// ConfigScopeKey is the viper scope used to load async service configuration.
 const ConfigScopeKey = "sync_config"
 
-type Service interface {
-	Schedule(duration time.Duration, do func()) *timingwheel.Timer
-	AfterFunc(duration time.Duration, do func()) *timingwheel.Timer
-	Submit(do func())
-	ChangePoolSize(size int)
-	StartAsyncTaskPoolMonitor(interval time.Duration)
-}
-
+// NewService creates an independent asynchronous execution service. A nil
+// configuration or non-positive pool size uses the default concurrency limit.
 func NewService(_ context.Context, config *Config) Service {
-	log.Debug("异步处理服务配置", zap.Any("config", config))
-	pool, err := ants.NewPool(config.PoolSize,
-		ants.WithPreAlloc(true),
-		ants.WithPanicHandler(func(p interface{}) {
-			log.DPanic("出现了不可处理的异常", zap.Any("err", p))
-		}),
-		ants.WithExpiryDuration(config.ExpiryDuration),
-		ants.WithMaxBlockingTasks(config.MaxBlockingTasks),
-	)
-	if err != nil {
-		log.Error("错误", zap.Error(err))
-		return nil
+	poolSize := defaultPoolSize
+	if config != nil && config.PoolSize > 0 {
+		poolSize = config.PoolSize
 	}
-	impl := &serviceImpl{
-		timingWheel: timingwheel.NewTimingWheel(time.Second, config.WheelSize),
-		pool:        pool,
+	return &serviceImpl{
+		timingWheel: timingwheel.New(),
+		pool:        newTaskPool(poolSize),
 	}
-	return impl
 }
 
 func newService(ctx context.Context) Service {
-	config := &Config{
-		PoolSize:         100000,
-		ExpiryDuration:   time.Second * 60,
-		MaxBlockingTasks: 1000,
-		WheelSize:        10000,
-	}
-	value := viper.Get(ConfigScopeKey)
-	if value != nil {
-		config = value.(*Config)
-	} else {
-		err := viper.UnmarshalKey(ConfigScopeKey, config)
-		if err != nil {
-			log.Error("错误", zap.Error(err))
-			return nil
-		}
+	config := &Config{PoolSize: defaultPoolSize}
+	if err := viper.UnmarshalKey(ConfigScopeKey, config); err != nil {
+		log.Error("加载异步服务配置失败", zap.Error(err))
+		return nil
 	}
 	return NewService(ctx, config)
 }
 
+// serviceImpl owns asynchronous task admission, concurrency and timer lifecycle.
 type serviceImpl struct {
-	timingWheel *timingwheel.TimingWheel
-	pool        *ants.Pool
+	// timingWheel owns all delayed and periodic callback registrations.
+	timingWheel *timingwheel.Wheel
+	// pool owns task admission, execution concurrency and shutdown draining.
+	pool *taskPool
 }
 
-func (impl *serviceImpl) StartAsyncTaskPoolMonitor(interval time.Duration) {
-	if interval == 0 {
-		interval = time.Second * 5
-	}
-	impl.pool.Release()
-	impl.Submit(func() {
-		for {
-			log.Debug("Pool统计信息",
-				zap.Int("cap", impl.pool.Cap()),
-				zap.Int("free", impl.pool.Free()),
-				zap.Int("running", impl.pool.Running()),
-				zap.Int("waiting", impl.pool.Waiting()))
-			time.Sleep(interval)
-		}
-	})
+var _ plugin.Plugin = (*serviceImpl)(nil)
+
+// Submit accepts task for asynchronous execution. Tasks accepted before
+// shutdown are retained in FIFO order until the concurrency limit allows them
+// to start. A nil task causes a panic.
+func (impl *serviceImpl) Submit(task func()) {
+	impl.pool.Submit(task)
 }
 
-func (impl *serviceImpl) GetPool() *ants.Pool {
-	return impl.pool
-}
-
-func (impl *serviceImpl) Submit(do func()) {
-	impl.pool.Submit(do)
-}
-
+// ChangePoolSize changes the maximum number of concurrently running tasks.
+// Shrinking the limit does not cancel tasks that are already running.
 func (impl *serviceImpl) ChangePoolSize(size int) {
-	impl.pool.Tune(size)
+	if !impl.pool.ChangeLimit(size) {
+		log.Warn("修改异步任务并发上限失败", zap.Int("size", size))
+	}
 }
 
-func (impl *serviceImpl) Start(ctx context.Context) error {
-	impl.timingWheel.Start()
+// PoolStatus returns a thread-safe snapshot of current task pool state.
+func (impl *serviceImpl) PoolStatus() PoolStatus {
+	return impl.pool.Status()
+}
 
+// Start starts the plugin lifecycle. The task dispatcher is available from
+// construction so independent services can submit tasks without plugin setup.
+func (impl *serviceImpl) Start(_ context.Context) error {
 	return nil
 }
 
+// Stop prevents future timer triggers and drains every task accepted before
+// shutdown. It returns the context error when the caller stops waiting early.
 func (impl *serviceImpl) Stop(ctx context.Context) error {
 	impl.timingWheel.Stop()
-	return nil
+	return impl.pool.Stop(ctx)
 }
 
-func (impl *serviceImpl) Schedule(duration time.Duration, do func()) *timingwheel.Timer {
-	return impl.timingWheel.ScheduleFunc(&everyScheduler{duration}, func() {
-		impl.pool.Submit(do)
+// Schedule registers a periodic callback. The callback only submits the task;
+// actual execution remains controlled by the pool concurrency limit.
+func (impl *serviceImpl) Schedule(interval time.Duration, task func()) Timer {
+	return impl.timingWheel.Schedule(interval, func() {
+		impl.Submit(task)
 	})
 }
 
-func (impl *serviceImpl) AfterFunc(duration time.Duration, do func()) *timingwheel.Timer {
-	return impl.timingWheel.AfterFunc(duration, func() {
-		impl.pool.Submit(do)
+// AfterFunc registers a one-shot delayed callback. The callback only submits
+// the task; actual execution remains controlled by the pool concurrency limit.
+func (impl *serviceImpl) AfterFunc(delay time.Duration, task func()) Timer {
+	return impl.timingWheel.AfterFunc(delay, func() {
+		impl.Submit(task)
 	})
-}
-
-type everyScheduler struct {
-	Interval time.Duration
-}
-
-func (s *everyScheduler) Next(prev time.Time) time.Time {
-	return prev.Add(s.Interval)
 }

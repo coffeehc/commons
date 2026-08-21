@@ -5,32 +5,33 @@ import (
 	"strings"
 )
 
-func BuildQuery(colNames, tableName string, maxPageSize int64, query *Query, joinCondition *JoinCondition, pgFormat bool) (pageSqlContext *SqlContext, totalSqlContext *SqlContext) {
+// BuildQuery creates one portable LIMIT/OFFSET query and its optional total-count query.
+func BuildQuery(colNames, tableName string, maxPageSize int64, query *Query, joinCondition *JoinCondition) (pageSqlContext *SqlContext, totalSqlContext *SqlContext) {
 	sqlBuilder := &strings.Builder{}
 	params := make([]interface{}, 0)
 	joinSql := ""
 	if joinCondition == nil && query.GetJoin() != nil {
 		joinCondition = query.GetJoin()
 	}
-	replace := AlisaDefined{
+	replace := aliasDefinition{
 		openJoin: joinCondition != nil,
 	}
-	// 预处理查询字段
 	if replace.openJoin {
 		replace.alisa = "t."
 		replace.tableAlisa = joinCondition.TableAlisa
 		replace.joinAlisa = "t1."
-		joinSql = fmt.Sprintf(" as t left join %s as t1 on %s=%s", joinCondition.TableName, replace.handle(joinCondition.TableColName), replace.handle(joinCondition.JoinTableColName))
-		_colNames := strings.Split(colNames, ",")
-		for i, colName := range _colNames {
-			if i > 0 {
-				sqlBuilder.WriteString(",")
-			}
-			sqlBuilder.WriteString(replace.handle(colName))
-		}
-		colNames = sqlBuilder.String()
-		sqlBuilder.Reset()
+		joinSql = fmt.Sprintf(" as t left join %s as t1 on %s=%s", quoteIdentifier(joinCondition.TableName), replace.handle(joinCondition.TableColName), replace.handle(joinCondition.JoinTableColName))
 	}
+	// 预处理查询字段
+	_colNames := strings.Split(colNames, ",")
+	for i, colName := range _colNames {
+		if i > 0 {
+			sqlBuilder.WriteString(",")
+		}
+		sqlBuilder.WriteString(replace.handleProjection(colName))
+	}
+	colNames = sqlBuilder.String()
+	sqlBuilder.Reset()
 	// pageIndexReset:=false
 	// 构建查询条件
 	params = append(params, buildCondition(sqlBuilder, replace, query.GetConditions())...)
@@ -68,16 +69,11 @@ func BuildQuery(colNames, tableName string, maxPageSize int64, query *Query, joi
 		if page.GetPageIndex() < 0 {
 			page.PageIndex = 0
 		}
-		if pgFormat {
-			limitSql = fmt.Sprintf(" limit ? OFFSET ?")
-			pageParams = append(pageParams, page.GetPageSize(), page.GetPageIndex()*page.GetPageSize())
-		} else {
-			limitSql = fmt.Sprintf(" limit ?,?")
-			pageParams = append(pageParams, page.GetPageIndex()*page.GetPageSize(), page.GetPageSize())
-		}
+		limitSql = " limit ? OFFSET ?"
+		pageParams = append(pageParams, page.GetPageSize(), page.GetPageIndex()*page.GetPageSize())
 	}
 	pageSqlContext = &SqlContext{
-		Sql:    fmt.Sprintf("select %s from %s %s %s %s %s", colNames, tableName, joinSql, conditionSql, orderSql, limitSql),
+		Sql:    fmt.Sprintf("select %s from %s %s %s %s %s", colNames, quoteIdentifier(tableName), joinSql, conditionSql, orderSql, limitSql),
 		Params: append(params, pageParams...),
 	}
 	if query.GetReturnTotal() {
@@ -86,27 +82,22 @@ func BuildQuery(colNames, tableName string, maxPageSize int64, query *Query, joi
 			pk = query.Pk
 		}
 		totalSqlContext = &SqlContext{
-			Sql:    fmt.Sprintf("select count(%s) as `count` from %s %s %s", replace.handle(pk), tableName, joinSql, conditionSql),
+			Sql:    fmt.Sprintf("select count(%s) as `count` from %s %s %s", replace.handle(pk), quoteIdentifier(tableName), joinSql, conditionSql),
 			Params: params,
-		}
-	}
-	if pgFormat {
-		pageSqlContext.Sql = strings.ReplaceAll(pageSqlContext.Sql, "`", "")
-		if totalSqlContext != nil {
-			totalSqlContext.Sql = strings.ReplaceAll(totalSqlContext.Sql, "`", "")
 		}
 	}
 	return pageSqlContext, totalSqlContext
 }
 
+// AppendLimit adds canonical LIMIT/OFFSET placeholders to an existing query.
 func AppendLimit(sql string, param []interface{}, maxPageSize int64, query *PageQuery) *SqlContext {
 	if query.GetPageSize() < 0 || query.GetPageSize() > maxPageSize {
 		query.PageSize = maxPageSize
 	}
 	if query.GetPageSize() > 0 {
-		param = append(param, query.GetPageIndex()*query.GetPageSize())
 		param = append(param, query.GetPageSize())
-		sql = fmt.Sprintf("%s limit ?,?", sql)
+		param = append(param, query.GetPageIndex()*query.GetPageSize())
+		sql = fmt.Sprintf("%s limit ? OFFSET ?", sql)
 	}
 	return &SqlContext{sql, param}
 }

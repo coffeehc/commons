@@ -7,8 +7,10 @@ import (
 	"go.uber.org/zap"
 )
 
+// LogMonitor is the default slow-query logger.
 var LogMonitor HandleMonitor = new(baseLogMonitor)
 
+// DefaultLogMonitorSlowQueryDelay is the duration after which LogMonitor reports a query.
 var DefaultLogMonitorSlowQueryDelay = time.Second
 
 type baseLogMonitor struct {

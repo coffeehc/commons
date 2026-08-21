@@ -2,10 +2,11 @@ package utils
 
 import (
 	"errors"
-	"github.com/coffeehc/commons/models"
-	"google.golang.org/protobuf/proto"
 	"reflect"
 	"time"
+
+	"github.com/coffeehc/commons/models"
+	"google.golang.org/protobuf/proto"
 )
 
 func BuildError(message string) *models.Error {
@@ -19,8 +20,9 @@ func ParsePayloadResponse(resp *models.PayloadResponse, payload proto.Message) *
 	if err != nil {
 		return err
 	}
-	err1 := proto.Unmarshal(resp.GetPayload(), payload)
-	panic(err1)
+	if err := proto.Unmarshal(resp.GetPayload(), payload); err != nil {
+		return BuildError(err.Error())
+	}
 	return nil
 }
 

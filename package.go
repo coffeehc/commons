@@ -6,6 +6,7 @@ import (
 	_ "github.com/coffeehc/commons/coder"
 	_ "github.com/coffeehc/commons/cryptos"
 	_ "github.com/coffeehc/commons/dbsource"
+	_ "github.com/coffeehc/commons/embeddedmqservice"
 	_ "github.com/coffeehc/commons/httpc"
 	_ "github.com/coffeehc/commons/ipcreator"
 	_ "github.com/coffeehc/commons/keylockservice"

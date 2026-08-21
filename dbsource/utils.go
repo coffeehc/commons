@@ -1,149 +1,83 @@
 package dbsource
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
+	"net"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jackc/pgx/v5/stdlib"
-
 	"github.com/coffeehc/base/errors"
-	"github.com/coffeehc/base/log"
-	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/jmoiron/sqlx"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx/reflectx"
-	"go.uber.org/zap"
 )
 
+// NewMapperFunc creates a sqlx field mapper using tag and lowercase field-name fallback.
 func NewMapperFunc(tag string) *reflectx.Mapper {
 	return reflectx.NewMapperFunc(tag, strings.ToLower)
 }
 
+// JSONMapperFunc maps database columns through json struct tags.
 var JSONMapperFunc = NewMapperFunc("json")
+
+// DBMapperFunc maps database columns through db struct tags.
 var DBMapperFunc = NewMapperFunc("db")
 
+// DbType identifies one supported database dialect.
 type DbType string
 
 const (
-	MYSQL    DbType = "mysql"
+	// MYSQL selects the sqlx-backed MySQL dialect.
+	MYSQL DbType = "mysql"
+	// POSTGRES selects the native pgxpool-backed PostgreSQL dialect.
 	POSTGRES DbType = "postgres"
-	SQLITE   DbType = "sqlite"
+	// SQLITE selects the sqlx-backed pure-Go SQLite dialect.
+	SQLITE DbType = "sqlite"
 )
 
-func buildDataSourceNameForMySql(config *Config) string {
-	values := make(url.Values)
-	values.Set("charset", "utf8mb4")
-	values.Set("interpolateParams", "true")
-	values.Set("parseTime", "true")
-	values.Set("loc", "Local")
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s", config.User, config.Password, config.Host, config.Port, config.DBName, values.Encode())
+func buildDataSourceNameForMySQL(config *Config) string {
+	mysqlConfig := mysql.NewConfig()
+	mysqlConfig.User = config.User
+	mysqlConfig.Passwd = config.Password
+	mysqlConfig.Net = "tcp"
+	mysqlConfig.Addr = net.JoinHostPort(config.Host, strconv.Itoa(config.Port))
+	mysqlConfig.DBName = config.DBName
+	mysqlConfig.Params = map[string]string{"charset": "utf8mb4"}
+	mysqlConfig.InterpolateParams = true
+	mysqlConfig.ParseTime = true
+	mysqlConfig.Loc = time.Local
+	return mysqlConfig.FormatDSN()
 }
 
 func buildDataSourceNameForPostgresSQL(config *Config) string {
-	params := make([]string, 0)
-	params = append(params, fmt.Sprintf("dbname='%s'", config.DBName))
-	params = append(params, fmt.Sprintf("user='%s'", config.User))
-	params = append(params, fmt.Sprintf("password='%s'", config.Password))
-	params = append(params, fmt.Sprintf("host='%s'", config.Host))
-	params = append(params, fmt.Sprintf("port='%d'", config.Port))
-	params = append(params, "sslmode=disable")
-	return strings.Join(params, " ")
+	databaseURL := &url.URL{
+		Scheme: "postgres",
+		User:   url.UserPassword(config.User, config.Password),
+		Host:   net.JoinHostPort(config.Host, strconv.Itoa(config.Port)),
+		Path:   config.DBName,
+	}
+	query := databaseURL.Query()
+	if config.SSLMode != "" {
+		query.Set("sslmode", string(config.SSLMode))
+	}
+	if config.SSLRootCert != "" {
+		query.Set("sslrootcert", config.SSLRootCert)
+	}
+	if config.SSLCert != "" {
+		query.Set("sslcert", config.SSLCert)
+	}
+	if config.SSLKey != "" {
+		query.Set("sslkey", config.SSLKey)
+	}
+	databaseURL.RawQuery = query.Encode()
+	return databaseURL.String()
 }
 
-func budilDataSourcwNameForSqlit(config *Config) string {
-	return config.LocalDbPath
-}
-
-func newDBSource(config *Config) *sqlx.DB {
-	if config.getDBType() == POSTGRES {
-		return newDBSourceForPG(config)
-	}
-	var db *sqlx.DB
-	var err error
-	var dataSource = ""
-	driverName := string(config.getDBType())
-	switch config.getDBType() {
-	case MYSQL:
-		dataSource = buildDataSourceNameForMySql(config)
-	case POSTGRES:
-		dataSource = buildDataSourceNameForPostgresSQL(config)
-		driverName = "pgx"
-	case SQLITE:
-		dataSource = budilDataSourcwNameForSqlit(config)
-	}
-	db, err = sqlx.Open(driverName, dataSource)
-	if err != nil {
-		log.Panic("打开数据库失败", zap.Error(err))
-	}
-	// log.Debug("打开数据库", zap.String("dataSource", dataSource))
-	if config.ConnMaxLifetimeSec > 60 {
-		db.SetConnMaxLifetime(time.Second * time.Duration(config.ConnMaxLifetimeSec))
-	} else {
-		db.SetConnMaxLifetime(time.Second * 60)
-	}
-	if config.MaxIdleConns > 5 {
-		db.SetMaxIdleConns(config.MaxIdleConns)
-	} else {
-		db.SetMaxIdleConns(5)
-	}
-	if config.MaxOpenConns > 15 {
-		db.SetMaxOpenConns(config.MaxOpenConns)
-	} else {
-		db.SetMaxOpenConns(15)
-	}
-	db.Mapper = config.Mapper
-	if db.Mapper == nil {
-		db.Mapper = JSONMapperFunc
-	}
-	err = db.Ping()
-	if err != nil {
-		log.Panic("db连接失败", zap.Error(err))
-	}
-	return db
-}
-
-func newDBSourceForPG(config *Config) *sqlx.DB {
-	databaseURL := buildDataSourceNameForPostgresSQL(config)
-	poolConfig, err := pgxpool.ParseConfig(databaseURL)
-	if err != nil {
-		log.Panic("无法解析数据库 URL", zap.Error(err))
-	}
-	db := stdlib.OpenDB(*poolConfig.ConnConfig)
-	if config.ConnMaxLifetimeSec > 60 {
-		db.SetConnMaxLifetime(time.Second * time.Duration(config.ConnMaxLifetimeSec))
-	} else {
-		db.SetConnMaxLifetime(time.Second * 60)
-	}
-	if config.MaxIdleConns > 5 {
-		db.SetMaxIdleConns(config.MaxIdleConns)
-	} else {
-		db.SetMaxIdleConns(5)
-	}
-	if config.MaxOpenConns > 15 {
-		db.SetMaxOpenConns(config.MaxOpenConns)
-	} else {
-		db.SetMaxOpenConns(15)
-	}
-	// 4. 使用 sqlx.NewDb 将标准的 *sql.DB 封装成 *sqlx.DB
-	// 第二个参数 "pgx" 是驱动名称，sqlx 内部会用到
-	sqlxDB := sqlx.NewDb(db, "pgx")
-	sqlxDB.Mapper = config.Mapper
-	if sqlxDB.Mapper == nil {
-		sqlxDB.Mapper = JSONMapperFunc
-	}
-	// 5. 检查连接是否成功
-	if err := sqlxDB.Ping(); err != nil {
-		log.Panic("无法连接到数据库", zap.Error(err))
-	}
-	return sqlxDB
-}
-
+// ErrorCountDiff reports that a write changed a different number of rows than required.
 var ErrorCountDiff = errors.MessageError("变更数据量不符合预期")
 
+// CheckRowsAffected verifies that result changed exactly okCount rows.
 func CheckRowsAffected(result sql.Result, okCount int64) error {
 	count, err := result.RowsAffected()
 	if err != nil {
@@ -155,91 +89,54 @@ func CheckRowsAffected(result sql.Result, okCount int64) error {
 	return nil
 }
 
+// SetValue writes one non-nil value into params and can omit supported zero values.
 func SetValue(params map[string]interface{}, name string, value interface{}, removeNull bool) {
 	if value == nil {
 		return
 	}
 	if removeNull {
-		switch value.(type) {
+		switch typedValue := value.(type) {
 		case string:
-			if value == "" {
+			if typedValue == "" {
 				return
 			}
-			break
-		case int, int8, int64, int16, int32, float32, float64:
-			if value == 0 {
+		case int:
+			if typedValue == 0 {
 				return
 			}
-			break
+		case int8:
+			if typedValue == 0 {
+				return
+			}
+		case int16:
+			if typedValue == 0 {
+				return
+			}
+		case int32:
+			if typedValue == 0 {
+				return
+			}
+		case int64:
+			if typedValue == 0 {
+				return
+			}
+		case float32:
+			if typedValue == 0 {
+				return
+			}
+		case float64:
+			if typedValue == 0 {
+				return
+			}
 		case []byte:
-			if len(value.([]byte)) == 0 {
+			if len(typedValue) == 0 {
 				return
 			}
-			break
 		case time.Time:
-			if value.(time.Time).IsZero() {
+			if typedValue.IsZero() {
 				return
 			}
-			break
 		}
 	}
 	params[name] = value
-}
-
-const contextXDBKey = "__dbsource_xdb"
-const contextConfigKey = "__dbsource_config"
-
-func (impl *serviceImpl) warpContext(ctx context.Context) context.Context {
-	return impl.setXDB(impl.setConfig(ctx))
-}
-
-func (impl *serviceImpl) setXDB(ctx context.Context) context.Context {
-	xdb := GetXDB(ctx)
-	if xdb != nil {
-		return ctx
-	}
-	return context.WithValue(ctx, contextXDBKey, impl.db)
-}
-
-func (impl *serviceImpl) setConfig(ctx context.Context) context.Context {
-	xdb := GetConfig(ctx)
-	if xdb != nil {
-		return ctx
-	}
-	return context.WithValue(ctx, contextConfigKey, impl.config)
-}
-
-func GetXDB(ctx context.Context) *sqlx.DB {
-	v := ctx.Value(contextXDBKey)
-	if v == nil {
-		return nil
-	}
-	return v.(*sqlx.DB)
-}
-
-func GetConfig(ctx context.Context) *Config {
-	v := ctx.Value(contextConfigKey)
-	if v == nil {
-		return nil
-	}
-	return v.(*Config)
-}
-
-var ContextHandlerKey = "__dbsource_headler"
-
-func SetHandler(ctx context.Context, handler Handler) context.Context {
-	_handler := GetHandler(ctx)
-	if _handler != nil {
-		// log.Warn("上下文中已经存在了数据库处理对象", zap.Any("handler", handler))
-		return ctx
-	}
-	return context.WithValue(ctx, ContextHandlerKey, handler)
-}
-
-func GetHandler(ctx context.Context) Handler {
-	v := ctx.Value(ContextHandlerKey)
-	if v == nil {
-		return nil
-	}
-	return v.(Handler)
 }

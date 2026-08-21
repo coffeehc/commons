@@ -9,13 +9,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// BuildUpdate creates one canonical update constrained by an identifier allowlist.
 func BuildUpdate(tableName string, id int64, limitFields map[string]bool, fields []*Field, conditions []*Condition) (*SqlContext, error) {
 	if id == 0 {
 		return nil, errors.MessageError("没有指定Id")
 	}
 	sqlBuilder := new(strings.Builder)
 	sqlBuilder.WriteString("update ")
-	sqlBuilder.WriteString(tableName)
+	sqlBuilder.WriteString(quoteIdentifier(tableName))
 	sqlBuilder.WriteString(" set ")
 	params := make([]interface{}, 0)
 	for _, field := range fields {
@@ -32,16 +33,20 @@ func BuildUpdate(tableName string, id int64, limitFields map[string]bool, fields
 		if len(params) > 0 {
 			sqlBuilder.WriteString(",")
 		}
-		sqlBuilder.WriteString(colName)
+		sqlBuilder.WriteString(quoteIdentifier(colName))
 		sqlBuilder.WriteString("=?")
 		params = append(params, value)
 	}
-	sqlBuilder.WriteString(" where ")
-	sqlBuilder.WriteString(" id=? ")
+	sqlBuilder.WriteString(" where `id`=?")
 	params = append(params, id)
 	if len(conditions) > 0 {
-		sqlBuilder.WriteString(" and ")
-		params = append(params, buildCondition(sqlBuilder, AlisaDefined{}, conditions)...)
+		conditionBuilder := new(strings.Builder)
+		conditionParams := buildCondition(conditionBuilder, aliasDefinition{}, conditions)
+		if len(conditionParams) > 0 {
+			sqlBuilder.WriteString(" and ")
+			sqlBuilder.WriteString(conditionBuilder.String())
+			params = append(params, conditionParams...)
+		}
 	}
 
 	return &SqlContext{

@@ -83,7 +83,7 @@ func ParseOrderConditions(c fiber.Ctx, fieldMap map[string]FieldDefined) []*sqlb
 			continue
 		}
 		v := c.Query(fmt.Sprintf("sort_%s", key))
-		if v == "" || v != "asc" || v != "desc" {
+		if v != "asc" && v != "desc" {
 			continue
 		}
 		conditions = append(conditions, &sqlbuilder.OrderCondition{
