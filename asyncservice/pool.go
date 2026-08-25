@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime/debug"
 	"sync"
+	"time"
 
 	"github.com/coffeehc/base/log"
 	"go.uber.org/zap"
@@ -21,8 +22,12 @@ type taskPool struct {
 	running int
 	// queue retains accepted tasks in FIFO order until they can start.
 	queue []func()
+	// pausedQueue retains tasks accepted after suspension until Resume.
+	pausedQueue []func()
 	// stopping prevents new submissions while already accepted tasks drain.
 	stopping bool
+	// paused prevents accepted tasks from moving into running state.
+	paused bool
 	// taskGroup tracks the dispatcher and every task goroutine it starts.
 	taskGroup sync.WaitGroup
 	// stopped is closed after the dispatcher drains all accepted tasks and exits.
@@ -52,6 +57,25 @@ func (pool *taskPool) Submit(task func()) bool {
 	if pool.stopping {
 		return false
 	}
+	if pool.paused {
+		pool.pausedQueue = append(pool.pausedQueue, task)
+		return true
+	}
+	pool.queue = append(pool.queue, task)
+	pool.condition.Signal()
+	return true
+}
+
+// SubmitIfRunning accepts task only while admission is not suspended.
+func (pool *taskPool) SubmitIfRunning(task func()) bool {
+	if task == nil {
+		panic("asyncservice: task must not be nil")
+	}
+	pool.mutex.Lock()
+	defer pool.mutex.Unlock()
+	if pool.stopping || pool.paused {
+		return false
+	}
 	pool.queue = append(pool.queue, task)
 	pool.condition.Signal()
 	return true
@@ -77,16 +101,63 @@ func (pool *taskPool) Status() PoolStatus {
 	pool.mutex.Lock()
 	defer pool.mutex.Unlock()
 	available := pool.limit - pool.running
+	if pool.paused {
+		available = 0
+	}
 	if available < 0 {
 		available = 0
 	}
 	return PoolStatus{
 		Limit:     pool.limit,
 		Running:   pool.running,
-		Waiting:   len(pool.queue),
+		Waiting:   len(pool.queue) + len(pool.pausedQueue),
 		Available: available,
 		Stopped:   pool.stopping,
+		Paused:    pool.paused,
 	}
+}
+
+// Suspend 允许已接收任务排空，并将此后接收的新任务放入暂停队列。
+func (pool *taskPool) Suspend() {
+	pool.mutex.Lock()
+	if !pool.stopping {
+		pool.paused = true
+	}
+	pool.mutex.Unlock()
+}
+
+// WaitIdle 等待暂停前已经接收的任务全部退出。
+func (pool *taskPool) WaitIdle(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	ticker := time.NewTicker(10 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		pool.mutex.Lock()
+		idle := pool.running == 0 && len(pool.queue) == 0
+		pool.mutex.Unlock()
+		if idle {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+		}
+	}
+}
+
+// Resume 恢复执行暂停期间接收的任务。
+func (pool *taskPool) Resume() {
+	pool.mutex.Lock()
+	if !pool.stopping {
+		pool.paused = false
+		pool.queue = append(pool.queue, pool.pausedQueue...)
+		pool.pausedQueue = nil
+		pool.condition.Broadcast()
+	}
+	pool.mutex.Unlock()
 }
 
 // Stop closes admission and waits for the dispatcher to drain previously accepted tasks.
@@ -94,6 +165,9 @@ func (pool *taskPool) Stop(ctx context.Context) error {
 	pool.mutex.Lock()
 	if !pool.stopping {
 		pool.stopping = true
+		pool.paused = false
+		pool.queue = append(pool.queue, pool.pausedQueue...)
+		pool.pausedQueue = nil
 		pool.condition.Broadcast()
 	}
 	stopped := pool.stopped

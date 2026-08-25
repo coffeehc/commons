@@ -117,6 +117,52 @@ func TestConsumerProgressesWithSingleAsyncPoolSlot(t *testing.T) {
 	}
 }
 
+func TestPausedConsumerPersistsAndConsumesNewPayloadAfterResume(t *testing.T) {
+	async := asyncservice.NewService(t.Context(), &asyncservice.Config{PoolSize: 1})
+	service := NewService(async)
+	controller := service.(ConsumerController)
+	handler := &queueTestHandler{done: make(chan error, 1)}
+	config := ConsumerConfig{
+		Name: "paused-enqueue", Directory: t.TempDir(), QueueCount: 1,
+		PollInterval: 5 * time.Millisecond,
+	}
+	if err := service.StartConsumer(t.Context(), config, handler); err != nil {
+		t.Fatal(err)
+	}
+	defer service.StopConsumer(config.Name)
+	if err := controller.PauseConsumers(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	if !controller.ConsumersPaused() {
+		t.Fatal("consumer controller did not report paused state")
+	}
+	if err := service.Enqueue(t.Context(), EnqueueInput{
+		ConsumerName: config.Name,
+		Payload:      []byte("persisted-while-paused"),
+	}); err != nil {
+		t.Fatalf("enqueue while paused returned error: %v", err)
+	}
+	if depth := service.Depth(config.Name); depth != 1 {
+		t.Fatalf("queue depth while paused = %d, want 1", depth)
+	}
+	select {
+	case <-handler.done:
+		t.Fatal("paused consumer handled payload before resume")
+	default:
+	}
+	if err := controller.ResumeConsumers(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case err := <-handler.done:
+		if err != nil {
+			t.Fatalf("resumed handler context should be active, got=%v", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("resumed consumer did not handle persisted payload")
+	}
+}
+
 func TestStartConsumerRejectsStoppedAsyncService(t *testing.T) {
 	async := asyncservice.NewService(t.Context(), &asyncservice.Config{PoolSize: 1})
 	stopper := async.(interface {

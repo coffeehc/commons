@@ -1,6 +1,9 @@
 package asyncservice
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // Timer controls one delayed or periodic callback. Implementations are safe
 // for concurrent use and do not wait for an already running callback.
@@ -21,6 +24,23 @@ type PoolStatus struct {
 	Available int
 	// Stopped reports whether the pool has stopped accepting new tasks.
 	Stopped bool
+	// Paused reports whether accepted tasks are temporarily prevented from starting.
+	Paused bool
+}
+
+// Controller 在不扩展稳定 Service 接口的前提下提供进程级任务准入控制。
+type Controller interface {
+	// Suspend 允许已接收任务排空，并挂起此后接收的新任务。
+	Suspend()
+	// WaitIdle 等待挂起前已经接收的任务全部退出。
+	WaitIdle(ctx context.Context) error
+	// Resume 恢复执行挂起期间接收的任务。
+	Resume()
+	// SubmitControl 在可挂起任务池之外启动一个服务生命周期控制任务。
+	// 服务开始停止后返回 false。
+	SubmitControl(task func()) bool
+	// SubmitIfRunning 仅在任务池未挂起时接收任务。
+	SubmitIfRunning(task func()) bool
 }
 
 // Service owns delayed scheduling and bounded asynchronous task execution.

@@ -44,6 +44,10 @@ type serviceImpl struct {
 	mu sync.RWMutex
 	// consumers 保存已经启动的消费者。
 	consumers map[string]*queueConsumer
+	// pausedConsumers 保存暂停期间仍可接收入队写入的消费者。
+	pausedConsumers map[string]*queueConsumer
+	// consumersPaused 表示全部消费者已经停止派发消息。
+	consumersPaused bool
 	// stopped 表示服务已经执行 Stop，不再允许启动消费者。
 	stopped bool
 }
@@ -136,6 +140,7 @@ type deadLetterFile struct {
 }
 
 var _ bootplugin.Plugin = (*serviceImpl)(nil)
+var _ ConsumerController = (*serviceImpl)(nil)
 
 // newService 使用全局 asyncservice 创建嵌入式 MQ 服务。
 func newService(ctx context.Context) Service {
@@ -150,8 +155,9 @@ func NewService(asyncService asyncservice.Service) Service {
 		panic("embeddedmqservice: async service must not be nil")
 	}
 	return &serviceImpl{
-		asyncService: asyncService,
-		consumers:    map[string]*queueConsumer{},
+		asyncService:    asyncService,
+		consumers:       map[string]*queueConsumer{},
+		pausedConsumers: map[string]*queueConsumer{},
 	}
 }
 
@@ -167,11 +173,15 @@ func (impl *serviceImpl) Stop(context.Context) error {
 	defer impl.lifecycleMu.Unlock()
 	impl.stopped = true
 	impl.mu.Lock()
-	consumers := make([]*queueConsumer, 0, len(impl.consumers))
+	consumers := make([]*queueConsumer, 0, len(impl.consumers)+len(impl.pausedConsumers))
 	for _, consumer := range impl.consumers {
 		consumers = append(consumers, consumer)
 	}
+	for _, consumer := range impl.pausedConsumers {
+		consumers = append(consumers, consumer)
+	}
 	impl.consumers = map[string]*queueConsumer{}
+	impl.pausedConsumers = map[string]*queueConsumer{}
 	impl.mu.Unlock()
 	for _, consumer := range consumers {
 		consumer.close()
@@ -191,6 +201,17 @@ func (impl *serviceImpl) StartConsumer(ctx context.Context, config ConsumerConfi
 	normalizeConsumerConfig(&config)
 	impl.lifecycleMu.Lock()
 	defer impl.lifecycleMu.Unlock()
+	if impl.consumersPaused {
+		consumer, err := newQueueConsumer(config, handler)
+		if err != nil {
+			return err
+		}
+		consumer.closeWithoutStart()
+		impl.mu.Lock()
+		impl.pausedConsumers[config.Name] = consumer
+		impl.mu.Unlock()
+		return nil
+	}
 	return impl.startConsumer(config, handler)
 }
 
@@ -205,37 +226,22 @@ func (impl *serviceImpl) startConsumer(config ConsumerConfig, handler QueueHandl
 	if existing := impl.detachConsumer(config.Name); existing != nil {
 		existing.close()
 	}
-	consumerCtx, cancel := context.WithCancel(context.Background())
-	consumer := &queueConsumer{
-		config:         config,
-		handler:        handler,
-		stopCh:         make(chan struct{}),
-		doneCh:         make(chan struct{}),
-		slots:          make(chan struct{}, config.Concurrency),
-		ctx:            consumerCtx,
-		cancel:         cancel,
-		activeMessages: map[string]struct{}{},
-		activeShards:   map[int]struct{}{},
-		queuedKeys:     map[string]struct{}{},
-	}
-	if err := consumer.ensureLayout(); err != nil {
-		cancel()
-		return err
-	}
-	if err := consumer.recoverInflight(true); err != nil {
-		cancel()
-		return err
-	}
-	if err := consumer.rebuildQueuedKeys(); err != nil {
-		cancel()
+	consumer, err := newQueueConsumer(config, handler)
+	if err != nil {
 		return err
 	}
 	impl.mu.Lock()
 	impl.consumers[config.Name] = consumer
 	impl.mu.Unlock()
-	impl.asyncService.Submit(func() {
-		impl.runConsumer(consumer)
-	})
+	if controller, ok := impl.asyncService.(asyncservice.Controller); ok {
+		if !controller.SubmitControl(func() { impl.runConsumer(consumer) }) {
+			impl.detachConsumer(config.Name)
+			consumer.closeWithoutStart()
+			return fmt.Errorf("异步执行服务已经停止: %s", config.Name)
+		}
+	} else {
+		impl.asyncService.Submit(func() { impl.runConsumer(consumer) })
+	}
 	log.Debug("嵌入式 MQ 消费者启动完成",
 		zap.String("consumer", config.Name),
 		zap.String("queue", config.QueueName),
@@ -252,9 +258,84 @@ func (impl *serviceImpl) StopConsumer(name string) {
 	impl.lifecycleMu.Lock()
 	defer impl.lifecycleMu.Unlock()
 	consumer := impl.detachConsumer(name)
+	if consumer == nil {
+		consumer = impl.detachPausedConsumer(name)
+	}
 	if consumer != nil {
 		consumer.close()
 	}
+}
+
+// PauseConsumers stops delivery while retaining closed consumers as durable enqueue writers.
+func (impl *serviceImpl) PauseConsumers(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	impl.lifecycleMu.Lock()
+	defer impl.lifecycleMu.Unlock()
+	if impl.stopped {
+		return ErrServiceStopped
+	}
+	if impl.consumersPaused {
+		return nil
+	}
+	impl.mu.Lock()
+	consumers := impl.consumers
+	impl.consumers = map[string]*queueConsumer{}
+	for name, consumer := range consumers {
+		impl.pausedConsumers[name] = consumer
+	}
+	impl.consumersPaused = true
+	impl.mu.Unlock()
+	for _, consumer := range consumers {
+		consumer.close()
+	}
+	return nil
+}
+
+// ResumeConsumers restarts every consumer captured by PauseConsumers.
+func (impl *serviceImpl) ResumeConsumers(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	impl.lifecycleMu.Lock()
+	defer impl.lifecycleMu.Unlock()
+	if impl.stopped {
+		return ErrServiceStopped
+	}
+	if !impl.consumersPaused {
+		return nil
+	}
+	impl.mu.RLock()
+	paused := make(map[string]*queueConsumer, len(impl.pausedConsumers))
+	for name, consumer := range impl.pausedConsumers {
+		paused[name] = consumer
+	}
+	impl.mu.RUnlock()
+	started := make([]string, 0, len(paused))
+	for name, consumer := range paused {
+		if err := impl.startConsumer(consumer.config, consumer.handler); err != nil {
+			for _, startedName := range started {
+				if active := impl.detachConsumer(startedName); active != nil {
+					active.close()
+				}
+			}
+			return err
+		}
+		started = append(started, name)
+	}
+	impl.mu.Lock()
+	impl.pausedConsumers = map[string]*queueConsumer{}
+	impl.consumersPaused = false
+	impl.mu.Unlock()
+	return nil
+}
+
+// ConsumersPaused reports whether delivery is currently suspended.
+func (impl *serviceImpl) ConsumersPaused() bool {
+	impl.mu.RLock()
+	defer impl.mu.RUnlock()
+	return impl.consumersPaused
 }
 
 // Enqueue 向指定消费者写入一条 payload。
@@ -305,6 +386,11 @@ func (impl *serviceImpl) PurgePayloads(ctx context.Context, consumerName string,
 	impl.lifecycleMu.Lock()
 	defer impl.lifecycleMu.Unlock()
 	consumer := impl.detachConsumer(consumerName)
+	wasPaused := false
+	if consumer == nil {
+		consumer = impl.detachPausedConsumer(consumerName)
+		wasPaused = consumer != nil
+	}
 	if consumer == nil {
 		return 0, fmt.Errorf("队列消费者未启动: %s", consumerName)
 	}
@@ -313,6 +399,8 @@ func (impl *serviceImpl) PurgePayloads(ctx context.Context, consumerName string,
 	var restartErr error
 	if impl.asyncService.PoolStatus().Stopped {
 		restartErr = fmt.Errorf("异步执行服务已经停止: %s", consumerName)
+	} else if wasPaused {
+		restartErr = impl.storePausedConsumer(consumer.config, consumer.handler)
 	} else {
 		restartErr = impl.startConsumer(consumer.config, consumer.handler)
 	}
@@ -339,8 +427,11 @@ func (impl *serviceImpl) PurgeDeadLetters(ctx context.Context, policy DeadLetter
 	impl.lifecycleMu.RLock()
 	defer impl.lifecycleMu.RUnlock()
 	impl.mu.RLock()
-	consumers := make([]*queueConsumer, 0, len(impl.consumers))
+	consumers := make([]*queueConsumer, 0, len(impl.consumers)+len(impl.pausedConsumers))
 	for _, consumer := range impl.consumers {
+		consumers = append(consumers, consumer)
+	}
+	for _, consumer := range impl.pausedConsumers {
 		consumers = append(consumers, consumer)
 	}
 	impl.mu.RUnlock()
@@ -473,6 +564,12 @@ func (impl *serviceImpl) runConsumer(consumer *queueConsumer) {
 			return
 		default:
 		}
+		if impl.asyncService.PoolStatus().Paused {
+			if !waitQueueTick(ticker, consumer.stopCh) {
+				return
+			}
+			continue
+		}
 		select {
 		case consumer.slots <- struct{}{}:
 		case <-consumer.stopCh:
@@ -504,6 +601,13 @@ func (impl *serviceImpl) runConsumer(consumer *queueConsumer) {
 			continue
 		}
 		consumer.wg.Add(1)
+		if controller, ok := impl.asyncService.(asyncservice.Controller); ok {
+			if controller.SubmitIfRunning(func() { consumer.engine(item) }) {
+				continue
+			}
+			consumer.engine(item)
+			continue
+		}
 		if impl.asyncService.PoolStatus().Available == 0 {
 			consumer.engine(item)
 			continue
@@ -523,11 +627,66 @@ func (impl *serviceImpl) detachConsumer(name string) *queueConsumer {
 	return consumer
 }
 
+// detachPausedConsumer removes and returns one suspended consumer writer.
+func (impl *serviceImpl) detachPausedConsumer(name string) *queueConsumer {
+	impl.mu.Lock()
+	defer impl.mu.Unlock()
+	consumer := impl.pausedConsumers[name]
+	delete(impl.pausedConsumers, name)
+	return consumer
+}
+
 // getConsumer 返回指定消费者当前态。
 func (impl *serviceImpl) getConsumer(name string) *queueConsumer {
 	impl.mu.RLock()
 	defer impl.mu.RUnlock()
-	return impl.consumers[name]
+	if consumer := impl.consumers[name]; consumer != nil {
+		return consumer
+	}
+	return impl.pausedConsumers[name]
+}
+
+// storePausedConsumer recreates one writer-only consumer after maintenance work.
+func (impl *serviceImpl) storePausedConsumer(config ConsumerConfig, handler QueueHandler) error {
+	consumer, err := newQueueConsumer(config, handler)
+	if err != nil {
+		return err
+	}
+	consumer.closeWithoutStart()
+	impl.mu.Lock()
+	impl.pausedConsumers[config.Name] = consumer
+	impl.mu.Unlock()
+	return nil
+}
+
+// newQueueConsumer creates a fully initialized consumer before delivery starts.
+func newQueueConsumer(config ConsumerConfig, handler QueueHandler) (*queueConsumer, error) {
+	consumerCtx, cancel := context.WithCancel(context.Background())
+	consumer := &queueConsumer{
+		config:         config,
+		handler:        handler,
+		stopCh:         make(chan struct{}),
+		doneCh:         make(chan struct{}),
+		slots:          make(chan struct{}, config.Concurrency),
+		ctx:            consumerCtx,
+		cancel:         cancel,
+		activeMessages: map[string]struct{}{},
+		activeShards:   map[int]struct{}{},
+		queuedKeys:     map[string]struct{}{},
+	}
+	if err := consumer.ensureLayout(); err != nil {
+		cancel()
+		return nil, err
+	}
+	if err := consumer.recoverInflight(true); err != nil {
+		cancel()
+		return nil, err
+	}
+	if err := consumer.rebuildQueuedKeys(); err != nil {
+		cancel()
+		return nil, err
+	}
+	return consumer, nil
 }
 
 // engine 调用业务 handler 并根据结果 ack、retry 或 dead-letter。
@@ -610,6 +769,20 @@ func (consumer *queueConsumer) close() {
 		}
 		<-consumer.doneCh
 		consumer.wg.Wait()
+	})
+}
+
+// closeWithoutStart converts an initialized consumer into a writer-only paused state.
+func (consumer *queueConsumer) closeWithoutStart() {
+	if consumer == nil {
+		return
+	}
+	consumer.stopOnce.Do(func() {
+		close(consumer.stopCh)
+		if consumer.cancel != nil {
+			consumer.cancel()
+		}
+		close(consumer.doneCh)
 	})
 }
 

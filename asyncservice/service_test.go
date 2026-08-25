@@ -159,6 +159,56 @@ func TestChangePoolSizeRejectsNonPositiveLimit(t *testing.T) {
 	}
 }
 
+func TestSuspendDrainsAcceptedTasksAndHoldsLaterSubmissions(t *testing.T) {
+	impl := newTestService(t, 1)
+	controller := Controller(impl)
+	firstStarted := make(chan struct{})
+	releaseFirst := make(chan struct{})
+	acceptedBeforeSuspend := make(chan struct{})
+	heldAfterSuspend := make(chan struct{})
+	impl.Submit(func() {
+		close(firstStarted)
+		<-releaseFirst
+	})
+	impl.Submit(func() { close(acceptedBeforeSuspend) })
+	waitSignal(t, firstStarted)
+
+	controller.Suspend()
+	impl.Submit(func() { close(heldAfterSuspend) })
+	close(releaseFirst)
+	waitSignal(t, acceptedBeforeSuspend)
+	if err := controller.WaitIdle(t.Context()); err != nil {
+		t.Fatalf("WaitIdle returned error: %v", err)
+	}
+	select {
+	case <-heldAfterSuspend:
+		t.Fatal("task submitted after suspension started before Resume")
+	default:
+	}
+	status := impl.PoolStatus()
+	if !status.Paused || status.Running != 0 || status.Waiting != 1 {
+		t.Fatalf("status while suspended = %+v", status)
+	}
+
+	controller.Resume()
+	waitSignal(t, heldAfterSuspend)
+}
+
+func TestControlTaskBypassesSuspendedPool(t *testing.T) {
+	impl := newTestService(t, 1)
+	controller := Controller(impl)
+	controller.Suspend()
+	controlDone := make(chan struct{})
+	if !controller.SubmitControl(func() { close(controlDone) }) {
+		t.Fatal("control task was rejected before shutdown")
+	}
+	waitSignal(t, controlDone)
+	if controller.SubmitIfRunning(func() {}) {
+		t.Fatal("SubmitIfRunning accepted a task while suspended")
+	}
+	controller.Resume()
+}
+
 func TestStopLeavesNoLeakedDispatcher(t *testing.T) {
 	impl := newTestService(t, 1)
 	if err := impl.Stop(context.Background()); err != nil {

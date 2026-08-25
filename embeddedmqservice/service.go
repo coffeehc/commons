@@ -116,3 +116,13 @@ type Service interface {
 	// Depth 返回指定消费者底层队列当前深度。
 	Depth(name string) int64
 }
+
+// ConsumerController 在不扩展稳定 Service 接口的前提下提供进程级消费者暂停控制。
+type ConsumerController interface {
+	// PauseConsumers 停止派发并等待活动 handler 退出，同时保留持久入队能力。
+	PauseConsumers(ctx context.Context) error
+	// ResumeConsumers 重启 PauseConsumers 捕获的全部消费者。
+	ResumeConsumers(ctx context.Context) error
+	// ConsumersPaused 返回当前是否已经暂停消息派发。
+	ConsumersPaused() bool
+}

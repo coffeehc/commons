@@ -2,6 +2,8 @@ package asyncservice
 
 import (
 	"context"
+	"runtime/debug"
+	"sync"
 	"time"
 
 	"github.com/coffeehc/base/log"
@@ -44,15 +46,27 @@ type serviceImpl struct {
 	timingWheel *timingwheel.Wheel
 	// pool owns task admission, execution concurrency and shutdown draining.
 	pool *taskPool
+	// controlMu protects control task admission during shutdown.
+	controlMu sync.Mutex
+	// controlTasks tracks service-owned control work that must bypass pool suspension.
+	controlTasks sync.WaitGroup
+	// controlStopping rejects control work after shutdown starts.
+	controlStopping bool
 }
 
 var _ plugin.Plugin = (*serviceImpl)(nil)
+var _ Controller = (*serviceImpl)(nil)
 
 // Submit accepts task for asynchronous execution. Tasks accepted before
 // shutdown are retained in FIFO order until the concurrency limit allows them
 // to start. A nil task causes a panic.
 func (impl *serviceImpl) Submit(task func()) {
 	impl.pool.Submit(task)
+}
+
+// SubmitIfRunning accepts task only while task admission is not suspended.
+func (impl *serviceImpl) SubmitIfRunning(task func()) bool {
+	return impl.pool.SubmitIfRunning(task)
 }
 
 // ChangePoolSize changes the maximum number of concurrently running tasks.
@@ -68,6 +82,44 @@ func (impl *serviceImpl) PoolStatus() PoolStatus {
 	return impl.pool.Status()
 }
 
+// Suspend 允许已接收任务排空，并挂起此后接收的新任务。
+func (impl *serviceImpl) Suspend() {
+	impl.pool.Suspend()
+}
+
+// WaitIdle 等待挂起前已经接收的任务全部退出。
+func (impl *serviceImpl) WaitIdle(ctx context.Context) error {
+	return impl.pool.WaitIdle(ctx)
+}
+
+// Resume 恢复执行挂起期间接收的任务。
+func (impl *serviceImpl) Resume() {
+	impl.pool.Resume()
+}
+
+// SubmitControl 在可挂起任务池之外启动一个服务生命周期控制任务。
+func (impl *serviceImpl) SubmitControl(task func()) bool {
+	if task == nil {
+		panic("asyncservice: control task must not be nil")
+	}
+	impl.controlMu.Lock()
+	defer impl.controlMu.Unlock()
+	if impl.controlStopping {
+		return false
+	}
+	impl.controlTasks.Go(func() {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				log.Error("异步控制任务执行异常",
+					zap.Any("panic", recovered),
+					zap.ByteString("stack", debug.Stack()))
+			}
+		}()
+		task()
+	})
+	return true
+}
+
 // Start starts the plugin lifecycle. The task dispatcher is available from
 // construction so independent services can submit tasks without plugin setup.
 func (impl *serviceImpl) Start(_ context.Context) error {
@@ -78,7 +130,23 @@ func (impl *serviceImpl) Start(_ context.Context) error {
 // shutdown. It returns the context error when the caller stops waiting early.
 func (impl *serviceImpl) Stop(ctx context.Context) error {
 	impl.timingWheel.Stop()
-	return impl.pool.Stop(ctx)
+	impl.controlMu.Lock()
+	impl.controlStopping = true
+	impl.controlMu.Unlock()
+	if err := impl.pool.Stop(ctx); err != nil {
+		return err
+	}
+	controlDone := make(chan struct{})
+	go func() {
+		impl.controlTasks.Wait()
+		close(controlDone)
+	}()
+	select {
+	case <-controlDone:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 // Schedule registers a periodic callback. The callback only submits the task;
