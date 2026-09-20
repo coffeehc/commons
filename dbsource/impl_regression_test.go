@@ -177,11 +177,27 @@ func TestQueryRowContextReturnsCancellation(t *testing.T) {
 	}{}
 
 	found, err := service.QueryRowContext(ctx, &record, `SELECT id FROM test_records WHERE id = ?`, 1)
-	if err == nil {
-		t.Fatal("QueryRowContext() error = nil, want cancellation error")
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("QueryRowContext() error = %v, want context.Canceled", err)
 	}
 	if found {
 		t.Fatal("QueryRowContext() found = true, want false")
+	}
+}
+
+func TestExecContextReturnsDatabaseError(t *testing.T) {
+	service := newSQLiteTestService(t)
+	if _, err := service.ExecContext(context.Background(), `INSERT INTO missing_table(id) VALUES (?)`, 1); err == nil {
+		t.Fatal("ExecContext() error = nil, want database error")
+	}
+}
+
+func TestExecContextReturnsCancellation(t *testing.T) {
+	service := newSQLiteTestService(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := service.ExecContext(ctx, `CREATE TABLE canceled_write(id INTEGER PRIMARY KEY)`); !errors.Is(err, context.Canceled) {
+		t.Fatalf("ExecContext() error = %v, want context.Canceled", err)
 	}
 }
 

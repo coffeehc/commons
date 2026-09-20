@@ -31,6 +31,14 @@ func ScanAll(rows Rows, dest any, mapper *reflectx.Mapper) error {
 	baseType := reflectx.Deref(elementType)
 	scannable := isScannable(baseType, mapper)
 	if scannable && len(columns) != 1 {
+		// pgx may expose no columns until Next surfaces a canceled query's error.
+		// This result cannot be scanned as a scalar anyway; prefer its actual
+		// terminal error over a misleading column-count failure.
+		if !rows.Next() {
+			if err := rows.Err(); err != nil {
+				return err
+			}
+		}
 		return fmt.Errorf("标量查询目标要求一列，实际返回 %d 列", len(columns))
 	}
 

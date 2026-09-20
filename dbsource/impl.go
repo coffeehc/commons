@@ -3,6 +3,7 @@ package dbsource
 import (
 	"context"
 	"database/sql"
+	stderrors "errors"
 	"fmt"
 	"reflect"
 	"sync"
@@ -138,8 +139,10 @@ func (impl *serviceImpl) InsertContext(ctx context.Context, query string, args .
 	result, err := impl.dialect.Exec(ctx, query, args...)
 	impl.addMonitorRecord(rewrittenQuery, time.Since(startedAt), HandleTypeExec)
 	if err != nil {
-		log.DPanic("执行插入失败", zap.String("sql", rewrittenQuery), zap.Error(err))
-		return 0, 0, errors.ConverError(err)
+		if !isContextCancellation(ctx, err) {
+			log.DPanic("执行插入失败", zap.String("sql", rewrittenQuery), zap.Error(err))
+		}
+		return 0, 0, convertOperationError(ctx, err)
 	}
 	return result.LastInsertID, result.RowsAffected, nil
 }
@@ -155,8 +158,10 @@ func (impl *serviceImpl) execContextWith(ctx context.Context, executor dialect.E
 	result, err := executor.Exec(ctx, query, args...)
 	impl.addMonitorRecord(rewrittenQuery, time.Since(startedAt), HandleTypeExec)
 	if err != nil {
-		log.DPanic("执行 SQL 失败", zap.String("sql", rewrittenQuery), zap.Error(err))
-		return 0, errors.ConverError(err)
+		if !isContextCancellation(ctx, err) {
+			log.DPanic("执行 SQL 失败", zap.String("sql", rewrittenQuery), zap.Error(err))
+		}
+		return 0, convertOperationError(ctx, err)
 	}
 	return result.RowsAffected, nil
 }
@@ -175,8 +180,10 @@ func (impl *serviceImpl) queryContextWith(ctx context.Context, executor dialect.
 	err := executor.Select(ctx, dest, query, args...)
 	impl.addMonitorRecord(rewrittenQuery, time.Since(startedAt), HandleTypeQuery)
 	if err != nil {
-		log.DPanic("执行查询失败", zap.String("sql", rewrittenQuery), zap.Error(err))
-		return errors.ConverError(err)
+		if !isContextCancellation(ctx, err) {
+			log.DPanic("执行查询失败", zap.String("sql", rewrittenQuery), zap.Error(err))
+		}
+		return convertOperationError(ctx, err)
 	}
 	return nil
 }
@@ -195,8 +202,10 @@ func (impl *serviceImpl) queryRowContextWith(ctx context.Context, executor diale
 	found, err := executor.Get(ctx, dest, query, args...)
 	impl.addMonitorRecord(rewrittenQuery, time.Since(startedAt), HandleTypeQueryRow)
 	if err != nil {
-		log.DPanic("执行单行查询失败", zap.String("sql", rewrittenQuery), zap.Error(err))
-		return false, errors.ConverError(err)
+		if !isContextCancellation(ctx, err) {
+			log.DPanic("执行单行查询失败", zap.String("sql", rewrittenQuery), zap.Error(err))
+		}
+		return false, convertOperationError(ctx, err)
 	}
 	return found, nil
 }
@@ -212,8 +221,10 @@ func (impl *serviceImpl) queryRowsContextWith(ctx context.Context, executor dial
 	rows, err := executor.Query(ctx, query, args...)
 	impl.addMonitorRecord(rewrittenQuery, time.Since(startedAt), HandleTypeQuery)
 	if err != nil {
-		log.DPanic("打开查询结果失败", zap.String("sql", rewrittenQuery), zap.Error(err))
-		return nil, errors.ConverError(err)
+		if !isContextCancellation(ctx, err) {
+			log.DPanic("打开查询结果失败", zap.String("sql", rewrittenQuery), zap.Error(err))
+		}
+		return nil, convertOperationError(ctx, err)
 	}
 	return rows, nil
 }
@@ -226,8 +237,10 @@ func (impl *serviceImpl) prepareContextWith(ctx context.Context, executor dialec
 	rewrittenQuery := impl.dialect.Rewrite(query)
 	statement, err := executor.Prepare(ctx, query)
 	if err != nil {
-		log.DPanic("准备 SQL 失败", zap.String("sql", rewrittenQuery), zap.Error(err))
-		return nil, errors.ConverError(err)
+		if !isContextCancellation(ctx, err) {
+			log.DPanic("准备 SQL 失败", zap.String("sql", rewrittenQuery), zap.Error(err))
+		}
+		return nil, convertOperationError(ctx, err)
 	}
 	return &statementImpl{service: impl, statement: statement, query: rewrittenQuery}, nil
 }
@@ -235,7 +248,7 @@ func (impl *serviceImpl) prepareContextWith(ctx context.Context, executor dialec
 func (impl *serviceImpl) BeginTx(ctx context.Context, options *sql.TxOptions) (Transaction, error) {
 	transaction, err := impl.dialect.BeginTx(ctx, options)
 	if err != nil {
-		return nil, errors.ConverError(err)
+		return nil, convertOperationError(ctx, err)
 	}
 	return &transactionImpl{
 		executorImpl: executorImpl{service: impl, executor: transaction},
@@ -246,7 +259,7 @@ func (impl *serviceImpl) BeginTx(ctx context.Context, options *sql.TxOptions) (T
 func (impl *serviceImpl) AcquireConnection(ctx context.Context) (Connection, error) {
 	connection, err := impl.dialect.Acquire(ctx)
 	if err != nil {
-		return nil, errors.ConverError(err)
+		return nil, convertOperationError(ctx, err)
 	}
 	return &connectionImpl{
 		executorImpl: executorImpl{service: impl, executor: connection},
@@ -260,11 +273,10 @@ func (impl *serviceImpl) HandleTx(ctx context.Context, handle func(context.Conte
 
 func (impl *serviceImpl) HandleTxWithOptions(ctx context.Context, options *sql.TxOptions, handle func(context.Context) error) error {
 	err := impl.dialect.HandleTx(ctx, options, handle)
-	if err != nil {
+	if err != nil && !isContextCancellation(ctx, err) {
 		log.Error("数据库事务执行失败", zap.Error(err))
-		return err
 	}
-	return nil
+	return err
 }
 
 func (impl *serviceImpl) Update(ctx context.Context, tableName string, limitFields map[string]bool, update *sqlbuilder.Update) (*sqlbuilder.UpdateResult, error) {
@@ -366,14 +378,14 @@ type transactionImpl struct {
 
 func (impl *transactionImpl) Commit(ctx context.Context) error {
 	if err := impl.transaction.Commit(ctx); err != nil {
-		return errors.ConverError(err)
+		return convertOperationError(ctx, err)
 	}
 	return nil
 }
 
 func (impl *transactionImpl) Rollback(ctx context.Context) error {
 	if err := impl.transaction.Rollback(ctx); err != nil {
-		return errors.ConverError(err)
+		return convertOperationError(ctx, err)
 	}
 	return nil
 }
@@ -386,7 +398,7 @@ type connectionImpl struct {
 func (impl *connectionImpl) BeginTx(ctx context.Context, options *sql.TxOptions) (Transaction, error) {
 	transaction, err := impl.connection.BeginTx(ctx, options)
 	if err != nil {
-		return nil, errors.ConverError(err)
+		return nil, convertOperationError(ctx, err)
 	}
 	return &transactionImpl{
 		executorImpl: executorImpl{service: impl.service, executor: transaction},
@@ -396,14 +408,14 @@ func (impl *connectionImpl) BeginTx(ctx context.Context, options *sql.TxOptions)
 
 func (impl *connectionImpl) Ping(ctx context.Context) error {
 	if err := impl.connection.Ping(ctx); err != nil {
-		return errors.ConverError(err)
+		return convertOperationError(ctx, err)
 	}
 	return nil
 }
 
 func (impl *connectionImpl) Close(ctx context.Context) error {
 	if err := impl.connection.Close(ctx); err != nil {
-		return errors.ConverError(err)
+		return convertOperationError(ctx, err)
 	}
 	return nil
 }
@@ -420,8 +432,10 @@ func (impl *statementImpl) Exec(ctx context.Context, args ...any) (dialect.Resul
 	result, err := impl.statement.Exec(ctx, args...)
 	impl.service.addMonitorRecord(impl.query, time.Since(startedAt), HandleTypeExec)
 	if err != nil {
-		log.DPanic("执行预处理 SQL 失败", zap.String("sql", impl.query), zap.Error(err))
-		return dialect.Result{}, errors.ConverError(err)
+		if !isContextCancellation(ctx, err) {
+			log.DPanic("执行预处理 SQL 失败", zap.String("sql", impl.query), zap.Error(err))
+		}
+		return dialect.Result{}, convertOperationError(ctx, err)
 	}
 	return result, nil
 }
@@ -438,4 +452,34 @@ func (impl *serviceImpl) Start(ctx context.Context) error {
 // Stop closes the active dialect connection pool.
 func (impl *serviceImpl) Stop(ctx context.Context) error {
 	return impl.Close(ctx)
+}
+
+// isContextCancellation requires the operation error to identify the caller's completed
+// context. A server timeout or an unrelated error racing with cancellation is not enough.
+// Every joined cause must qualify, so rollback failures cannot be hidden by cancellation.
+func isContextCancellation(ctx context.Context, err error) bool {
+	contextErr := ctx.Err()
+	if contextErr == nil || !stderrors.Is(err, contextErr) {
+		return false
+	}
+	switch wrapped := err.(type) {
+	case interface{ Unwrap() []error }:
+		for _, cause := range wrapped.Unwrap() {
+			if !isContextCancellation(ctx, cause) {
+				return false
+			}
+		}
+	case interface{ Unwrap() error }:
+		return isContextCancellation(ctx, wrapped.Unwrap())
+	}
+	return true
+}
+
+// convertOperationError preserves standard cancellation identity locally because
+// base/errors.ConverError does not expose Unwrap. Real errors keep its existing contract.
+func convertOperationError(ctx context.Context, err error) error {
+	if isContextCancellation(ctx, err) {
+		return fmt.Errorf("数据库操作取消: %w", err)
+	}
+	return errors.ConverError(err)
 }

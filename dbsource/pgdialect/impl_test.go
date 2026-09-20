@@ -297,3 +297,28 @@ func TestConvertTxOptions(t *testing.T) {
 		t.Fatalf("convertTxOptions() = %#v", options)
 	}
 }
+
+// TestSelectScalarReturnsRowsError preserves a terminal driver error when no columns are available.
+func TestSelectScalarReturnsRowsError(t *testing.T) {
+	for _, cause := range []error{context.Canceled, context.DeadlineExceeded, &pgconn.PgError{Code: "42601", Message: "syntax error"}} {
+		transaction := &stubTx{rows: &stubRows{err: cause}}
+		ctx := context.WithValue(t.Context(), transactionContextKey{}, pgx.Tx(transaction))
+		database := &serviceImpl{mapper: reflectx.NewMapper("db")}
+		var values []int
+		if err := database.Select(ctx, &values, "SELECT 1"); !errors.Is(err, cause) {
+			t.Fatalf("Select() = %v; want terminal error %v", err, cause)
+		}
+	}
+}
+
+// TestExecuteTransactionKeepsRollbackFailureWithCancellation protects independent cleanup errors.
+func TestExecuteTransactionKeepsRollbackFailureWithCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	rollbackErr := errors.New("independent rollback failure")
+	transaction := &stubTx{rollbackErr: rollbackErr}
+	err := executeTransaction(ctx, transaction, func(context.Context) error { return context.Canceled })
+	if !errors.Is(err, context.Canceled) || !errors.Is(err, rollbackErr) {
+		t.Fatalf("lost operation or cleanup error: %v", err)
+	}
+}

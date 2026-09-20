@@ -24,6 +24,38 @@
 - 支持事务、监控、分页查询
 - 支持 sharding 分库分表
 
+#### Shutdown cancellation 回归
+
+调用 context 已取消或到期，且操作错误链仅包含对应 `context.Canceled` / `context.DeadlineExceeded` 时，dbsource 保留标准 `errors.Is` 身份，不记录错误日志或 DPanic。SQL、约束、连接故障、服务端超时以及混合真实错误仍走原有错误策略；不会仅凭 `ctx.Err()` 或 PostgreSQL `57014` 静默处理。
+
+基线：commons `896d1e7`、pgx `v5.9.1`。真实 PostgreSQL 查询取消时，旧代码记录 DPanic，且 `base/errors.ConverError` 隐藏取消身份。pgx 的超时包装支持 `Unwrap`；标量扫描须优先返回延迟到 `Rows.Next` 才出现的终止错误。事务取消后若物理连接已关闭，回滚仍释放池租约，但不附加该关闭造成的重复错误；独立回滚失败仍保留。
+
+普通回归不需要数据库。真实 PostgreSQL 回归须显式提供测试 DSN，每轮创建独立 `dbsource_cancel_*` schema 并验证删除，不读取应用配置：
+
+```sh
+# 仅指向专用测试数据库；凭据通过运行时环境提供。
+export DBSOURCE_TEST_POSTGRES='host=127.0.0.1 port=5432 user=test dbname=dbsource_test sslmode=disable'
+go test ./...
+go test -race ./...
+go vet ./...
+go build ./...
+```
+
+测试通过 `pg_stat_activity` 确认查询已执行后才取消，覆盖 query/row/rows/exec/insert/statement、显式事务、HandleTx、deadline、真实 SQL/约束/连接错误与服务端 timeout。日志断言使用现有同步日志订阅，包含连接标记以避免未接入 logger 时误判为零日志。
+
+真实 SIGTERM 测试通过 `bootintegration` 标签启用。使用包含当前 commons 和 boot checkout 的临时 workspace（boot 启动回滚基线为 `875fb40`），避免改变 commons 的依赖版本：
+
+```sh
+# 从 commons 根目录运行，boot checkout 位于相邻目录。
+validation_dir=$(mktemp -d)
+go -C "$validation_dir" work init "$PWD" "$PWD/../boot"
+GOWORK="$validation_dir/go.work" go test -race -tags bootintegration ./dbsource -run '^TestPostgresShutdown' -count=1 -v
+# 单独检查 boot 的启动回滚、非零退出与逆序关闭。
+go -C ../boot test -race ./engine ./plugin
+```
+
+SIGTERM 测试在独立子进程中调用真实 `engine.WaitServiceStop`，模拟 worker Stop 的 cancel/join，再关闭数据库；同时覆盖 active 与 idle shutdown。2026-09-20 在 PostgreSQL 18.6 验证取消错误可识别、DPanic 为零、子进程退出码为零。boot 未作修改；其全模块检查仍有既存 Fiber API、`RegisterPluginByFast`、gRPC 示例及 vet 问题，engine/plugin 生命周期回归单独验证。
+
 ### 3. httpc - HTTP 客户端封装
 - 基于 resty/v2 封装
 - 内置 DNS 缓存（5分钟缓存时间，4分钟刷新）

@@ -210,7 +210,12 @@ func executeTransaction(ctx context.Context, transaction pgx.Tx, handle func(con
 			panic(recovered)
 		}
 		if err != nil {
-			if rollbackErr := rollbackTransaction(ctx, transaction); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			// pgx closes the physical connection on context cancellation, which
+			// already aborts the transaction. Still Rollback to release the pool
+			// lease, but do not append a second error from that closed connection.
+			connection := transaction.Conn()
+			canceledConnection := ctx.Err() != nil && errors.Is(err, ctx.Err()) && connection != nil && connection.IsClosed()
+			if rollbackErr := rollbackTransaction(ctx, transaction); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) && !canceledConnection {
 				err = errors.Join(err, rollbackErr)
 			}
 			return
