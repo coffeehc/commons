@@ -2,14 +2,17 @@ package localdbservice
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/cockroachdb/pebble/v2"
 	"github.com/cockroachdb/pebble/v2/bloom"
 	"github.com/cockroachdb/pebble/v2/sstable"
-	"github.com/coffeehc/base/errors"
+	baseerrors "github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/commons/coder"
 	"github.com/spf13/viper"
@@ -27,6 +30,7 @@ var Separator = []byte("\t\t\t")
 
 type RangeHandler func(key []byte, value []byte) (bool, error)
 
+// Service owns one Pebble database; write durability is selected when opened.
 type Service interface {
 	Range(startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error
 	RangeWithContext(ctx context.Context, startKey, endKey []byte, reverse bool, maxCount int, handler RangeHandler) error
@@ -43,6 +47,15 @@ type Service interface {
 	GetWithCoder(key []byte, body interface{}, coder2 coder.Coder) (bool, error)
 	// Close flushes pending data and releases the Pebble directory lock.
 	Close() error
+}
+
+// PeriodicSyncService writes through Pebble's WAL without waiting for every
+// record to reach disk, then synchronizes the WAL at the configured interval.
+// Callers must use CommitBatch instead of committing Pebble batches directly.
+type PeriodicSyncService interface {
+	Service
+	// CommitBatch commits one caller-built batch with the service-owned durability policy.
+	CommitBatch(batch *pebble.Batch) error
 }
 
 func newService(ctx context.Context) Service {
@@ -63,6 +76,19 @@ func newService(ctx context.Context) Service {
 // Open opens one explicitly owned Pebble database at dataDir.
 // The caller must close the returned service and must not open the same path twice.
 func Open(dataDir string) (Service, error) {
+	return open(dataDir, 0)
+}
+
+// OpenWithPeriodicSync opens one explicitly owned Pebble database whose writes
+// become durable at most one sync interval later. Close performs a final sync.
+func OpenWithPeriodicSync(dataDir string, syncInterval time.Duration) (PeriodicSyncService, error) {
+	if syncInterval <= 0 {
+		return nil, fmt.Errorf("local database sync interval must be positive")
+	}
+	return open(dataDir, syncInterval)
+}
+
+func open(dataDir string, syncInterval time.Duration) (*serviceImpl, error) {
 	if strings.TrimSpace(dataDir) == "" {
 		return nil, fmt.Errorf("local database data directory is required")
 	}
@@ -72,7 +98,15 @@ func Open(dataDir string) (Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &serviceImpl{storage: storage}, nil
+	impl := &serviceImpl{storage: storage, writeOptions: pebble.Sync}
+	if syncInterval > 0 {
+		impl.writeOptions = pebble.NoSync
+		impl.syncInterval = syncInterval
+		impl.stopSync = make(chan struct{})
+		impl.syncStopped = make(chan struct{})
+		go impl.runPeriodicSync()
+	}
+	return impl, nil
 }
 
 // newPebbleOptions 按 Pebble v2 的配置模型构造本地存储参数。
@@ -121,9 +155,16 @@ func newPebbleOptions() *pebble.Options {
 }
 
 type serviceImpl struct {
-	storage   *pebble.DB
-	closeOnce sync.Once
-	closeErr  error
+	storage      *pebble.DB
+	writeOptions *pebble.WriteOptions
+	syncInterval time.Duration
+	stopSync     chan struct{}
+	syncStopped  chan struct{}
+	syncErrorMu  sync.RWMutex
+	syncError    error
+	dirty        atomic.Bool
+	closeOnce    sync.Once
+	closeErr     error
 }
 
 // Start verifies that the plugin startup context is still active.
@@ -135,9 +176,50 @@ func (impl *serviceImpl) Stop(context.Context) error { return impl.Close() }
 // Close flushes and releases the owned Pebble database exactly once.
 func (impl *serviceImpl) Close() error {
 	impl.closeOnce.Do(func() {
-		impl.closeErr = impl.storage.Close()
+		if impl.stopSync != nil {
+			close(impl.stopSync)
+			<-impl.syncStopped
+			impl.closeErr = impl.syncWAL()
+		}
+		impl.closeErr = stderrors.Join(impl.closeErr, impl.storage.Close())
 	})
 	return impl.closeErr
+}
+
+// runPeriodicSync bounds the unsynchronized WAL window without making each
+// foreground write wait for filesystem durability.
+func (impl *serviceImpl) runPeriodicSync() {
+	ticker := time.NewTicker(impl.syncInterval)
+	defer ticker.Stop()
+	defer close(impl.syncStopped)
+	for {
+		select {
+		case <-ticker.C:
+			_ = impl.syncWAL()
+		case <-impl.stopSync:
+			return
+		}
+	}
+}
+
+func (impl *serviceImpl) syncWAL() error {
+	if !impl.dirty.Swap(false) {
+		return impl.currentSyncError()
+	}
+	err := baseerrors.ConverError(impl.storage.LogData(nil, pebble.Sync))
+	if err != nil {
+		impl.dirty.Store(true)
+	}
+	impl.syncErrorMu.Lock()
+	impl.syncError = err
+	impl.syncErrorMu.Unlock()
+	return err
+}
+
+func (impl *serviceImpl) currentSyncError() error {
+	impl.syncErrorMu.RLock()
+	defer impl.syncErrorMu.RUnlock()
+	return impl.syncError
 }
 
 func (impl *serviceImpl) SetPB(key []byte, body proto.Message) error {
@@ -201,10 +283,16 @@ func (impl *serviceImpl) Range(startKey, endKey []byte, reverse bool, maxCount i
 
 func (impl *serviceImpl) Set(key []byte, value []byte) error {
 	if len(key) == 0 {
-		return errors.MessageError("存储的Key不合法，或者没有添加前缀")
+		return baseerrors.MessageError("存储的Key不合法，或者没有添加前缀")
 	}
-	err := impl.storage.Set(key, value, pebble.Sync)
-	return errors.ConverError(err)
+	if err := impl.currentSyncError(); err != nil {
+		return err
+	}
+	err := impl.storage.Set(key, value, impl.writeOptions)
+	if err == nil && impl.writeOptions == pebble.NoSync {
+		impl.dirty.Store(true)
+	}
+	return baseerrors.ConverError(err)
 }
 
 func (impl *serviceImpl) Get(key []byte) ([]byte, bool, error) {
@@ -218,7 +306,7 @@ func (impl *serviceImpl) Get(key []byte) ([]byte, bool, error) {
 		if err == pebble.ErrNotFound {
 			return nil, false, nil
 		}
-		return nil, false, errors.ConverError(err)
+		return nil, false, baseerrors.ConverError(err)
 	}
 	result := make([]byte, len(data))
 	copy(result, data)
@@ -226,13 +314,40 @@ func (impl *serviceImpl) Get(key []byte) ([]byte, bool, error) {
 }
 
 func (impl *serviceImpl) Del(key []byte) error {
-	err := impl.storage.Delete(key, pebble.Sync)
-	return errors.ConverError(err)
+	if err := impl.currentSyncError(); err != nil {
+		return err
+	}
+	err := impl.storage.Delete(key, impl.writeOptions)
+	if err == nil && impl.writeOptions == pebble.NoSync {
+		impl.dirty.Store(true)
+	}
+	return baseerrors.ConverError(err)
 }
 
 func (impl *serviceImpl) DelRange(startKey, endKey []byte) error {
-	err := impl.storage.DeleteRange(startKey, endKey, pebble.Sync)
-	return errors.ConverError(err)
+	if err := impl.currentSyncError(); err != nil {
+		return err
+	}
+	err := impl.storage.DeleteRange(startKey, endKey, impl.writeOptions)
+	if err == nil && impl.writeOptions == pebble.NoSync {
+		impl.dirty.Store(true)
+	}
+	return baseerrors.ConverError(err)
+}
+
+// CommitBatch commits one batch using the durability policy selected at open.
+func (impl *serviceImpl) CommitBatch(batch *pebble.Batch) error {
+	if batch == nil {
+		return fmt.Errorf("local database batch is required")
+	}
+	if err := impl.currentSyncError(); err != nil {
+		return err
+	}
+	err := batch.Commit(impl.writeOptions)
+	if err == nil && impl.writeOptions == pebble.NoSync {
+		impl.dirty.Store(true)
+	}
+	return baseerrors.ConverError(err)
 }
 
 func (impl *serviceImpl) GetDB() *pebble.DB {
