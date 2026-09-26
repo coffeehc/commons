@@ -2,6 +2,9 @@ package localdbservice
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"sync"
 
 	"github.com/cockroachdb/pebble/v2"
 	"github.com/cockroachdb/pebble/v2/bloom"
@@ -9,7 +12,6 @@ import (
 	"github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/commons/coder"
-	"github.com/coffeehc/commons/sequences"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
@@ -39,25 +41,38 @@ type Service interface {
 	GetPB(key []byte, body proto.Message) (bool, error)
 	SetWithCoder(key []byte, body interface{}, coder2 coder.Coder) error
 	GetWithCoder(key []byte, body interface{}, coder2 coder.Coder) (bool, error)
+	// Close flushes pending data and releases the Pebble directory lock.
+	Close() error
 }
 
 func newService(ctx context.Context) Service {
+	if err := ctx.Err(); err != nil {
+		log.Panic("打开dataDir前上下文已取消", zap.Error(err))
+	}
 	viper.SetDefault(configKeyForDataDir, "./datas")
 	dataDir := viper.GetString(configKeyForDataDir)
 	log.Debug("打开数据文件", zap.String("dataDir", dataDir))
-	options := newPebbleOptions()
-	defer options.Cache.Unref()
-	storage, err := pebble.Open(dataDir, options)
+	service, err := Open(dataDir)
 	if err != nil {
 		log.Panic("打开dataDir文件错误", zap.Error(err))
 		return nil
 	}
-	sequences.EnablePlugin(ctx)
-	impl := &serviceImpl{
-		storage:         storage,
-		sequenceService: sequences.GetService(),
+	return service
+}
+
+// Open opens one explicitly owned Pebble database at dataDir.
+// The caller must close the returned service and must not open the same path twice.
+func Open(dataDir string) (Service, error) {
+	if strings.TrimSpace(dataDir) == "" {
+		return nil, fmt.Errorf("local database data directory is required")
 	}
-	return impl
+	options := newPebbleOptions()
+	defer options.Cache.Unref()
+	storage, err := pebble.Open(dataDir, options)
+	if err != nil {
+		return nil, err
+	}
+	return &serviceImpl{storage: storage}, nil
 }
 
 // newPebbleOptions 按 Pebble v2 的配置模型构造本地存储参数。
@@ -106,8 +121,23 @@ func newPebbleOptions() *pebble.Options {
 }
 
 type serviceImpl struct {
-	storage         *pebble.DB
-	sequenceService sequences.SequenceService
+	storage   *pebble.DB
+	closeOnce sync.Once
+	closeErr  error
+}
+
+// Start verifies that the plugin startup context is still active.
+func (impl *serviceImpl) Start(ctx context.Context) error { return ctx.Err() }
+
+// Stop closes the owned Pebble database exactly once.
+func (impl *serviceImpl) Stop(context.Context) error { return impl.Close() }
+
+// Close flushes and releases the owned Pebble database exactly once.
+func (impl *serviceImpl) Close() error {
+	impl.closeOnce.Do(func() {
+		impl.closeErr = impl.storage.Close()
+	})
+	return impl.closeErr
 }
 
 func (impl *serviceImpl) SetPB(key []byte, body proto.Message) error {
