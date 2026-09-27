@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/cockroachdb/pebble/v2"
-	"github.com/cockroachdb/pebble/v2/bloom"
-	"github.com/cockroachdb/pebble/v2/sstable"
 	baseerrors "github.com/coffeehc/base/errors"
 	"github.com/coffeehc/base/log"
 	"github.com/coffeehc/commons/coder"
@@ -58,6 +56,23 @@ type PeriodicSyncService interface {
 	CommitBatch(batch *pebble.Batch) error
 }
 
+// OpenConfig defines how one independently owned Pebble database is opened.
+// PebbleOptions may be nil to use DefaultOpenConfig. SyncInterval equal to zero
+// keeps Pebble's synchronous write durability; a positive value batches WAL
+// synchronization and bounds the possible unsynchronized window. Callers may
+// change top-level scalar fields on the supplied Pebble options after
+// OpenWithConfig returns because localdbservice clones them before opening the
+// database. Reference-valued resources such as a shared Cache retain Pebble's
+// normal caller-owned lifecycle.
+type OpenConfig struct {
+	// PebbleOptions contains caller-selected Pebble tuning. Nil selects the
+	// package default, and unspecified Pebble fields receive Pebble defaults.
+	PebbleOptions *pebble.Options
+	// SyncInterval controls periodic WAL synchronization. Zero uses synchronous
+	// writes; a positive duration permits that much unsynchronized WAL time.
+	SyncInterval time.Duration
+}
+
 func newService(ctx context.Context) Service {
 	if err := ctx.Err(); err != nil {
 		log.Panic("打开dataDir前上下文已取消", zap.Error(err))
@@ -76,7 +91,7 @@ func newService(ctx context.Context) Service {
 // Open opens one explicitly owned Pebble database at dataDir.
 // The caller must close the returned service and must not open the same path twice.
 func Open(dataDir string) (Service, error) {
-	return open(dataDir, 0)
+	return OpenWithConfig(dataDir, DefaultOpenConfig())
 }
 
 // OpenWithPeriodicSync opens one explicitly owned Pebble database whose writes
@@ -85,23 +100,56 @@ func OpenWithPeriodicSync(dataDir string, syncInterval time.Duration) (PeriodicS
 	if syncInterval <= 0 {
 		return nil, fmt.Errorf("local database sync interval must be positive")
 	}
-	return open(dataDir, syncInterval)
+	config := DefaultOpenConfig()
+	config.SyncInterval = syncInterval
+	return OpenWithConfig(dataDir, config)
 }
 
-func open(dataDir string, syncInterval time.Duration) (*serviceImpl, error) {
+// DefaultOpenConfig returns a fresh general-purpose configuration based on
+// Pebble's maintained defaults. It preserves the whole-key comparer split used
+// by existing localdbservice databases without imposing workload-specific SST,
+// cache, compaction, compression, or Bloom filter policies on every caller.
+func DefaultOpenConfig() OpenConfig {
+	comparer := *pebble.DefaultComparer
+	comparer.Split = splitWholeKey
+	options := &pebble.Options{Comparer: &comparer}
+	return OpenConfig{PebbleOptions: options}
+}
+
+// OpenWithConfig opens one explicitly owned Pebble database using a cloned,
+// validated caller configuration. The returned service owns the database and
+// must be closed exactly once when the caller is finished with it.
+func OpenWithConfig(dataDir string, config OpenConfig) (PeriodicSyncService, error) {
 	if strings.TrimSpace(dataDir) == "" {
 		return nil, fmt.Errorf("local database data directory is required")
 	}
-	options := newPebbleOptions()
-	defer options.Cache.Unref()
+	if config.SyncInterval < 0 {
+		return nil, fmt.Errorf("local database sync interval cannot be negative")
+	}
+	options := config.PebbleOptions
+	if options == nil {
+		options = DefaultOpenConfig().PebbleOptions
+	} else {
+		options = options.Clone()
+		if options.Comparer == nil {
+			options.Comparer = DefaultOpenConfig().PebbleOptions.Comparer
+		} else {
+			comparer := *options.Comparer
+			options.Comparer = &comparer
+		}
+	}
+	options.EnsureDefaults()
+	if err := options.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid local database Pebble options: %w", err)
+	}
 	storage, err := pebble.Open(dataDir, options)
 	if err != nil {
 		return nil, err
 	}
 	impl := &serviceImpl{storage: storage, writeOptions: pebble.Sync}
-	if syncInterval > 0 {
+	if config.SyncInterval > 0 {
 		impl.writeOptions = pebble.NoSync
-		impl.syncInterval = syncInterval
+		impl.syncInterval = config.SyncInterval
 		impl.stopSync = make(chan struct{})
 		impl.syncStopped = make(chan struct{})
 		go impl.runPeriodicSync()
@@ -109,50 +157,9 @@ func open(dataDir string, syncInterval time.Duration) (*serviceImpl, error) {
 	return impl, nil
 }
 
-// newPebbleOptions 按 Pebble v2 的配置模型构造本地存储参数。
-// TargetFileSizes 从 L0 起按倍数增长，未显式配置的层级由 Pebble 继承前一层策略。
-func newPebbleOptions() *pebble.Options {
-	comparer := *pebble.DefaultComparer
-	// Pebble v2 迁移只调整 Options 结构，保留旧数据库的 comparer split 行为。
-	comparer.Split = func([]byte) int {
-		return 0
-	}
-	options := &pebble.Options{
-		Cache:                 pebble.NewCache(1024 * 1024 * 32),
-		BytesPerSync:          32 << 20, // 32 MiB
-		Comparer:              &comparer,
-		MaxOpenFiles:          500,
-		LBaseMaxBytes:         64 << 20, // 64 MB
-		L0CompactionThreshold: 50,
-		L0StopWritesThreshold: 200,
-	}
-	options.TargetFileSizes[0] = 4 << 30
-	options.TargetFileSizes[1] = 8 << 30
-	options.TargetFileSizes[2] = 16 << 30
-	options.Levels[0] = pebble.LevelOptions{
-		Compression: func() *sstable.CompressionProfile {
-			return sstable.NoCompression
-		},
-		FilterPolicy: bloom.FilterPolicy(10),
-	}
-	options.Levels[1] = pebble.LevelOptions{
-		Compression: func() *sstable.CompressionProfile {
-			return sstable.NoCompression
-		},
-		FilterType:   pebble.TableFilter,
-		FilterPolicy: bloom.FilterPolicy(5),
-	}
-	options.Levels[2] = pebble.LevelOptions{
-		Compression: func() *sstable.CompressionProfile {
-			return sstable.SnappyCompression
-		},
-		FilterType:   pebble.TableFilter,
-		FilterPolicy: bloom.FilterPolicy(1),
-	}
-	options.Experimental.L0CompactionConcurrency = 15
-	options.Experimental.CompactionDebtConcurrency = 10
-	return options
-}
+// splitWholeKey keeps the historical localdbservice comparer behavior: keys
+// have no MVCC suffix and must participate in compaction as complete values.
+func splitWholeKey([]byte) int { return 0 }
 
 type serviceImpl struct {
 	storage      *pebble.DB

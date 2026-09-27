@@ -2,10 +2,14 @@ package localdbservice
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/cockroachdb/pebble/v2"
+	"github.com/cockroachdb/pebble/v2/bloom"
 	"github.com/cockroachdb/pebble/v2/sstable"
 )
 
@@ -40,6 +44,54 @@ func TestOpenOwnsLifecycleAndPersistsData(t *testing.T) {
 		t.Fatalf("unexpected reopened value: found=%v value=%q", found, stored)
 	}
 }
+
+func TestOpenReadsDatabaseCreatedWithLegacyDefaults(t *testing.T) {
+	directory := t.TempDir()
+	comparer := *pebble.DefaultComparer
+	comparer.Split = splitWholeKey
+	legacyOptions := &pebble.Options{
+		Comparer:              &comparer,
+		BytesPerSync:          32 << 20,
+		MaxOpenFiles:          500,
+		LBaseMaxBytes:         64 << 20,
+		L0CompactionThreshold: 50,
+		L0StopWritesThreshold: 200,
+	}
+	legacyOptions.TargetFileSizes[0] = 4 << 30
+	legacyOptions.TargetFileSizes[1] = 8 << 30
+	legacyOptions.TargetFileSizes[2] = 16 << 30
+	legacyOptions.Levels[0] = pebble.LevelOptions{Compression: noCompression, FilterPolicy: bloom.FilterPolicy(10)}
+	legacyOptions.Levels[1] = pebble.LevelOptions{Compression: noCompression, FilterType: pebble.TableFilter, FilterPolicy: bloom.FilterPolicy(5)}
+	legacyOptions.Levels[2] = pebble.LevelOptions{Compression: snappyCompression, FilterType: pebble.TableFilter, FilterPolicy: bloom.FilterPolicy(1)}
+	legacyStore, err := pebble.Open(directory, legacyOptions)
+	if err != nil {
+		t.Fatalf("open database with legacy defaults: %v", err)
+	}
+	key := []byte("account/polymarket/legacy/core")
+	value := []byte("legacy")
+	if err := legacyStore.Set(key, value, pebble.Sync); err != nil {
+		t.Fatalf("write database with legacy defaults: %v", err)
+	}
+	if err := legacyStore.Flush(); err != nil {
+		t.Fatalf("flush database with legacy defaults: %v", err)
+	}
+	if err := legacyStore.Close(); err != nil {
+		t.Fatalf("close database with legacy defaults: %v", err)
+	}
+	store, err := Open(directory)
+	if err != nil {
+		t.Fatalf("reopen legacy database with current defaults: %v", err)
+	}
+	t.Cleanup(func() { _ = store.Close() })
+	stored, found, err := store.Get(key)
+	if err != nil || !found || !bytes.Equal(stored, value) {
+		t.Fatalf("unexpected legacy value: found=%v value=%q err=%v", found, stored, err)
+	}
+}
+
+func noCompression() *sstable.CompressionProfile { return sstable.NoCompression }
+
+func snappyCompression() *sstable.CompressionProfile { return sstable.SnappyCompression }
 
 func TestOpenWithPeriodicSyncUsesOneDurabilityPolicyForWritesAndBatches(t *testing.T) {
 	directory := t.TempDir()
@@ -95,9 +147,9 @@ func TestOpenWithPeriodicSyncRejectsInvalidInput(t *testing.T) {
 	}
 }
 
-func TestNewPebbleOptionsUsesV2LevelConfiguration(t *testing.T) {
-	options := newPebbleOptions()
-	defer options.Cache.Unref()
+func TestDefaultOpenConfigUsesPebbleDefaults(t *testing.T) {
+	config := DefaultOpenConfig()
+	options := config.PebbleOptions.Clone()
 	if options.Comparer == pebble.DefaultComparer {
 		t.Fatal("local comparer must not mutate Pebble's global default comparer")
 	}
@@ -105,22 +157,78 @@ func TestNewPebbleOptionsUsesV2LevelConfiguration(t *testing.T) {
 	if err := options.Validate(); err != nil {
 		t.Fatalf("Pebble options should be valid: %v", err)
 	}
-	wantTargetFileSizes := []int64{4 << 30, 8 << 30, 16 << 30, 32 << 30}
+	wantTargetFileSizes := []int64{2 << 20, 4 << 20, 8 << 20, 16 << 20}
 	for level, want := range wantTargetFileSizes {
 		if got := options.TargetFileSizes[level]; got != want {
 			t.Fatalf("unexpected target file size for L%d: got=%d want=%d", level, got, want)
 		}
 	}
-	if options.Levels[0].Compression() != sstable.NoCompression {
-		t.Fatal("L0 should keep no-compression policy")
+	if options.L0CompactionThreshold != 4 {
+		t.Fatalf("unexpected L0 compaction threshold: %d", options.L0CompactionThreshold)
 	}
-	if options.Levels[1].Compression() != sstable.NoCompression {
-		t.Fatal("L1 should keep no-compression policy")
+	if options.L0StopWritesThreshold != 12 {
+		t.Fatalf("unexpected L0 stop-writes threshold: %d", options.L0StopWritesThreshold)
 	}
-	if options.Levels[2].Compression() != sstable.SnappyCompression {
-		t.Fatal("L2 should keep Snappy compression policy")
+	if options.LBaseMaxBytes != 64<<20 {
+		t.Fatalf("unexpected base-level size: %d", options.LBaseMaxBytes)
 	}
-	if options.Levels[3].Compression() != sstable.SnappyCompression {
-		t.Fatal("later levels should inherit the L2 compression policy")
+}
+
+func TestOpenWithConfigUsesCallerOptions(t *testing.T) {
+	directory := t.TempDir()
+	config := DefaultOpenConfig()
+	config.SyncInterval = 25 * time.Millisecond
+	config.PebbleOptions.MemTableSize = 8 << 20
+	config.PebbleOptions.L0CompactionThreshold = 6
+	config.PebbleOptions.L0StopWritesThreshold = 18
+	config.PebbleOptions.TargetFileSizes[0] = 64 << 20
+	service, err := OpenWithConfig(directory, config)
+	if err != nil {
+		t.Fatalf("open configured local database: %v", err)
+	}
+	t.Cleanup(func() { _ = service.Close() })
+	impl := service.(*serviceImpl)
+	if impl.writeOptions != pebble.NoSync || impl.syncInterval != config.SyncInterval {
+		t.Fatal("configured local database did not apply periodic durability")
+	}
+	entries, err := os.ReadDir(directory)
+	if err != nil {
+		t.Fatalf("read configured local database directory: %v", err)
+	}
+	var optionsText string
+	for _, entry := range entries {
+		if !strings.HasPrefix(entry.Name(), "OPTIONS-") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(directory, entry.Name()))
+		if err != nil {
+			t.Fatalf("read persisted Pebble options: %v", err)
+		}
+		optionsText = string(data)
+		break
+	}
+	for _, expected := range []string{
+		"mem_table_size=8388608",
+		"l0_compaction_threshold=6",
+		"l0_stop_writes_threshold=18",
+		"target_file_size=67108864",
+	} {
+		if !strings.Contains(optionsText, expected) {
+			t.Fatalf("persisted Pebble options do not contain %q", expected)
+		}
+	}
+}
+
+func TestOpenWithConfigRejectsInvalidConfiguration(t *testing.T) {
+	config := DefaultOpenConfig()
+	config.SyncInterval = -time.Second
+	if _, err := OpenWithConfig(t.TempDir(), config); err == nil {
+		t.Fatal("negative sync interval was accepted")
+	}
+	config = DefaultOpenConfig()
+	config.PebbleOptions.L0CompactionThreshold = 20
+	config.PebbleOptions.L0StopWritesThreshold = 10
+	if _, err := OpenWithConfig(t.TempDir(), config); err == nil {
+		t.Fatal("invalid Pebble options were accepted")
 	}
 }
