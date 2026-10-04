@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -400,6 +401,42 @@ func TestPostgresDataSourceNameDoesNotDisableTLSByDefault(t *testing.T) {
 	})
 	if strings.Contains(dataSourceName, "sslmode=disable") {
 		t.Fatalf("PostgreSQL data source disabled TLS: %s", dataSourceName)
+	}
+}
+
+// TestPostgresDataSourceNameSearchPathQuotesOneSchema proves the actual DSN passes one schema to pgx without changing unrelated URL parameters.
+func TestPostgresDataSourceNameSearchPathQuotesOneSchema(t *testing.T) {
+	for _, schema := range []string{"isolated_schema", "MixedCase", `schema,with "quote"&sslmode=disable`} {
+		config := &Config{DBName: "database", User: "user", Host: "127.0.0.1", Port: 5432,
+			SSLMode: PostgresSSLModeVerifyFull, SearchPath: schema}
+		dataSourceName := buildDataSourceNameForPostgresSQL(config)
+		parsed, err := url.Parse(dataSourceName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		query := parsed.Query()
+		expected := pgx.Identifier{schema}.Sanitize()
+		if len(query) != 2 || query.Get("search_path") != expected || query.Get("sslmode") != string(config.SSLMode) {
+			t.Fatal("单个 schema 没有安全编码，或改变了传输参数")
+		}
+		poolConfig, err := pgxpool.ParseConfig(dataSourceName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if poolConfig.ConnConfig.RuntimeParams["search_path"] != expected {
+			t.Fatal("pgxpool 没有接收到真实数据源中的单个 schema")
+		}
+	}
+}
+
+// TestPostgresDataSourceNameEmptySearchPathPreservesServerDefault keeps existing callers' unspecified schema behavior.
+func TestPostgresDataSourceNameEmptySearchPathPreservesServerDefault(t *testing.T) {
+	parsed, err := url.Parse(buildDataSourceNameForPostgresSQL(&Config{DBName: "database", User: "user", Host: "127.0.0.1", Port: 5432}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := parsed.Query()["search_path"]; exists {
+		t.Fatal("未声明 search_path 时改变了既有服务器默认")
 	}
 }
 

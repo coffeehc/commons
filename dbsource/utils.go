@@ -10,6 +10,7 @@ import (
 
 	"github.com/coffeehc/base/errors"
 	"github.com/go-sql-driver/mysql"
+	"github.com/jackc/pgx/v5"
 	"github.com/jmoiron/sqlx/reflectx"
 )
 
@@ -58,6 +59,9 @@ func buildDataSourceNameForPostgresSQL(config *Config) string {
 		Path:   config.DBName,
 	}
 	query := databaseURL.Query()
+	if config.SearchPath != "" {
+		query.Set("search_path", pgx.Identifier{config.SearchPath}.Sanitize())
+	}
 	if config.SSLMode != "" {
 		query.Set("sslmode", string(config.SSLMode))
 	}
