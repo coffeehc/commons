@@ -4,6 +4,12 @@
 
 ## 核心服务模块
 
+### logservice - 结构化错误服务（第一版）
+- 内置 PostgreSQL 记录、去重聚合、持久事件与独立 handler 重试
+- 直接复用 `dbsource.Service`；不要求业务实现 Store，不改变 `base/log`
+- 提供分类/脱敏扩展、范围隔离查询、详情过期和非破坏性的注册升级
+- [接入说明、边界与真实 PostgreSQL 验证](logservice/README.md)
+
 ### 1. asyncservice - 异步执行服务
 - 基于 Go 标准库实现动态并发上限和任务生命周期管理
 - 支持延迟任务、定时任务调度
