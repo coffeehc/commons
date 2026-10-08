@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coffeehc/commons/dbsource/pgdialect"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func newSQLiteTestService(t *testing.T) *serviceImpl {
@@ -359,7 +359,7 @@ func TestPostgresDataSourceNameEscapesCredentials(t *testing.T) {
 		SSLMode:  PostgresSSLModeVerifyFull,
 	}
 
-	poolConfig, err := pgxpool.ParseConfig(buildDataSourceNameForPostgresSQL(config))
+	poolConfig, err := pgdialect.ParsePoolConfig(buildDataSourceNameForPostgresSQL(config))
 	if err != nil {
 		t.Fatalf("ParseConfig() error = %v", err)
 	}
@@ -419,7 +419,7 @@ func TestPostgresDataSourceNameSearchPathQuotesOneSchema(t *testing.T) {
 		if len(query) != 2 || query.Get("search_path") != expected || query.Get("sslmode") != string(config.SSLMode) {
 			t.Fatal("单个 schema 没有安全编码，或改变了传输参数")
 		}
-		poolConfig, err := pgxpool.ParseConfig(dataSourceName)
+		poolConfig, err := pgdialect.ParsePoolConfig(dataSourceName)
 		if err != nil {
 			t.Fatal(err)
 		}

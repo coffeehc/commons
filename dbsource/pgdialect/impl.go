@@ -76,7 +76,7 @@ func New(ctx context.Context, config *Config) (dialect.Dialect, error) {
 }
 
 func buildPoolConfig(config *Config) (*pgxpool.Config, error) {
-	poolConfig, err := pgxpool.ParseConfig(config.DataSourceName)
+	poolConfig, err := ParsePoolConfig(config.DataSourceName)
 	if err != nil {
 		return nil, err
 	}

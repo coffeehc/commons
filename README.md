@@ -25,10 +25,18 @@
 - 只有父包 `dbsource` 负责插件注册、监控和实现选择，不暴露底层连接池
 - `dbsource.Open` 可创建并关闭独立实例，支持迁移时同时连接源库和目标库
 - 业务 SQL 统一使用 `?` 占位符，PostgreSQL 标识符和占位符由方言改写；原生 JSON `?` 操作符写作 `??`
-- PostgreSQL TLS 通过 `Config.SSLMode`、`SSLRootCert`、`SSLCert` 和 `SSLKey` 配置；空模式保留 pgx 默认行为
+- PostgreSQL TLS 通过 `Config.SSLMode`、`SSLRootCert`、`SSLCert` 和 `SSLKey` 配置；空模式固定为 `prefer`，不读取 `PGSSLMODE`
 - 内置 SQL 构建器（sqlbuilder）
 - 支持事务、监控、分页查询
 - 支持 sharding 分库分表
+
+#### PostgreSQL 配置来源
+
+PostgreSQL 连接只使用调用方提供的配置和明确默认值，不让 `PG*` 环境变量、当前操作系统用户名、`.pgpass`、`.pg_service.conf` 或默认客户端证书覆盖配置或导致解析失败。`host`、`user`、`database` 必须明确填写；密码可以为空；端口默认 `5432`，连接超时默认 5 秒。`Config.SearchPath` 继续把一个 schema 作为完整标识符传递。
+
+独立连接探测可使用 `pgdialect.ParsePoolConfig(dsn)`，返回原生 `*pgxpool.Config`，其 `ConnConfig` 可交给 `pgx.ConnectConfig`。支持 URL 和 keyword/value DSN、显式 TLS 证书路径及运行时/连接池参数；拒绝 `service`、`servicefile`、`passfile` 这些额外配置源。TLS 验证仍使用显式 CA 或 Go/操作系统正常的系统信任行为。
+
+实现不修改进程环境，也不 fork/vendor pgx。pgx 内部仍会读取环境，但解析前已经覆盖所有对应设置。为隔离 pgx 的 service 选择机制，解析期间创建仅含固定空 section 的临时描述文件；不写入任何用户配置或密码，返回前删除。升级 pgx 时须复核新增的环境参数并运行 `go test -race ./dbsource/...`。
 
 #### Shutdown cancellation 回归
 

@@ -34,7 +34,7 @@ type Config struct {
 	Port int `mapstructure:"port,omitempty" json:"port,omitempty"`
 	// SearchPath names one PostgreSQL schema, quoted as one identifier. Empty preserves the server search path; other backends ignore it.
 	SearchPath string `mapstructure:"search_path,omitempty" json:"search_path,omitempty"`
-	// SSLMode selects PostgreSQL transport verification. Empty keeps the pgx default.
+	// SSLMode selects PostgreSQL transport verification. Empty uses prefer; PGSSLMODE is never used.
 	SSLMode PostgresSSLMode `mapstructure:"ssl_mode,omitempty" json:"ssl_mode,omitempty"`
 	// SSLRootCert is the PostgreSQL root CA file used by certificate verification.
 	SSLRootCert string `mapstructure:"ssl_root_cert,omitempty" json:"ssl_root_cert,omitempty"`
