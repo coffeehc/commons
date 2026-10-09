@@ -12,6 +12,9 @@ type Builder interface {
 	RegisterClassifier(name string, classifier Classifier) error
 	RegisterRedactor(name string, redactor Redactor) error
 	RegisterHandler(HandlerRegistration, EventHandler) error
+	// Prepare freezes registrations and validates/prepares owned schema without starting workers.
+	// It is idempotent, and the same builder may subsequently Start exactly once.
+	Prepare(context.Context) error
 	Start(context.Context) (Service, error)
 }
 type Config struct {

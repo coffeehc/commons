@@ -38,6 +38,8 @@ type builder struct {
 	mu          sync.Mutex
 	options     Options
 	frozen      bool
+	started     bool
+	prepared    *serviceImpl
 	normalizers []namedNormalizer
 	classifiers []namedClassifier
 	redactors   []namedRedactor
@@ -251,25 +253,49 @@ func (b *builder) RegisterHandler(reg HandlerRegistration, hook EventHandler) er
 	b.handlers[reg.ID] = registeredHandler{reg, hook}
 	return nil
 }
-func (b *builder) Start(ctx context.Context) (Service, error) {
+
+// Prepare performs only the schema/registry transaction. It starts no delivery,
+// maintenance, or cancellation goroutine and never owns the caller's data source.
+func (b *builder) Prepare(ctx context.Context) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	if b.frozen {
-		return nil, ErrRegistrationFrozen
-	}
+	_, err := b.prepareLocked(ctx)
+	return err
+}
+func (b *builder) prepareLocked(ctx context.Context) (*serviceImpl, error) {
 	if ctx == nil {
 		return nil, ErrInvalid
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	s := &serviceImpl{options: b.options, scopeKey: hash(b.options.Config.Scope), table: `"` + b.options.Schema.Namespace + `".`, normalizers: b.normalizers, classifiers: b.classifiers, redactors: b.redactors, handlers: b.handlers, allowed: map[string]bool{}, done: make(chan struct{})}
-	for _, key := range b.options.Config.AllowedAttributes {
-		s.allowed[key] = true
+	s := b.prepared
+	if s == nil {
+		s = &serviceImpl{options: b.options, scopeKey: hash(b.options.Config.Scope), table: `"` + b.options.Schema.Namespace + `".`, normalizers: b.normalizers, classifiers: b.classifiers, redactors: b.redactors, handlers: b.handlers, allowed: map[string]bool{}, done: make(chan struct{})}
+		for _, key := range b.options.Config.AllowedAttributes {
+			s.allowed[key] = true
+		}
 	}
+	// Revalidate on repeated calls, including Start after an offline Prepare, so
+	// intervening schema drift or an unavailable data source cannot be hidden.
 	if err := s.migrate(ctx); err != nil {
 		return nil, err
 	}
+	b.prepared = s
+	b.frozen = true
+	return s, nil
+}
+func (b *builder) Start(ctx context.Context) (Service, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.started {
+		return nil, ErrRegistrationFrozen
+	}
+	s, err := b.prepareLocked(ctx)
+	if err != nil {
+		return nil, err
+	}
+	b.started = true
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	b.frozen = true
 	for _, h := range s.handlers {

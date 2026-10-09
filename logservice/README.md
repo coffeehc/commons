@@ -131,3 +131,9 @@ LOGSERVICE_PG_BIN=/usr/lib/postgresql/17/bin ./logservice/test-postgres.sh -coun
 真实 PostgreSQL 测试覆盖并发去重/计数、持久 payload 脱敏、隔离/分页/过期、事务失败回滚与提交 ACK 丢失、重启/独立重试/lease fencing、因果环、backpressure、注册 CAS 升级、结构漂移及宿主外层事务隔离。没有设置测试 DSN 时普通测试明确跳过 PostgreSQL 用例；模拟对象不能替代这些验证。
 
 本版无 UI。后续项目 UI 可展示按来源/性质/类别过滤的分组列表、EntryCount、最近发生、记录详情和投递状态；恢复操作应依赖业务明确提供的命令与条件。
+
+### 显式离线准备
+
+部署工具可在完成同样的 handler 注册后调用 `Builder.Prepare(ctx)`。它只执行自有 schema/registry 的原迁移事务，绝不启动投递、维护或关闭等待 goroutine，不接管数据源。成功后冻结注册；重复调用会重新核验当前结构，但不重复创建已存在的 schema。首次准备失败不冻结注册，可修复连接/结构后重试；已成功准备后的注册保持冻结。
+
+同一 builder 在 Prepare 后仍可 Start 一次；Start 再次验证结构后才启动 worker。并发 Prepare/Start 由 builder 生命周期锁协调，不会启动重复 worker。Start 成功后再次 Start 仍返回 ErrRegistrationFrozen。运行服务建议使用 MigrationVerifyOnly，仅由显式离线 Prepare 配合 MigrationAutoSafe 准备结构。Prepare 本身不提供记录/查询 Service，也不领取待投递事件或执行保留期清理。
