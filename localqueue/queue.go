@@ -15,6 +15,10 @@ import (
 var errQueueClosed = errors.New("exiting")
 var errQueueInUse = errors.New("队列已被其他实例占用")
 
+// ErrClosed and ErrInUse allow callers to identify lifecycle/ownership errors.
+var ErrClosed = errQueueClosed
+var ErrInUse = errQueueInUse
+
 // putRequest 表示一次串行化写入请求。
 type putRequest struct {
 	// message 是调用方提交的消息。

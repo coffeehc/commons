@@ -34,7 +34,7 @@ func (byteCoder) Marshal(obj interface{}) ([]byte, error) {
 }
 func (byteCoder) Unmarshal(data []byte, target interface{}) error {
 	t, ok := target.(*[]byte)
-	if ok {
+	if ok && t != nil {
 		*t = make([]byte, len(data))
 		copy(*t, data)
 		return nil
@@ -54,7 +54,7 @@ func (stringCoder) Marshal(obj interface{}) ([]byte, error) {
 }
 func (stringCoder) Unmarshal(data []byte, target interface{}) error {
 	t, ok := target.(*string)
-	if ok {
+	if ok && t != nil {
 		*t = string(data)
 		return nil
 	}
@@ -76,7 +76,7 @@ type pbCoder struct{}
 
 func (pbCoder) Marshal(obj interface{}) ([]byte, error) {
 	msg, ok := obj.(proto.Message)
-	if ok {
+	if ok && msg.ProtoReflect().IsValid() {
 		return proto.Marshal(msg)
 	}
 	return nil, errors.New("对象不是protobuf.Message类型")
@@ -84,7 +84,7 @@ func (pbCoder) Marshal(obj interface{}) ([]byte, error) {
 }
 func (pbCoder) Unmarshal(data []byte, target interface{}) error {
 	msg, ok := target.(proto.Message)
-	if ok {
+	if ok && msg.ProtoReflect().IsValid() {
 		return proto.Unmarshal(data, msg)
 	}
 	return errors.New("对象不是protobuf.Message类型")
@@ -104,7 +104,7 @@ func (uint64Coder) Marshal(obj interface{}) ([]byte, error) {
 }
 func (uint64Coder) Unmarshal(data []byte, target interface{}) error {
 	iptr, ok := target.(*uint64)
-	if ok {
+	if ok && iptr != nil && len(data) == 8 {
 		*iptr = binary.BigEndian.Uint64(data)
 		return nil
 	}
@@ -125,7 +125,7 @@ func (int64Coder) Marshal(obj interface{}) ([]byte, error) {
 }
 func (int64Coder) Unmarshal(data []byte, target interface{}) error {
 	iptr, ok := target.(*int64)
-	if ok {
+	if ok && iptr != nil && len(data) == 8 {
 		*iptr = int64(binary.BigEndian.Uint64(data))
 		return nil
 	}
@@ -146,7 +146,7 @@ func (uint32Coder) Marshal(obj interface{}) ([]byte, error) {
 }
 func (uint32Coder) Unmarshal(data []byte, target interface{}) error {
 	iptr, ok := target.(*uint32)
-	if ok {
+	if ok && iptr != nil && len(data) == 4 {
 		*iptr = binary.BigEndian.Uint32(data)
 		return nil
 	}
@@ -167,7 +167,7 @@ func (int32Coder) Marshal(obj interface{}) ([]byte, error) {
 }
 func (int32Coder) Unmarshal(data []byte, target interface{}) error {
 	iptr, ok := target.(*int32)
-	if ok {
+	if ok && iptr != nil && len(data) == 4 {
 		*iptr = int32(binary.BigEndian.Uint32(data))
 		return nil
 	}

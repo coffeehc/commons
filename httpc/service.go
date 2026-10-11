@@ -27,7 +27,7 @@ func BuildTransport() http.RoundTripper {
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: time.Second,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			MinVersion: tls.VersionTLS12,
 		},
 		ForceAttemptHTTP2: true,
 	}
@@ -58,9 +58,12 @@ func NewClient(logger *zap.Logger) *resty.Client {
 }
 
 func ClientInitSetting(httpClient *resty.Client, logger *zap.Logger) {
+	if logger == nil { logger = zap.NewNop() }
 	httpClient.RemoveProxy()
 	httpClient.SetLogger(logger.Sugar())
-	httpClient.SetRetryCount(3)
+	// Retrying a mutating request requires a host deduplication contract.
+	// Callers may explicitly enable retries for their safe request operations.
+	httpClient.SetRetryCount(0)
 	httpClient.Header.Set("user-agent", "coffee's")
 	httpClient.Header.Set("accept", "*/*")
 	httpClient.SetTimeout(time.Second * 30)
@@ -68,7 +71,9 @@ func ClientInitSetting(httpClient *resty.Client, logger *zap.Logger) {
 	httpClient.SetDisableWarn(true)
 	httpClient.SetRetryMaxWaitTime(time.Second)
 	httpClient.SetAllowGetMethodPayload(true)
-	httpClient.SetCookieJar(NewNullCookieJar())
+	if httpClient.GetClient().Jar == nil {
+		httpClient.SetCookieJar(NewNullCookieJar())
+	}
 }
 
 func NewClientWithCookieJar(cookieJar http.CookieJar, logger *zap.Logger) *resty.Client {
@@ -93,7 +98,7 @@ func BuildDNSCacheTransport() http.RoundTripper {
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 0,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			MinVersion: tls.VersionTLS12,
 		},
 		ForceAttemptHTTP2: true,
 		//Proxy: http.ProxyFromEnvironment,
@@ -130,7 +135,7 @@ func DnsCacheDialContext(dialer *net.Dialer) func(context.Context, string, strin
 				continue
 			}
 			//log.Debug("命中DNS缓存", zap.String("network", network), zap.String("address", ip), zap.String("host", host))
-			conn, err := dialer.DialContext(ctx, network, ip+":"+port) // 这里我们已经解析出来了ip和port，那么net.Dialer判断出来是个ip就不会再去解析了
+			conn, err := dialer.DialContext(ctx, network, net.JoinHostPort(ip, port))
 			if err == nil {
 				return conn, nil
 			} else {

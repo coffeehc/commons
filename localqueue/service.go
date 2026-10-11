@@ -65,3 +65,34 @@ var defaultConfig = queueConfig{
 func NewQueue(name, queueDir string) Interface {
 	return newDiskQueue(name, queueDir, defaultConfig)
 }
+
+// Open opens a disk FIFO and returns initialization errors immediately.
+// Its frame and metadata formats are identical to NewQueue.
+func Open(name, queueDir string) (Interface, error) {
+	return OpenWithConfig(name, queueDir, DefaultConfig())
+}
+
+// Config controls disk FIFO framing and checkpoint synchronization. Put returns
+// after writing a frame; SyncEvery/SyncTimeout bound normal sync scheduling,
+// rather than guarantee that every successful Put has reached durable storage.
+type Config struct {
+	MaxBytesPerFile int64
+	MinMessageSize  int32
+	MaxMessageSize  int32
+	SyncEvery       int64
+	SyncTimeout     time.Duration
+}
+
+func DefaultConfig() Config {
+	return Config{defaultMaxBytesPerFile, defaultMinMessageSize, defaultMaxMessageSize, defaultSyncEvery, defaultSyncTimeout}
+}
+
+// OpenWithConfig reports configuration, storage and ownership errors at open.
+func OpenWithConfig(name, queueDir string, config Config) (Interface, error) {
+	internal := queueConfig{config.MaxBytesPerFile, config.MinMessageSize, config.MaxMessageSize, config.SyncEvery, config.SyncTimeout}
+	queue := newDiskQueue(name, queueDir, internal).(*diskQueue)
+	if queue.startErr != nil {
+		return nil, queue.startErr
+	}
+	return queue, nil
+}
