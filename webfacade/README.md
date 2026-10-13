@@ -1,6 +1,6 @@
 # Web/API 响应与分页合同
 
-`github.com/coffeehc/commons/webfacade` 原生拥有 Web/API 响应模型、发送/错误处理、查询与分页传输合同。新消费方处理这些职责只需引入该包。`httpx/httpxcommons` 为已发布应用保留冻结兼容面，不反向引用或 alias commons。
+`github.com/coffeehc/commons/webfacade` 原生拥有 Web/API 响应模型、发送/错误处理、查询与分页传输合同。消费方处理这些职责只需引入该包。原 `httpx/httpxcommons` 的响应 API 已删除，不保留 alias 或 wrapper；该包中未迁移的证书加载功能不受影响。
 
 ## 响应外壳
 
@@ -8,7 +8,7 @@
 
 `SendSuccess`、`SendError`、`SendErrorWithRedirect`、`SendErrors` 保留既有外壳与 protobuf 协商。`SendError` 接收明确可公开的文本；`SendErrors` 只公开明确分类的 `base/errors.MessageError` 消息。未知、系统、数据库或混合组合错误统一使用“系统内部错误”。包装层文本不会外泄；组合中的系统/未知错误优先于公开业务消息。响应不附带底层错误或原始请求数据。
 
-既有 protobuf schema 和宽松 `ParseQuery` 不变。统一错误 helper 使用 `SendPBError` 时，修正其原先忽略 `statusCode` 的问题；`SendPBErrors` 与 JSON 使用相同安全分类。有效 PB 响应字节与 httpx 兼容。PB 序列化失败仍遵循 commons 既有 `SendPBSuccess` 行为；旧 httpx helper 的异常状态差异继续冻结保留，本次不顺便改写两者。
+既有 protobuf 字段编号和宽松 `ParseQuery` 不变。统一错误 helper 使用 `SendPBError` 时，修正其原先忽略 `statusCode` 的问题；`SendPBErrors` 与 JSON 使用相同安全分类。有效 PB 响应字节由固定 golden 数据验证。PB 序列化失败仍遵循 commons 既有 `SendPBSuccess` 行为；已删除的旧 httpx helper 不再提供独立异常状态语义。
 
 ## 列表载荷
 
@@ -34,7 +34,7 @@ page.NextCursor = webfacade.EndCursor() // 输出 next_cursor: null
 - `total` 与 `next_cursor` 可共存，互不推导。逐项权限过滤后允许空列表仍带非空续扫令牌；有令牌不保证下页有数据，也不说明剩余条数。游标模式只能以显式 null 终结，不能看列表长度猜末页。
 - 游标是不透明且原样传输的 UTF-8 字符串，最多 4096 字节，与既有 bizlog 传输预算一致。不裁剪、不解 base64、不猜数字 ID、不自动生成 SQL 条件。空串非法；末页显式使用 `EndCursor()`。
 - `Cursor.Token()` 在有续页令牌时返回 `(token, true)`，明确末页返回 `("", false)`；调用前先检查指针是否为 nil，以区分字段缺失。
-- 旧 `httpxcommons.ListData[T].Total int64` 原样保留，已发布源码字面量继续编译。只有明确迁移的生产方才改用可选 `*int64`。
+- 旧 `httpxcommons.ListData[T]` Go API 已删除。生产方必须改用本包的 `ListData[T]` 和可选 `*int64` 总数；没有执行 COUNT 时保持 nil。
 
 ## 严格分页解析
 

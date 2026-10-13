@@ -2,6 +2,14 @@
 
 一个基于 Go 1.27 的通用工具包，以服务方式封装了各种基础设施组件，依赖于 [boot engine](https://github.com/coffeehc/boot) 框架。
 
+## 安全依赖更新
+
+Fiber 已更新至 `v3.4.0`，pgx/v5 更新至 `v5.9.2`；其连带依赖包括 fasthttp `v1.72.0`、compress `v1.19.0`、gofiber/utils/v2 `v2.1.1`。另将 x/text 更新至 `v0.41.0`，覆盖 Unicode 规范化及 precis 的已知修复。模块最低 Go 版本仍为 `1.27.0`。
+
+pgx 更新包含 [GO-2026-5004](https://pkg.go.dev/vuln/GO-2026-5004) 的 dollar-quoted SQL 参数修复；不改变默认查询协议，也不取消显式 simple protocol 支持。已复核 pgconn 的 `PG*` 环境设置项，隔离列表无需增加。`TestPostgresDollarQuotedParameterSafety` 使用专用 `DBSOURCE_TEST_POSTGRES` 验证默认及 simple protocol 的参数作为数据处理；没有该变量时会明确跳过，不能把普通单测视为真实数据库验证。
+
+此次更新不代表所有依赖告警清零，也不改变消费者的构建工具链；发布应用仍须核对自己的模块图、构建 Go 补丁版本和使用路径。
+
 ## 核心服务模块
 
 ### logservice - 结构化错误服务（第一版）
@@ -100,7 +108,7 @@ SIGTERM 测试在独立子进程中调用真实 `engine.WaitServiceStop`，模�
 - 基于 Fiber 框架封装
 - 支持查询参数解析
 - 支持分页、排序、条件过滤
-- 原生统一 AjaxResponse、响应/错误发送与查询分页协议；旧 httpx 响应保留兼容
+- 原生统一 AjaxResponse、响应/错误发送与查询分页协议；旧 httpx 响应 Go API 已迁入本包，不保留兼容 wrapper
 - 支持可选 total 与三态 next_cursor，默认不请求 COUNT
 - [响应合同与迁移说明](webfacade/README.md)
 

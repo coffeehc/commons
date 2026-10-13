@@ -7,39 +7,31 @@ import (
 	"strings"
 	"testing"
 
-	legacy "github.com/coffeehc/httpx/httpxcommons"
 	"google.golang.org/protobuf/proto"
 )
 
-func TestAjaxEnvelopePreservesLegacyBytes(t *testing.T) {
-	for _, old := range []legacy.AjaxResponse{
-		{},
-		{Success: true, Code: 0, Payload: map[string]string{"id": "one"}},
-		{Success: true, Code: 1, Message: "ok", RequestID: "request-1", Payload: []string{}},
-		{Code: 40100, Message: "denied", Redirect: "/login"},
+func TestAjaxEnvelopeWireFixtures(t *testing.T) {
+	for _, test := range []struct {
+		value AjaxResponse
+		want  string
+	}{
+		{AjaxResponse{}, `{"success":false,"message":"","payload":null,"request_id":"","code":0}`},
+		{AjaxResponse{Success: true, Code: 0, Payload: map[string]string{"id": "one"}}, `{"success":true,"message":"","payload":{"id":"one"},"request_id":"","code":0}`},
+		{AjaxResponse{Success: true, Code: 1, Message: "ok", RequestID: "request-1", Payload: []string{}}, `{"success":true,"message":"ok","payload":[],"request_id":"request-1","code":1}`},
+		{AjaxResponse{Code: 40100, Message: "denied", Redirect: "/login"}, `{"success":false,"message":"denied","payload":null,"request_id":"","code":40100,"redirect":"/login"}`},
 	} {
-		want, err := json.Marshal(old)
-		if err != nil {
-			t.Fatal(err)
-		}
-		current := AjaxResponse{old.Success, old.Message, old.Payload, old.RequestID, old.Code, old.Redirect}
+		current := test.value
 		var response BaseResponse = &current
-		if response.IsSuccess() != old.Success || response.GetMessage() != old.Message || response.GetCode() != old.Code || response.GetRequestId() != old.RequestID {
+		if response.IsSuccess() != current.Success || response.GetMessage() != current.Message || response.GetCode() != current.Code || response.GetRequestId() != current.RequestID {
 			t.Fatal("accessor contract changed")
 		}
 		got, err := json.Marshal(current)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if string(got) != string(want) {
-			t.Fatalf("got %s; want %s", got, want)
+		if string(got) != test.want {
+			t.Fatalf("got %s; want %s", got, test.want)
 		}
-	}
-	// Published clients may still construct Total with a plain int64.
-	old := legacy.ListData[string]{List: nil, Total: int64(0)}
-	got, _ := json.Marshal(old)
-	if string(got) != `{"list":null,"total":0}` {
-		t.Fatalf("legacy changed: %s", got)
 	}
 }
 
@@ -151,12 +143,9 @@ func TestListProducerValidationAndCursorStates(t *testing.T) {
 }
 
 func TestPBWireRemainsCompatible(t *testing.T) {
-	old := &legacy.PBResponse{Success: true, Code: 17, Message: "ok", RequestId: 31, Payload: []byte("payload")}
 	current := &PBResponse{Success: true, Code: 17, Message: "ok", RequestId: 31, Payload: []byte("payload")}
-	want, err := proto.Marshal(old)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Fixed wire fixture keeps this contract independent of the deleted legacy API.
+	want := []byte{0x08, 17, 0x12, 2, 'o', 'k', 0x18, 31, 0x20, 1, 0x2a, 7, 'p', 'a', 'y', 'l', 'o', 'a', 'd'}
 	got, err := proto.Marshal(current)
 	if err != nil {
 		t.Fatal(err)

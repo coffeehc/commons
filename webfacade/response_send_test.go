@@ -1,6 +1,7 @@
 package webfacade
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,28 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"google.golang.org/protobuf/proto"
 )
+
+func TestPBSuccessNegotiationAfterDependencyUpgrade(t *testing.T) {
+	payload := &PBResponse{Message: "nested payload", Code: 7}
+	encodedPayload, err := proto.Marshal(payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, err := proto.Marshal(&PBResponse{Success: true, Payload: encodedPayload, Code: 20001})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, accept := range []string{PBContentType, "*/*", ""} {
+		status, body := testResponse(t, accept, func(c fiber.Ctx) error { return SendSuccess(c, payload, 20001) })
+		if status != http.StatusOK || !bytes.Equal(body, want) {
+			t.Fatalf("accept=%q status=%d body=%x want=%x", accept, status, body, want)
+		}
+	}
+	status, body := testResponse(t, "application/json", func(c fiber.Ctx) error { return SendPBSuccess(c, payload, 20001) })
+	if status != http.StatusOK || !bytes.Equal(body, want) {
+		t.Fatalf("explicit PB status=%d body=%x want=%x", status, body, want)
+	}
+}
 
 func testResponse(t *testing.T, accept string, handler fiber.Handler) (int, []byte) {
 	t.Helper()
