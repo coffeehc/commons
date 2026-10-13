@@ -38,13 +38,9 @@ func SendPBSuccess(c fiber.Ctx, data proto.Message, code int64) error {
 	return c.Send(body)
 }
 
+// SendPBErrors 使用与 SendErrors 相同的安全错误分类。
 func SendPBErrors(c fiber.Ctx, err error, code int64, statusCode int) error {
-	message := err.Error()
-	if errors.IsSystemError(err) {
-		log.Error("遭遇了系统错误", zap.Error(err))
-		message = "系统忙，请稍后再试"
-	}
-	return SendPBError(c, message, code, statusCode)
+	return SendPBError(c, publicErrorMessage(err), code, statusCode)
 }
 
 func SendPBError(c fiber.Ctx, message string, code int64, statusCode int) error {
@@ -57,7 +53,7 @@ func SendPBError(c fiber.Ctx, message string, code int64, statusCode int) error 
 	if err != nil {
 		return c.SendStatus(500)
 	}
-	return c.Send(body)
+	return c.Status(statusCode).Send(body)
 }
 
 func FormatSequence(layout string, id int64) string {

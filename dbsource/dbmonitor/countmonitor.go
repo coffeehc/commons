@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/coffeehc/commons/dbsource"
-	"github.com/coffeehc/httpx/httpxcommons"
+	"github.com/coffeehc/commons/webfacade"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -48,6 +48,6 @@ func (impl *countMonitor) monitorCount() fiber.Handler {
 			counts[sql] = count
 		}
 		impl.mutex.RUnlock()
-		return httpxcommons.SendSuccess(c, counts, 0)
+		return webfacade.SendSuccess(c, counts, 0)
 	}
 }

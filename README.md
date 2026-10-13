@@ -100,7 +100,9 @@ SIGTERM 测试在独立子进程中调用真实 `engine.WaitServiceStop`，模�
 - 基于 Fiber 框架封装
 - 支持查询参数解析
 - 支持分页、排序、条件过滤
-- 与 httpx 配合使用
+- 原生统一 AjaxResponse、响应/错误发送与查询分页协议；旧 httpx 响应保留兼容
+- 支持可选 total 与三态 next_cursor，默认不请求 COUNT
+- [响应合同与迁移说明](webfacade/README.md)
 
 ### 8. keylockservice - 键锁服务
 - 本地全局锁服务
