@@ -181,14 +181,13 @@ SIGTERM 测试在独立子进程中调用真实 `engine.WaitServiceStop`，模�
 
 主要依赖：
 - `coffeehc/boot` - 插件框架
-- `coffeehc/httpx` - HTTP 框架
 - `coffeehc/base` - 基础库
 - `go-redis/v9` - Redis 客户端
 - `resty/v2` - HTTP 客户端
 - `sqlx` / `pgx` - 数据库驱动
 - `freecache` - 内存缓存
 - `pebble/v2` - 嵌入式数据库
-- `fiber/v2` - Web 框架
+- `fiber/v3` - Web 框架
 - `viper` - 配置管理
 - `zap` - 日志
 - `google.golang.org/protobuf` - Protobuf
