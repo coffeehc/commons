@@ -2,9 +2,7 @@ package httpc
 
 import (
 	"context"
-	"fmt"
 	"net"
-	"strings"
 	"sync"
 	"time"
 
@@ -69,7 +67,7 @@ func (r *Resolver) Refresh() {
 	}
 }
 
-// Lookup 解析 host，并只在成功获得地址时更新缓存。
+// Lookup 解析 host，缓存不带方括号的 IP；连接时由 net.JoinHostPort 添加端口和 IPv6 方括号。
 func (r *Resolver) Lookup(ctx context.Context, host string) ([]string, error) {
 	//log.Debug("查询dns", zap.String("host", host))
 	//ips, err := net.DefaultResolver.LookupIPAddr(ctx, host) // 调用默认的resolver
@@ -81,11 +79,6 @@ func (r *Resolver) Lookup(ctx context.Context, host string) ([]string, error) {
 	if len(ips) == 0 {
 		log.Error("没有获取到任何对应的ip", zap.String("host", host))
 		return nil, nil
-	}
-	for i, ip := range ips {
-		if strings.Contains(ip, ":") {
-			ips[i] = fmt.Sprintf("[%s]", ip)
-		}
 	}
 	r.cache.Store(host, ips)
 	return ips, nil
